@@ -1,0 +1,9 @@
+# scope.txt — authoritative for this target folder
+# Lines starting with + are in-scope, - are out-of-scope. Confirm against
+# hackerone.com/<program>/policy_scopes before ANY active scanning.
+# Never test customer CPE / dynamic-pool ranges.
+
+# Example:
+# +*.example.com
+# -blog.example.com
+# -*.pools.*.example.net
