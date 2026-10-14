@@ -29,44 +29,54 @@ jobs:
           src_rx = re.compile(r'(?<![A-Za-z0-9_./-])(SKILL_FILES/[A-Za-z0-9_.+ /-]+?\.(?:md|txt|py|sh|yaml|yml|json))')
 
           missing_rel = []
-          stale_src = []
-          all_rel = []
-          all_src = []
+          missing_src = []
+          outside_deep = []
 
           for f in sorted(root.rglob('*.md')):
               text = f.read_text(encoding='utf-8', errors='replace')
-              parts = f.parts
-              skill = parts[2]
+              lines = text.splitlines()
+              skill = f.parts[2]
               skill_root = root / skill
-              for ref in sorted(set(rel_rx.findall(text))):
-                  ref = ref.strip()
-                  target = skill_root / ref
-                  exists = target.exists()
-                  all_rel.append((skill, str(f), ref, exists))
-                  if not exists:
-                      missing_rel.append((skill, str(f), ref))
-              for ref in sorted(set(src_rx.findall(text))):
-                  ref = ref.strip()
-                  local_exists = Path(ref).exists()
-                  upstream_exists = (upstream / ref).exists()
-                  all_src.append((skill, str(f), ref, local_exists, upstream_exists))
-                  if not local_exists:
-                      stale_src.append((skill, str(f), ref, upstream_exists))
+              deep_line = None
+              for i, line in enumerate(lines, 1):
+                  if re.match(r'^##+\s+Deep-dive files\s*$', line.strip(), re.I):
+                      deep_line = i
+                      break
 
-          print('=== BROKEN RELATIVE REFERENCES ===')
-          for skill, owner, ref in missing_rel:
-              print(f'MISSING_REL | {skill} | {owner} | {ref}')
-          print(f'MISSING_REL_COUNT={len(missing_rel)}')
+              for lineno, line in enumerate(lines, 1):
+                  for ref in rel_rx.findall(line):
+                      ref = ref.strip()
+                      if not (skill_root / ref).exists():
+                          missing_rel.append((skill, str(f), lineno, ref))
+                  for ref in src_rx.findall(line):
+                      ref = ref.strip()
+                      local_target = skill_root / ref
+                      if not local_target.exists():
+                          up_exists = (upstream / ref).exists()
+                          missing_src.append((skill, str(f), lineno, ref, up_exists))
+                          if deep_line is None or lineno < deep_line:
+                              outside_deep.append((skill, str(f), lineno, ref, up_exists))
 
-          print('=== STALE SKILL_FILES REFERENCES ===')
-          for skill, owner, ref, upstream_exists in stale_src:
-              print(f'STALE_SRC | {skill} | upstream={str(upstream_exists).lower()} | {owner} | {ref}')
-          print(f'STALE_SRC_COUNT={len(stale_src)}')
+          print('=== BROKEN RELATIVE references/... ===')
+          for x in missing_rel:
+              print('MISSING_REL | %s | %s:%d | %s' % x)
+          print('MISSING_REL_COUNT=' + str(len(missing_rel)))
+
+          print('=== MISSING SKILL_FILES/... RELATIVE TO EACH SKILL ===')
+          for skill, owner, lineno, ref, up in missing_src:
+              print(f'MISSING_SRC | {skill} | upstream={str(up).lower()} | {owner}:{lineno} | {ref}')
+          print('MISSING_SRC_COUNT=' + str(len(missing_src)))
+
+          print('=== MISSING SKILL_FILES refs OUTSIDE Deep-dive section ===')
+          for skill, owner, lineno, ref, up in outside_deep:
+              print(f'OUTSIDE_DEEP | {skill} | upstream={str(up).lower()} | {owner}:{lineno} | {ref}')
+          print('OUTSIDE_DEEP_COUNT=' + str(len(outside_deep)))
 
           print('=== SUMMARY BY SKILL ===')
           skills = sorted({p.name for p in root.iterdir() if p.is_dir()})
           for skill in skills:
               mr = sum(1 for x in missing_rel if x[0] == skill)
-              ss = sum(1 for x in stale_src if x[0] == skill)
-              print(f'SKILL | {skill} | missing_relative={mr} | stale_source_refs={ss}')
+              ms = sum(1 for x in missing_src if x[0] == skill)
+              od = sum(1 for x in outside_deep if x[0] == skill)
+              print(f'SKILL | {skill} | missing_relative={mr} | missing_skill_files={ms} | outside_deep={od}')
           PY
