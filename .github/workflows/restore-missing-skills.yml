@@ -1,4 +1,4 @@
-name: Restore missing BugBountySkills support files
+name: Audit repaired BugBountySkills references
 
 on:
   push:
@@ -6,78 +6,40 @@ on:
       - repair/restore-missing-skills-20261014
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  restore:
+  audit:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout target repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Restore missing support files from pinned upstream commit
+      - uses: actions/checkout@v4
+      - name: Find unresolved support references and their owners
         shell: bash
         run: |
           set -euo pipefail
-          rm -rf /tmp/BugBountySkills-upstream
-          git clone --quiet https://github.com/0xN0RMXL/BugBountySkills.git /tmp/BugBountySkills-upstream
-          git -C /tmp/BugBountySkills-upstream checkout --quiet 0accf5fdc71ec7f03273aebb99268a8609f8dfd4
-
-          # Add only files that are missing locally; never overwrite the user's edits.
-          for dir in SKILL_FILES CHECKLISTS KNOWLEDGE_BASE REFERENCE SAMPLES scripts; do
-            if [ -d "/tmp/BugBountySkills-upstream/$dir" ]; then
-              mkdir -p "$dir"
-              cp -an "/tmp/BugBountySkills-upstream/$dir/." "$dir/"
-            fi
-          done
-
-      - name: Audit support-file references used by OpenCode skills
-        shell: bash
-        run: |
           python3 - <<'PY'
           from pathlib import Path
-          import glob
-          import re
-
+          import glob, re
           prefixes = ('SKILL_FILES', 'CHECKLISTS', 'KNOWLEDGE_BASE', 'REFERENCE', 'SAMPLES', 'scripts')
-          refs = set()
-          md_link = re.compile(r'\((?P<p>(?:SKILL_FILES|CHECKLISTS|KNOWLEDGE_BASE|REFERENCE|SAMPLES|scripts)/[^)]+)\)')
-          plain = re.compile(r'(?P<p>(?:SKILL_FILES|CHECKLISTS|KNOWLEDGE_BASE|REFERENCE|SAMPLES|scripts)/[^\s`"\']+)')
-
+          patterns = [
+              re.compile(r'\((?P<p>(?:SKILL_FILES|CHECKLISTS|KNOWLEDGE_BASE|REFERENCE|SAMPLES|scripts)/[^)]+)\)'),
+              re.compile(r'(?P<p>(?:SKILL_FILES|CHECKLISTS|KNOWLEDGE_BASE|REFERENCE|SAMPLES|scripts)/[^\s`"\']+)')
+          ]
+          owners = {}
           for md in Path('.opencode/skills').rglob('*.md'):
               text = md.read_text(encoding='utf-8', errors='replace')
-              for rx in (md_link, plain):
+              for rx in patterns:
                   for m in rx.finditer(text):
-                      p = m.group('p').strip().rstrip('.,;:)')
-                      if p.startswith(prefixes):
-                          refs.add(p)
-
-          missing = []
-          for ref in sorted(refs):
-              if any(c in ref for c in '*?['):
-                  if not glob.glob(ref):
-                      missing.append(ref)
-              elif not Path(ref).exists():
+                      ref = m.group('p').strip().rstrip('.,;:)')
+                      owners.setdefault(ref, set()).add(str(md))
+          missing=[]
+          for ref in sorted(owners):
+              exists = bool(glob.glob(ref)) if any(c in ref for c in '*?[') else Path(ref).exists()
+              if not exists:
                   missing.append(ref)
-
-          print(f'REF_AUDIT_TOTAL={len(refs)}')
-          print(f'REF_AUDIT_MISSING={len(missing)}')
-          for ref in missing:
-              print(f'MISSING_REF={ref}')
+                  print('MISSING_REF=' + ref)
+                  for owner in sorted(owners[ref]): print('  OWNER=' + owner)
+          print('REF_AUDIT_TOTAL=' + str(len(owners)))
+          print('REF_AUDIT_MISSING=' + str(len(missing)))
+          if missing: raise SystemExit(2)
           PY
-
-      - name: Commit restored support files
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "$(git status --porcelain -- SKILL_FILES CHECKLISTS KNOWLEDGE_BASE REFERENCE SAMPLES scripts)" ]; then
-            echo 'No support-file changes to commit.'
-            exit 0
-          fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SKILL_FILES CHECKLISTS KNOWLEDGE_BASE REFERENCE SAMPLES scripts
-          git commit -m 'restore missing support files from upstream'
-          git push origin HEAD:repair/restore-missing-skills-20261014
