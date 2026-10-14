@@ -1,47 +1,81 @@
-# ~/bugbounty — ORACLE hunting root (Opencode project scope)
+# BugbountySkills — OpenCode project contract
 
-This directory is the strict Opencode project root. Every subfolder `~/bugbounty/<target>/`
-is one program. Skills in `~/bugbounty/.opencode/skills/` auto-load for anything under here.
+This repository provides shared OpenCode rules and skills. Real target data lives under ignored local workspaces:
 
-## How to start a new target
-
-```bash
-cp -r ~/bugbounty/_template ~/bugbounty/<new-name>
-# then edit ~/bugbounty/<new-name>/scope.txt + STATE.md
-cd ~/bugbounty/<new-name>
-opencode
+```text
+<repo>/targets/<target>/
 ```
 
-Say `ORACLE`, `STATE`, or `RECON MODE — dry-run only` to verify skills loaded.
+Example:
 
-## Routing — skill triggers
+```text
+<repo>/targets/vinted/
+  scope.txt          # or scope/program CSV
+  rules.txt
+  STATE.md           # created/updated as work progresses
+  recon_data/
+  findings.md
+  lessons.md
+  RECON_LOG.md
+```
 
-| Say this | Loads |
+Open OpenCode from inside the target folder. `.opencode/` at repository root supplies the shared skills/rules.
+
+## Target bootstrap
+
+At session start, follow `.opencode/rules/HUNT_RULES.md §0`:
+
+1. infer the active target from `targets/<target>/`;
+2. read `rules.txt` first;
+3. load `scope.txt` or the available scope CSV;
+4. inspect existing state/recon/findings before doing new work;
+5. keep all new artifacts inside the active target folder.
+
+`targets/` is gitignored. Never commit target recon, credentials, loot, or program data to this repository.
+
+## Skill selection
+
+The operator does **not** need to say `WEB MODE`, `API MODE`, etc. Those phrases remain valid shortcuts, but the model should normally choose the smallest relevant skill itself.
+
+| Need | Primary skill |
 |---|---|
-| `RECON MODE — <target>` | `.opencode/skills/recon-mode/SKILL.md` — **§0 AUDIT GATE: rate operator-supplied recon, fill only gaps, never repeat DONE stages** — then passive → enum → DNS → alive → JS/wayback → fuzz → ports → fingerprint → cloud |
-| `WEB MODE — <target> <stack>` | `.opencode/skills/web-mode/SKILL.md` — 41 web vuln classes, chain-to-ATO |
-| `API MODE — <target>` | `.opencode/skills/api-mode/SKILL.md` — REST/GraphQL/gRPC, BOLA/BFLA first |
-| `LLM MODE — <target>` | `.opencode/skills/llm-mode/SKILL.md` |
-| `MOBILE MODE — <apk/ipa>` | `.opencode/skills/mobile-mode/SKILL.md` |
-| `PAYLOAD <class> <context>` | `.opencode/skills/payloads/SKILL.md` |
-| `SCR MODE — <language>` | `.opencode/skills/scr-mode/SKILL.md` |
-| `REPORT MODE — <vuln> <impact>` | `.opencode/skills/reporting-mode/SKILL.md` |
-| `EXPLOIT MODE — <chain>` | `.opencode/skills/exploit-mode/SKILL.md` |
-| `INFRA MODE` | `.opencode/skills/infra-mode/SKILL.md` — AWS/GCP/Azure, S3, K8s, Docker |
-| `H1 MODE / BC MODE / INTI MODE` | `.opencode/skills/platform-intel-mode/SKILL.md` |
-| `AUTOMATION` | `.opencode/skills/automation-mode/SKILL.md` — pipelines, VPS, notify |
-| `ORACLE / STATE / RESET` | `.opencode/skills/core-identity/SKILL.md` — always loaded: `opencode.json` `instructions` injects `.opencode/rules/HUNT_RULES.md` every turn; load core-identity via the `skill` tool at session start |
+| recon / asset discovery / JS-wayback / DNS | `recon-mode` |
+| normal web application/session/form testing | `web-mode` |
+| REST, GraphQL, gRPC, API authorization | `api-mode` |
+| AWS/GCP/Azure, S3, Kubernetes, Docker, network infra | `infra-mode` |
+| Android/iOS | `mobile-mode` |
+| source code / repository review | `scr-mode` |
+| LLM/RAG/agent/tool security | `llm-mode` |
+| payload lookup | `payloads` |
+| minimal PoC / chaining after a concrete candidate exists | `exploit-mode` |
+| reporting / CVSS / platform-ready writeup | `reporting-mode` |
+| platform/program intelligence | `platform-intel-mode` |
+| scripts, pipelines, monitoring, automation | `automation-mode` |
+| general hunting strategy/state | `core-identity` |
 
-## Per-target state (isolation rule)
+Load the top-level `SKILL.md` first, then only the exact deep-dive file needed. Avoid loading giant references or overlapping modes unless evidence genuinely crosses domains.
 
-* `STATE.md` in the current `~/bugbounty/<target>/` dir is authoritative. Never copy STATE across targets.
-* `scope.txt` in the current dir is authoritative. Never test outside it.
-* `RECON_LOG.md` is the append-only recon ledger — the §0 audit gate reads it; a stage logged DONE is never re-run.
-* The operator ALWAYS supplies their own recon; ORACLE audits it first (recon-mode §0), fills only gaps.
-* Never test customer CPE / dynamic-pool ranges (`*.pools.*`, `*.cust.*`, `*.rev.*`, `*.dsl.*`, etc.). Confirm written policy at `hackerone.com/<program>/policy_scopes` before active scanning.
-* Upstream source repo (`Desktop/BugBountySkills`) is reference only — do not edit it from here.
+## Model autonomy
 
-## Operator stack (assumed by customized skills)
+There is no fixed lead/worker/reviewer architecture.
 
-Kali + Burp Pro (Param Miner, Turbo Intruder, Autorize, JWT Editor, Collaborator) + VPS.
-Free-tier-friendly defaults; paid APIs (`$ST_KEY`, `$VT_KEY`, Chaos) are optional behind env guards.
+The current model decides how to solve the task. It may work directly or delegate a narrow subtask to another model/subagent when that materially improves speed, context isolation, parallelism, or independent falsification. No specific model, role name, or hierarchy is required.
+
+If delegation is used:
+- pass only the relevant target context and scope/rules;
+- define one narrow deliverable;
+- tell the subagent what work is already done so it does not repeat it;
+- merge and sanity-check the result before acting on it.
+
+## State isolation
+
+- Never copy `STATE.md`, findings, recon artifacts, or credentials across target folders.
+- Program `rules.txt` + explicit scope files override generic skill guidance.
+- Never infer that sibling/acquired/brand-related assets are testable until scope confirms them.
+- Reuse existing artifacts and diff/merge rather than rerunning work blindly.
+
+## Shared environment
+
+`ENV.md` contains host/device notes and pinned local tooling facts. It is **environment evidence, not eternal truth**. Check its verification date and confirm actual installed/runtime versions when the exact version matters.
+
+Default operator stack: Kali + Burp Pro + optional VPS. Paid APIs are optional; prefer a free path when practical.
