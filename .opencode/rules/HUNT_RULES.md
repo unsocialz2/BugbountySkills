@@ -14,6 +14,15 @@ The operator works from a target directory under the repository:
 
 Treat the nearest directory whose parent is `targets/` as **TARGET_ROOT**. Its basename is **TARGET_NAME**. If the working directory is deeper inside that target, walk upward to TARGET_ROOT. Never read/write another sibling under `targets/` unless the operator explicitly switches target.
 
+A fresh target workspace may contain **only**:
+
+```text
+rules.txt
+scope.txt          # OR a scope/program CSV export
+```
+
+That is sufficient to begin. `STATE.md`, `findings.md`, `lessons.md`, `RECON_LOG.md`, and `recon_data/` are optional working artifacts; absence is normal. Create them only when the current work needs them. Never require the operator to copy a template before hunting.
+
 Before any target network request, scanner, browser/Burp action, validation, or report:
 
 1. Locate TARGET_ROOT from the working directory. Do not ask for the target name if `targets/<target>/` already identifies it.
@@ -39,7 +48,7 @@ All target artifacts stay inside TARGET_ROOT:
 ./recon_data/
 ```
 
-Existing target files are authoritative history. Inspect them before creating or repeating work.
+If any of these already exist, treat them as authoritative history and inspect them before creating or repeating work.
 
 ## 1. MODEL AUTONOMY & OPTIONAL DELEGATION
 
@@ -121,6 +130,7 @@ Before producing a report, reproduce from a clean-enough state and ensure every 
 ## 6. STATE & NO-REPEAT
 
 - Reuse existing target artifacts before running new work.
+- Missing state/recon files on a new target are normal; create only what becomes useful.
 - Do not repeat a verified stage merely because a skill was reloaded.
 - Re-run only for changed scope, stale evidence, changed application behavior, or explicit operator request.
 - Merge/diff stateful outputs rather than silently overwriting them.
