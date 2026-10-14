@@ -1,26 +1,31 @@
-# RECON_LOG — <program> (append-only ledger, never overwrite)
+# RECON_LOG — <target> (append-only ledger)
 
-Source of truth for the recon-mode §0 AUDIT GATE. Any stage marked DONE here
-with a verified artifact is NEVER re-run for this target.
+Source of truth for what recon was already done, with enough context to decide whether it is still fresh/useful.
+A stage marked DONE is not rerun blindly; refresh only for stale evidence, changed scope/behavior, or explicit operator request.
 
-| Date | Stage | Status | Artifact | Delta |
-|------|-------|--------|----------|-------|
+| Date | Stage | Status | Artifact | Delta / reason |
+|------|-------|--------|----------|----------------|
 |      | 1 passive seed | | | |
 |      | 2 enum+resolve | | | |
 |      | 3 DNS analysis | | | |
 |      | 4 alive probe | | | |
 |      | 5 JS analysis | | | |
 |      | 6 wayback mining | | | |
-|      | 7 content discovery | | | |
-|      | 8 API discovery | | | |
-|      | 9 port scan | | | |
-|      | 10 fingerprint | | | |
-|      | 11 shodan/censys | | | |
+|      | 7 port scan | | | |
+|      | 8 fingerprint | | | |
+|      | 9 github/code leaks | | | |
+|      | 10 search-engine dorks | | | |
+|      | 11 shodan/censys/fofa | | | |
 |      | 12 cloud assets | | | |
-|      | 13 github dorks | | | |
-|      | 14 google dorks | | | |
-|      | 15 mobile recon | | | |
-|      | 16 dedup+prioritize | | | |
+|      | 13 mobile recon | | | |
+|      | 14 API discovery | | | |
+|      | 15 content discovery | | | |
+|      | 16 automation/dedup | | | |
 
-## AUDIT verdicts
-<!-- e.g. | 2026-09-11 | AUDIT | YELLOW 78% | gaps: 3,5,9,16 | ran 3,5,9,16 | -->
+Status values: `DONE`, `PARTIAL`, `MISSING`, `N/A`, `REFRESHED`.
+
+## Audit notes
+
+<!-- Example:
+| 2026-10-14 | AUDIT | PARTIAL | gaps: DNS, JS secrets | next: DNS only; port scan N/A by rules |
+-->
