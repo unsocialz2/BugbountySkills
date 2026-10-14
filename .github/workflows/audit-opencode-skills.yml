@@ -1,0 +1,72 @@
+name: Audit OpenCode skills
+
+on:
+  push:
+    branches:
+      - repair/opencode-skills-clean
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit local and upstream references
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/upstream
+          git clone --quiet --depth 1 https://github.com/0xN0RMXL/BugBountySkills.git /tmp/upstream
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.opencode/skills')
+          upstream = Path('/tmp/upstream')
+          rel_rx = re.compile(r'(?<![A-Za-z0-9_./-])(references/[A-Za-z0-9_.+ /-]+?\.(?:md|txt|py|sh|yaml|yml|json))')
+          src_rx = re.compile(r'(?<![A-Za-z0-9_./-])(SKILL_FILES/[A-Za-z0-9_.+ /-]+?\.(?:md|txt|py|sh|yaml|yml|json))')
+
+          missing_rel = []
+          stale_src = []
+          all_rel = []
+          all_src = []
+
+          for f in sorted(root.rglob('*.md')):
+              text = f.read_text(encoding='utf-8', errors='replace')
+              parts = f.parts
+              skill = parts[2]
+              skill_root = root / skill
+              for ref in sorted(set(rel_rx.findall(text))):
+                  ref = ref.strip()
+                  target = skill_root / ref
+                  exists = target.exists()
+                  all_rel.append((skill, str(f), ref, exists))
+                  if not exists:
+                      missing_rel.append((skill, str(f), ref))
+              for ref in sorted(set(src_rx.findall(text))):
+                  ref = ref.strip()
+                  local_exists = Path(ref).exists()
+                  upstream_exists = (upstream / ref).exists()
+                  all_src.append((skill, str(f), ref, local_exists, upstream_exists))
+                  if not local_exists:
+                      stale_src.append((skill, str(f), ref, upstream_exists))
+
+          print('=== BROKEN RELATIVE REFERENCES ===')
+          for skill, owner, ref in missing_rel:
+              print(f'MISSING_REL | {skill} | {owner} | {ref}')
+          print(f'MISSING_REL_COUNT={len(missing_rel)}')
+
+          print('=== STALE SKILL_FILES REFERENCES ===')
+          for skill, owner, ref, upstream_exists in stale_src:
+              print(f'STALE_SRC | {skill} | upstream={str(upstream_exists).lower()} | {owner} | {ref}')
+          print(f'STALE_SRC_COUNT={len(stale_src)}')
+
+          print('=== SUMMARY BY SKILL ===')
+          skills = sorted({p.name for p in root.iterdir() if p.is_dir()})
+          for skill in skills:
+              mr = sum(1 for x in missing_rel if x[0] == skill)
+              ss = sum(1 for x in stale_src if x[0] == skill)
+              print(f'SKILL | {skill} | missing_relative={mr} | stale_source_refs={ss}')
+          PY
