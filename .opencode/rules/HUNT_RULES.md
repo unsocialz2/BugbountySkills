@@ -1,10 +1,10 @@
 # HUNT_RULES — always-on operating contract (ORACLE)
 
-Loaded via `instructions` in `opencode.json`. Applies to the lead AND every subagent, every turn.
+Loaded via `instructions` in `opencode.json`. Applies every turn.
 
-## 0. TARGET WORKSPACE CONTRACT (mandatory BEFORE target work)
+## 0. TARGET WORKSPACE CONTRACT
 
-The operator opens OpenCode from a target directory under the repository:
+The operator works from a target directory under the repository:
 
 ```text
 <repo>/targets/<target>/
@@ -12,35 +12,24 @@ The operator opens OpenCode from a target directory under the repository:
 <repo>/targets/vinted/
 ```
 
-Treat the nearest directory whose parent is `targets/` as **TARGET_ROOT**. Its basename is **TARGET_NAME**. If the current working directory is deeper inside that target, walk upward to that target root. Never read/write another sibling under `targets/` unless the operator explicitly switches target.
-
-### Target bootstrap — run once at the start of every target session
+Treat the nearest directory whose parent is `targets/` as **TARGET_ROOT**. Its basename is **TARGET_NAME**. If the working directory is deeper inside that target, walk upward to TARGET_ROOT. Never read/write another sibling under `targets/` unless the operator explicitly switches target.
 
 Before any target network request, scanner, browser/Burp action, validation, or report:
 
-1. **Locate TARGET_ROOT** from the working directory. Do not ask the operator for the target name when it is already encoded by `targets/<target>/`.
-2. **Read `rules.txt` first** when present. Extract program-specific restrictions, prohibited techniques, rate/automation limits, auth/account requirements, excluded vulnerability classes, disclosure/reporting notes, and any scope statements embedded in the rules.
-3. **Load scope from TARGET_ROOT**, in this priority order:
+1. Locate TARGET_ROOT from the working directory. Do not ask for the target name if `targets/<target>/` already identifies it.
+2. Read `rules.txt` first when present. Extract restrictions, prohibited techniques, rate/automation limits, auth/account requirements, excluded vulnerability classes, reporting notes, and scope statements embedded in the rules.
+3. Load scope from TARGET_ROOT in this order:
    - `scope.txt`
    - `scope.csv`
    - `scope*.csv`
-   - a single obvious program-export `*.csv` in TARGET_ROOT
-4. **Parse CSV by its headers, not by a hardcoded vendor schema.** Preserve the raw asset value and use fields such as asset/type, in-scope/out-of-scope, bounty eligibility, max severity, instruction/notes when they exist. Unknown columns stay unknown; never invent semantics.
-5. Build a silent **TARGET CONTEXT** containing:
-   - `TARGET_ROOT`, `TARGET_NAME`
-   - scope source file(s)
-   - explicit in-scope assets / asset types
-   - explicit out-of-scope assets / exclusions
-   - rules/restrictions and automation limits
-   - auth/account prerequisites
-   - platform/program hints if present
-6. **Program files outrank generic skills.** `rules.txt` and explicit scope data override any default command, wordlist, scan depth, request rate, attack class, or assumption in a skill.
-7. **Never invent scope.** If scope data is incomplete, active work is limited to assets explicitly marked in-scope by the available files or the operator's current prompt. Brand/company pivots are leads only until scope confirms them.
-8. **Do not re-ask for known context.** If target, scope, or rules are already available in TARGET_ROOT, use them automatically.
+   - one obvious program-export `*.csv` in TARGET_ROOT
+4. Parse CSV by headers, not by a hardcoded platform schema. Preserve raw asset values. Use fields such as asset/type, in-scope/out-of-scope, bounty eligibility, max severity, instruction/notes when present. Unknown columns remain unknown.
+5. Build a silent TARGET CONTEXT containing TARGET_ROOT, TARGET_NAME, scope source(s), explicit in/out-of-scope assets, restrictions, automation limits, auth prerequisites, and platform/program hints.
+6. Program files outrank generic skills. `rules.txt` and explicit scope data override default commands, rates, scan depth, attack classes, and assumptions.
+7. Never invent scope. Brand/company pivots are leads only until scope confirms them.
+8. Do not re-ask for context already available in the target workspace.
 
-### Target-local state
-
-All hunting artifacts belong to TARGET_ROOT, never the repository root:
+All target artifacts stay inside TARGET_ROOT:
 
 ```text
 ./STATE.md
@@ -50,49 +39,96 @@ All hunting artifacts belong to TARGET_ROOT, never the repository root:
 ./recon_data/
 ```
 
-Existing target files are authoritative history. Inspect them before creating or repeating work. Relative paths used by hunting modes resolve from TARGET_ROOT; paths inside a skill's own documentation still resolve from that skill directory.
+Existing target files are authoritative history. Inspect them before creating or repeating work.
 
-## 1. VIABILITY GATE (mandatory BEFORE any deep-dive)
+## 1. MODEL AUTONOMY & OPTIONAL DELEGATION
 
-Before spending more than ~15 minutes on any candidate, write these 4 lines:
+The current model owns strategy and execution. There are **no fixed roles, named reviewers, mandatory worker hierarchy, or required model choices**.
 
+- Execute a task directly when that is the simplest path.
+- Delegate to a subagent/model only when it materially helps: independent falsification, parallel independent branches, context isolation for a large artifact, or a useful second opinion.
+- Do not delegate just to satisfy architecture.
+- When delegating, give the subagent the minimum necessary TARGET CONTEXT, the exact narrow task, what not to repeat, and the expected evidence/artifact.
+- The current model remains responsible for merging results, resolving contradictions, and deciding the next action.
+- If the operator says "delegate if useful" or equivalent, treat that as standing permission for optional delegation during the task.
+
+## 2. SKILL LOADING & DOMAIN BOUNDARIES
+
+Treat every top-level `SKILL.md` as a **router**, not a book. Load the smallest relevant skill, then only the exact deep-dive file needed for the current step.
+
+Do not load overlapping skills or giant references "just in case". Add another skill only when evidence crosses a real domain boundary.
+
+Default ownership:
+
+| Domain | Primary skill |
+|---|---|
+| attack-surface discovery / recon | `recon-mode` |
+| browser/session/form/general web flaws | `web-mode` |
+| REST / GraphQL / gRPC / API authz | `api-mode` |
+| cloud / container / network infrastructure | `infra-mode` |
+| Android / iOS app and device work | `mobile-mode` |
+| source-code / repository review | `scr-mode` |
+| AI / RAG / tool-using LLM systems | `llm-mode` |
+| exact payload lookup | `payloads` |
+| post-validation minimal PoC / chaining | `exploit-mode` |
+| automation/tool building | `automation-mode` |
+| platform/program research | `platform-intel-mode` |
+| report writing and numeric severity/CVSS | `reporting-mode` |
+
+Boundary rules:
+- GraphQL/gRPC and schema-driven API testing belong to `api-mode` by default.
+- Browser/session flows belong to `web-mode` even if the backend is JSON.
+- `exploit-mode` starts from a concrete primitive/candidate; it is not a duplicate discovery mode.
+- Numeric severity/CVSS is owned by `reporting-mode` unless the operator explicitly asks for scoring earlier. Hunting skills should record demonstrated impact facts, not guess scores.
+- Platform policy, payout, VRT, SLA, product/tool-version, and similar changeable facts must be verified from current target files or a current authoritative source when they materially affect an action.
+
+## 3. VIABILITY GATE
+
+Before spending more than ~15 minutes on a candidate, establish:
+
+```text
+ATTACKER:  <unauth / low-priv / adjacent tenant / ...>
+REACH:     <live | dead | unknown> + cheapest proof
+IMPACT:    <concrete demonstrated harm or none>
+DUPE-OOS:  <scope/policy/known-issue status: clear | suspect | OOS>
 ```
-ATTACKER:  <who: unauth / low-priv user / adjacent tenant / ...>
-REACH:     <live | dead | unknown> + one command proving it
-IMPACT:    <concrete harm to target or other users, or 'none'>
-DUPE-OOS:  <checked hacktivity/scope: clear | suspect | OOS>
-```
 
-- `REACH=dead` or `IMPACT=none` → **STOP immediately**, log one line to `./lessons.md`, move on. No deep-dive, no PoC, no report.
-- `REACH=unknown` → your next and only action is the single cheapest reachability test. No theory before it passes.
-- A source-code weakness with no reachable attacker is a **note**, never a finding.
+- `REACH=dead` or `IMPACT=none` -> stop deep work, log the lesson, move on.
+- `REACH=unknown` -> next action is the cheapest reachability test.
+- A source weakness with no reachable attacker is a NOTE, not a finding.
 
-## 2. EVIDENCE CONTRACT (mandatory BEFORE anything enters findings.md)
+## 4. EVIDENCE + FALSIFICATION CONTRACT
 
-No entry may be marked candidate/validated without ALL of:
+Nothing becomes a validated finding without all of:
 
-1. Raw request/response excerpt (or exact file:line source+sink for code bugs).
-2. One exact reproduce command (copy-pasteable).
-3. Attacker model + reachability proof (from the gate above).
-4. "Why not a dupe / why in scope" — one line.
-5. `final-reviewer` PASS for anything leaving the project as a report.
+1. Raw request/response excerpt, exact runtime evidence, or file:line source-to-sink path.
+2. One exact reproducible command/request/PoC.
+3. Attacker model + reachability proof.
+4. One line proving it is in scope and not merely a known/expected behavior.
+5. A falsification pass that actively tests the strongest benign explanation or false-positive hypothesis.
 
-Hypotheses without 1–2 are leads, not findings. Never score CVSS on a lead.
+Hypotheses without 1-2 are leads. Never score a lead.
 
-## 3. TIME-BOX / KILL SWITCH
+Before producing a report, reproduce from a clean-enough state and ensure every impact claim maps to evidence. The model may perform falsification itself or delegate an independent second pass when useful; neither is mandatory as a named role.
 
-- Recon ≤4h per target, then manual hunting. No signal in 8h → pivot target, log why.
-- One candidate gets max 2h of deep work without new evidence → park it, move on.
-- Report budget 1h. No report without a `final-reviewer` PASS.
+## 5. TIME-BOX / KILL SWITCH
 
-## 4. DELEGATION POLICY
+- Recon <=4h per target before switching to targeted/manual hunting unless new signal justifies continuation.
+- No meaningful signal in ~8h -> reassess/pivot and log why.
+- One candidate gets max ~2h of deep work without new evidence -> park it.
+- Report writing should not become another research phase; missing evidence sends the finding back to validation.
 
-- The lead (bughunter/build/plan) MAY read target-local metadata and existing artifacts needed for bootstrap/state (`rules.txt`, scope files, STATE/findings/lessons/RECON_LOG/recon_data inventory).
-- The lead NEVER performs target network actions, scanners, browsing, Burp, or Playwright itself. Every target action is a `task` call to exactly one worker.
-- Workers inherit the TARGET CONTEXT, then load the relevant mode skill FIRST via the `skill` tool before acting. One worker, one focused subtask.
-- `deep-reviewer` exists to kill your darlings: route every candidate through falsification before `final-reviewer`.
+## 6. STATE & NO-REPEAT
 
-## 5. CALIBRATION
+- Reuse existing target artifacts before running new work.
+- Do not repeat a verified stage merely because a skill was reloaded.
+- Re-run only for changed scope, stale evidence, changed application behavior, or explicit operator request.
+- Merge/diff stateful outputs rather than silently overwriting them.
+- Keep `STATE.md` concise: current target facts, auth state, tech stack, coverage, interesting endpoints, findings, lessons, and next action.
 
-- State uncertainty plainly ("unverified: X"). Never inflate severity to compensate for weak evidence — a strict FAIL beats a wasted submission.
-- Cite PortSwigger / HackTricks / disclosed reports for non-obvious claims. No bare CVSS numbers: vector or "unscored".
+## 7. CALIBRATION
+
+- State uncertainty plainly and pair it with the cheapest falsifying test.
+- Prefer direct evidence over scanner labels or theory.
+- Never inflate impact to compensate for weak evidence.
+- For non-obvious technical claims, prefer current primary docs / PortSwigger research / authoritative vendor docs; use community material as secondary support.
