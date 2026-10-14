@@ -17,17 +17,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Restore SKILL_FILES from pinned upstream commit
+      - name: Restore missing support files from pinned upstream commit
         shell: bash
         run: |
           set -euo pipefail
           rm -rf /tmp/BugBountySkills-upstream
           git clone --quiet https://github.com/0xN0RMXL/BugBountySkills.git /tmp/BugBountySkills-upstream
           git -C /tmp/BugBountySkills-upstream checkout --quiet 0accf5fdc71ec7f03273aebb99268a8609f8dfd4
-          rm -rf SKILL_FILES
-          cp -a /tmp/BugBountySkills-upstream/SKILL_FILES ./SKILL_FILES
 
-      - name: Audit SKILL_FILES references used by OpenCode skills
+          # Add only files that are missing locally; never overwrite the user's edits.
+          for dir in SKILL_FILES CHECKLISTS KNOWLEDGE_BASE REFERENCE SAMPLES scripts; do
+            if [ -d "/tmp/BugBountySkills-upstream/$dir" ]; then
+              mkdir -p "$dir"
+              cp -an "/tmp/BugBountySkills-upstream/$dir/." "$dir/"
+            fi
+          done
+
+      - name: Audit support-file references used by OpenCode skills
         shell: bash
         run: |
           python3 - <<'PY'
@@ -35,15 +41,22 @@ jobs:
           import glob
           import re
 
+          prefixes = ('SKILL_FILES', 'CHECKLISTS', 'KNOWLEDGE_BASE', 'REFERENCE', 'SAMPLES', 'scripts')
           refs = set()
+          md_link = re.compile(r'\((?P<p>(?:SKILL_FILES|CHECKLISTS|KNOWLEDGE_BASE|REFERENCE|SAMPLES|scripts)/[^)]+)\)')
+          plain = re.compile(r'(?P<p>(?:SKILL_FILES|CHECKLISTS|KNOWLEDGE_BASE|REFERENCE|SAMPLES|scripts)/[^\s`"\']+)')
+
           for md in Path('.opencode/skills').rglob('*.md'):
               text = md.read_text(encoding='utf-8', errors='replace')
-              refs.update(re.findall(r'SKILL_FILES/[A-Za-z0-9_./*+ -]+?\.md', text))
+              for rx in (md_link, plain):
+                  for m in rx.finditer(text):
+                      p = m.group('p').strip().rstrip('.,;:)')
+                      if p.startswith(prefixes):
+                          refs.add(p)
 
           missing = []
           for ref in sorted(refs):
-              ref = ref.rstrip('.,;:)')
-              if '*' in ref or '?' in ref or '[' in ref:
+              if any(c in ref for c in '*?['):
                   if not glob.glob(ref):
                       missing.append(ref)
               elif not Path(ref).exists():
@@ -55,16 +68,16 @@ jobs:
               print(f'MISSING_REF={ref}')
           PY
 
-      - name: Commit restored support tree
+      - name: Commit restored support files
         shell: bash
         run: |
           set -euo pipefail
-          if git diff --quiet -- SKILL_FILES && git diff --cached --quiet -- SKILL_FILES; then
-            echo 'No SKILL_FILES changes to commit.'
+          if [ -z "$(git status --porcelain -- SKILL_FILES CHECKLISTS KNOWLEDGE_BASE REFERENCE SAMPLES scripts)" ]; then
+            echo 'No support-file changes to commit.'
             exit 0
           fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add SKILL_FILES
-          git commit -m 'restore missing SKILL_FILES from upstream'
+          git add SKILL_FILES CHECKLISTS KNOWLEDGE_BASE REFERENCE SAMPLES scripts
+          git commit -m 'restore missing support files from upstream'
           git push origin HEAD:repair/restore-missing-skills-20261014
