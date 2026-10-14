@@ -1,0 +1,70 @@
+name: Restore missing BugBountySkills support files
+
+on:
+  push:
+    branches:
+      - repair/restore-missing-skills-20261014
+
+permissions:
+  contents: write
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore SKILL_FILES from pinned upstream commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/BugBountySkills-upstream
+          git clone --quiet https://github.com/0xN0RMXL/BugBountySkills.git /tmp/BugBountySkills-upstream
+          git -C /tmp/BugBountySkills-upstream checkout --quiet 0accf5fdc71ec7f03273aebb99268a8609f8dfd4
+          rm -rf SKILL_FILES
+          cp -a /tmp/BugBountySkills-upstream/SKILL_FILES ./SKILL_FILES
+
+      - name: Audit SKILL_FILES references used by OpenCode skills
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import glob
+          import re
+
+          refs = set()
+          for md in Path('.opencode/skills').rglob('*.md'):
+              text = md.read_text(encoding='utf-8', errors='replace')
+              refs.update(re.findall(r'SKILL_FILES/[A-Za-z0-9_./*+ -]+?\.md', text))
+
+          missing = []
+          for ref in sorted(refs):
+              ref = ref.rstrip('.,;:)')
+              if '*' in ref or '?' in ref or '[' in ref:
+                  if not glob.glob(ref):
+                      missing.append(ref)
+              elif not Path(ref).exists():
+                  missing.append(ref)
+
+          print(f'REF_AUDIT_TOTAL={len(refs)}')
+          print(f'REF_AUDIT_MISSING={len(missing)}')
+          for ref in missing:
+              print(f'MISSING_REF={ref}')
+          PY
+
+      - name: Commit restored support tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- SKILL_FILES && git diff --cached --quiet -- SKILL_FILES; then
+            echo 'No SKILL_FILES changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SKILL_FILES
+          git commit -m 'restore missing SKILL_FILES from upstream'
+          git push origin HEAD:repair/restore-missing-skills-20261014
