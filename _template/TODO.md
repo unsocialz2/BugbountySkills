@@ -1,16 +1,21 @@
-# TODO — <program>
+# TODO — <target>
 
-- [ ] Confirm written policy + rate limits / no-DoS / data-access rules
-- [ ] Provide own recon results → ORACLE runs §0 AUDIT (rate, fill gaps, never repeat)
-- [ ] Gate: GREEN verdict in RECON_LOG.md before hunting
-- [ ] DNS analysis (dangling CNAME → takeover check)
-- [ ] JS + Wayback mining → endpoints + params
-- [ ] Content discovery (ffuf/feroxbuster) on top alive
-- [ ] API discovery (swagger/openapi/graphql/grpc/WS)
-- [ ] Port scan (naabu on netblocks/IPs only if in scope)
-- [ ] Fingerprint (httpx -tech-detect, wafw00f) → pick primitives
-- [ ] Eyeball top-50 alive, pick highest-value endpoint
-- [ ] Hunt per WEB/API/MOBILE skill → falsification pass (web-mode §4) before reporting
-- [ ] Report per REPORT MODE template
+- [ ] Read `rules.txt` and scope source(s); extract active restrictions/limits.
+- [ ] Inspect existing `STATE.md`, `RECON_LOG.md`, findings, and `recon_data/` before new work.
+- [ ] Audit applicable recon stages; mark DONE / PARTIAL / MISSING / N/A.
+- [ ] Choose the highest-signal missing step instead of blindly running the full pipeline.
+- [ ] Prioritize alive/auth/API/business-critical surfaces from actual evidence.
+- [ ] For each candidate: viability gate -> minimal proof -> falsification -> demonstrated impact.
+- [ ] Use `exploit-mode` only after a concrete primitive exists and a compact PoC/chain is useful.
+- [ ] Use `reporting-mode` for final severity/CVSS and platform-ready writeup.
+- [ ] Update concise state and lessons before ending the session.
 
-New target: `cp -r ~/bugbounty/_template ~/bugbounty/<new-name>`
+Optional starter copy:
+
+```bash
+mkdir -p targets/<new-name>
+cp -r _template/. targets/<new-name>/
+# replace scope/rules with the real program data, then:
+cd targets/<new-name>
+opencode
+```
