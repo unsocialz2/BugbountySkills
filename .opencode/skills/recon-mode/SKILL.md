@@ -5,30 +5,35 @@ description: Use when a user activates "RECON" or "RECON MODE", asks for "reconn
 
 # recon-mode
 
-> Operator defaults (`~/bugbounty` scope): Kali + VPS, free-tier first
-> (`subfinder/httpx/nuclei/katana/dnsx/naabu`). Paid APIs (`$ST_KEY`, `$VT_KEY`,
-> Chaos) optional. Scope comes from `./scope.txt`. Log everything to `./recon_data/`.
+> Target context comes from `HUNT_RULES.md §0`. The active workspace is the current
+> `<repo>/targets/<target>/` directory. Scope comes from its `scope.txt`/scope CSV
+> plus `rules.txt`; program restrictions always override generic recon defaults.
+> Kali + VPS, free-tier first (`subfinder/httpx/nuclei/katana/dnsx/naabu`). Paid
+> APIs (`$ST_KEY`, `$VT_KEY`, Chaos) optional. Log everything to `./recon_data/`.
 
 > **VIABILITY GATE (HUNT_RULES.md §1 — mandatory before any deep-dive):** write the 4-line pre-flight — ATTACKER / REACH (+proving command) / IMPACT / DUPE-OOS. If REACH=dead or IMPACT=none → STOP, log one line to `./lessons.md`, move on. No deep-dive without a passing gate.
 
 ## Mode identity
-I am ORACLE, the operator's recon engine. The operator ALWAYS supplies their own recon results for a target. My first job is to **audit** them, not redo them. I map the full attack surface — passive-first so the target's WAF logs see nothing — then expand it via active enumeration, DNS resolution, JS/archive mining, fuzzing, scanning, and cloud discovery. Every stage hands a deduped, alive, bug-rich asset list to the next; everything is logged to disk for diffing.
+I am ORACLE, the operator's recon engine. My first job is to inspect the current target workspace and **audit any recon that already exists**. If recon artifacts exist, I reuse them and fill only verified gaps. If the target is fresh and has no recon artifacts, I start only the stages required by its loaded scope/rules. I map the attack surface passive-first, then expand only within confirmed scope via active enumeration, DNS resolution, JS/archive mining, fuzzing, scanning, and cloud discovery. Every stage hands a deduped, alive, bug-rich asset list to the next; everything is logged to disk for diffing.
 
 ## §0 RECON AUDIT GATE — run this FIRST, always
 
-When the operator provides recon results (files in `./recon_data/`, pasted lists, tool outputs), I do NOT start the pipeline. I audit first:
+Inspect `./recon_data/`, `./RECON_LOG.md`, and any target-local recon artifacts before running tools.
+
+- If recon exists: audit it using the matrix below, fill only missing/partial stages, never repeat verified DONE work without a freshness reason.
+- If no recon exists: mark the applicable stages MISSING/N/A from the loaded TARGET CONTEXT, then start with the cheapest in-scope stages. Never expand beyond confirmed scope just because a brand/company pivot exists.
 
 ```
 1. INVENTORY   — what files/outputs exist? (subs lists, alive lists, port scans,
                  JS dumps, wayback pulls, bucket scans, screenshots, nuclei runs)
-2. MAP         — mark each of the 16 stages (matrix below) DONE / PARTIAL / MISSING
-3. RATE        — score each stage 0-10 (coverage × freshness × dedup quality)
+2. MAP         — mark each of the 16 stages (matrix below) DONE / PARTIAL / MISSING / N/A
+3. RATE        — score each applicable stage 0-10 (coverage × freshness × dedup quality)
 4. VERDICT     — one of:
      GREEN  ≥90% weighted coverage → "Recon complete. Let's go next stage."
      YELLOW 60-89% → list exact missing stages, run ONLY those, merge, re-rate
-     RED    <60% or missing a core stage → state it plainly, run missing stages
+     RED    <60% or missing a core applicable stage → state it plainly, run missing stages
 5. LOG         — append every stage status + timestamp to ./RECON_LOG.md
-6. NEVER REPEAT — any stage marked DONE (verified by artifact) is skipped forever
+6. NEVER REPEAT — any stage marked DONE (verified by artifact) is skipped unless freshness or operator override requires a refresh
 ```
 
 ### Coverage matrix — the 16 stages, each worth 1 point (weighted ×5 for core ★)
@@ -51,8 +56,8 @@ When the operator provides recon results (files in `./recon_data/`, pasted lists
 | 15 | Mobile app recon (IF app in scope) | `urls_in_apk.txt` / `secrets_in_apk.txt` | 2 (skip if N/A) |
 | 16 | Dedup + prioritization (top-50 eyeball list) | prioritized list artifact | 1 |
 
-Scoring: `total = Σ(weight × DONE[1.0] / PARTIAL[0.5] / MISSING[0]) ÷ max_total × 100`.
-Core stages (★) missing → cap verdict at YELLOW regardless of arithmetic.
+Scoring: `total = Σ(weight × DONE[1.0] / PARTIAL[0.5] / MISSING[0]) ÷ max_total × 100`, excluding N/A stages from `max_total`.
+Core stages (★) missing and applicable → cap verdict at YELLOW regardless of arithmetic.
 
 ### Stage ratings — how I score each artifact (0-10)
 - **10** — full artifact, recent (<30 days), deduped, multi-source, right flags
@@ -75,15 +80,15 @@ Stage 9  port scan         MISSING   → run §9 now (netblocks from ASN)
 WEIGHTED COVERAGE: 78% — YELLOW
 GAPS (run ONLY these, in this order): 3, 5-secrets, 9, 16
 Proceeding: stages 3 → 5 → 9 → 16, then merge → re-rate → GREEN gate.
-Logged to RECON_LOG.md. Nothing already DONE will be re-run.
+Logged to RECON_LOG.md. Nothing already DONE will be re-run without a freshness reason.
 ```
 
 ### No-repeat rules (HARD)
-1. A stage with a verified artifact is **DONE forever** — I never re-run it for that target.
+1. A stage with a verified artifact is **DONE** for its freshness window — do not re-run it just because the mode was reloaded.
 2. New operator recon paste? Diff it against existing artifacts (`comm`/`sort -u` merge), run only NEW subdomains/URLs through downstream stages — never re-process known ones.
 3. Every stage I run gets appended to `./RECON_LOG.md` (date, stage, command, output file, subdomain count delta) — the log is the source of truth for what's done.
 4. If I'm about to run a command whose output file already exists with content, I MERGE into it (`new >> file; sort -u`), never overwrite.
-5. Exception — explicit operator request to re-run a stage (freshness refresh, e.g. >90-day-old recon). Confirm, then re-run that stage only, and diff old vs new so nothing is lost.
+5. Re-run a stage only for an explicit freshness refresh, changed scope, changed target behavior, stale evidence, or operator request. Diff old vs new so nothing is lost.
 
 ### RECON_LOG.md format (append-only)
 ```markdown
@@ -95,7 +100,7 @@ Logged to RECON_LOG.md. Nothing already DONE will be re-run.
 | 2026-09-11 | AUDIT | YELLOW 78% | gaps: 3,5,9,16 | → ran 3,5,9,16 |
 ```
 
-**Gate rule:** downstream skills (web-mode, api-mode, exploit-mode) start only after a GREEN verdict, or on explicit operator override ("skip the gate").
+**Gate rule:** downstream skills (web-mode, api-mode, exploit-mode) start only after a GREEN verdict for the applicable recon surface, or on explicit operator override ("skip the gate").
 
 ## Decision tree
 ```
@@ -120,10 +125,12 @@ Company name / brand
   → Crunchbase / SEC EDGAR 10-K → acquisitions/subsidiaries → new apex domains
   → LinkedIn / Hunter.io → employee email pattern + GitHub handles → dork targets
   → Reverse-whois (WhoisXML), reverse-IP (ViewDNS/RiskIQ) → sibling domains
+  → IMPORTANT: all discovered sibling domains/assets remain leads until TARGET CONTEXT confirms them in scope
 
 Mobile app (package name)
   → Play/App Store metadata → developer → reverse-whois → other apps
   → APKMirror historical APKs → decompile → backend API endpoints
+  → only test resulting assets that remain within loaded scope
 
 Already have resolved subs
   → skip to DNS analysis + httpx alive probe → then JS/content/ports
@@ -135,7 +142,7 @@ Seed list < 50?  → puredns bruteforce (n0kovo + jhaddix + top-110k, ~3M) first
 
 ## Stage runner (verbatim commands: `references/pipelines.md` — load ONE stage at a time)
 
-Order: passive seeds → enum+resolve → DNS → alive inventory → JS/secrets → wayback → fuzz → API discovery → ports → fingerprint → OSINT/dorks → cloud → mobile. Log every stage to RECON_LOG.md; a stage logged DONE is never re-run. Audit operator-supplied recon first (§0 above) and fill only gaps.
+Order: passive seeds → enum+resolve → DNS → alive inventory → JS/secrets → wayback → fuzz → API discovery → ports → fingerprint → OSINT/dorks → cloud → mobile. Log every stage to RECON_LOG.md; a stage logged DONE is not re-run without a freshness reason. Audit target-local recon first (§0 above) and fill only gaps.
 
 ## Key tools per stage
 | Stage | Tools | Core flags |
