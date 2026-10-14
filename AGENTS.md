@@ -6,18 +6,15 @@ This repository provides shared OpenCode rules and skills. Real target data live
 <repo>/targets/<target>/
 ```
 
-Example:
+A new target can start with only:
 
 ```text
 <repo>/targets/vinted/
-  scope.txt          # or scope/program CSV
+  scope.txt          # OR a scope/program CSV export
   rules.txt
-  STATE.md           # created/updated as work progresses
-  recon_data/
-  findings.md
-  lessons.md
-  RECON_LOG.md
 ```
+
+That is enough. The model may create `STATE.md`, `recon_data/`, `findings.md`, `lessons.md`, and `RECON_LOG.md` later when they become useful. `_template/` is optional convenience, not a required workflow.
 
 Open OpenCode from inside the target folder. `.opencode/` at repository root supplies the shared skills/rules.
 
@@ -28,8 +25,8 @@ At session start, follow `.opencode/rules/HUNT_RULES.md §0`:
 1. infer the active target from `targets/<target>/`;
 2. read `rules.txt` first;
 3. load `scope.txt` or the available scope CSV;
-4. inspect existing state/recon/findings before doing new work;
-5. keep all new artifacts inside the active target folder.
+4. inspect existing state/recon/findings if they exist;
+5. create working artifacts only as needed and keep them inside the active target folder.
 
 `targets/` is gitignored. Never commit target recon, credentials, loot, or program data to this repository.
 
