@@ -1,82 +1,109 @@
-name: Audit OpenCode skills
+name: Repair OpenCode skills
 
 on:
   push:
     branches:
       - repair/opencode-skills-clean
+    paths:
+      - .github/workflows/audit-opencode-skills.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  audit:
+  repair:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Audit local and upstream references
+        with:
+          fetch-depth: 0
+      - name: Restore only missing files referenced by skills
         shell: bash
         run: |
           set -euo pipefail
           rm -rf /tmp/upstream
-          git clone --quiet --depth 1 https://github.com/0xN0RMXL/BugBountySkills.git /tmp/upstream
+          git clone --quiet https://github.com/0xN0RMXL/BugBountySkills.git /tmp/upstream
+          git -C /tmp/upstream checkout --quiet 0accf5fdc71ec7f03273aebb99268a8609f8dfd4
+
           python3 - <<'PY'
           from pathlib import Path
-          import re
+          import re, shutil
 
           root = Path('.opencode/skills')
           upstream = Path('/tmp/upstream')
-          rel_rx = re.compile(r'(?<![A-Za-z0-9_./-])(references/[A-Za-z0-9_.+ /-]+?\.(?:md|txt|py|sh|yaml|yml|json))')
           src_rx = re.compile(r'(?<![A-Za-z0-9_./-])(SKILL_FILES/[A-Za-z0-9_.+ /-]+?\.(?:md|txt|py|sh|yaml|yml|json))')
+          rel_rx = re.compile(r'(?<![A-Za-z0-9_./-])(references/[A-Za-z0-9_.+ /-]+?\.(?:md|txt|py|sh|yaml|yml|json))')
 
-          missing_rel = []
-          missing_src = []
-          outside_deep = []
+          restored = []
+          unresolved = []
 
+          # Restore every SKILL_FILES/... path exactly where that skill expects it.
           for f in sorted(root.rglob('*.md')):
+              skill_root = root / f.parts[2]
               text = f.read_text(encoding='utf-8', errors='replace')
-              lines = text.splitlines()
-              skill = f.parts[2]
-              skill_root = root / skill
-              deep_line = None
-              for i, line in enumerate(lines, 1):
-                  if re.match(r'^##+\s+Deep-dive files\s*$', line.strip(), re.I):
-                      deep_line = i
-                      break
+              for ref in sorted(set(src_rx.findall(text))):
+                  ref = ref.strip()
+                  dst = skill_root / ref
+                  if dst.exists():
+                      continue
+                  src = upstream / ref
+                  if not src.exists():
+                      unresolved.append((str(f), ref, 'missing upstream source'))
+                      continue
+                  dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(src, dst)
+                  restored.append((str(dst), ref))
 
-              for lineno, line in enumerate(lines, 1):
-                  for ref in rel_rx.findall(line):
-                      ref = ref.strip()
-                      if not (skill_root / ref).exists():
-                          missing_rel.append((skill, str(f), lineno, ref))
-                  for ref in src_rx.findall(line):
-                      ref = ref.strip()
-                      local_target = skill_root / ref
-                      if not local_target.exists():
-                          up_exists = (upstream / ref).exists()
-                          missing_src.append((skill, str(f), lineno, ref, up_exists))
-                          if deep_line is None or lineno < deep_line:
-                              outside_deep.append((skill, str(f), lineno, ref, up_exists))
+          # One real deleted relative reference found by the audit.
+          payload_dst = root / 'payloads/references/6-rce-command-injection-by-language.md'
+          payload_src = upstream / 'SKILL_FILES/PAYLOADS/rce_payloads_all_langs.md'
+          if not payload_dst.exists():
+              if not payload_src.exists():
+                  unresolved.append(('.opencode/skills/payloads/SKILL.md', 'references/6-rce-command-injection-by-language.md', 'missing upstream source'))
+              else:
+                  payload_dst.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(payload_src, payload_dst)
+                  restored.append((str(payload_dst), 'SKILL_FILES/PAYLOADS/rce_payloads_all_langs.md'))
 
-          print('=== BROKEN RELATIVE references/... ===')
-          for x in missing_rel:
-              print('MISSING_REL | %s | %s:%d | %s' % x)
-          print('MISSING_REL_COUNT=' + str(len(missing_rel)))
+          print(f'RESTORED_COUNT={len(restored)}')
+          for dst, src in restored:
+              print(f'RESTORED | {dst} <- {src}')
+          if unresolved:
+              for row in unresolved:
+                  print('UNRESOLVED | ' + ' | '.join(row))
+              raise SystemExit(2)
 
-          print('=== MISSING SKILL_FILES/... RELATIVE TO EACH SKILL ===')
-          for skill, owner, lineno, ref, up in missing_src:
-              print(f'MISSING_SRC | {skill} | upstream={str(up).lower()} | {owner}:{lineno} | {ref}')
-          print('MISSING_SRC_COUNT=' + str(len(missing_src)))
+          # Final integrity audit: every local references/... and SKILL_FILES/... mention must resolve inside its skill.
+          missing = []
+          for f in sorted(root.rglob('*.md')):
+              skill_root = root / f.parts[2]
+              text = f.read_text(encoding='utf-8', errors='replace')
+              for ref in sorted(set(rel_rx.findall(text))):
+                  ref = ref.strip()
+                  if not (skill_root / ref).exists():
+                      missing.append((str(f), ref))
+              for ref in sorted(set(src_rx.findall(text))):
+                  ref = ref.strip()
+                  if not (skill_root / ref).exists():
+                      missing.append((str(f), ref))
 
-          print('=== MISSING SKILL_FILES refs OUTSIDE Deep-dive section ===')
-          for skill, owner, lineno, ref, up in outside_deep:
-              print(f'OUTSIDE_DEEP | {skill} | upstream={str(up).lower()} | {owner}:{lineno} | {ref}')
-          print('OUTSIDE_DEEP_COUNT=' + str(len(outside_deep)))
-
-          print('=== SUMMARY BY SKILL ===')
-          skills = sorted({p.name for p in root.iterdir() if p.is_dir()})
-          for skill in skills:
-              mr = sum(1 for x in missing_rel if x[0] == skill)
-              ms = sum(1 for x in missing_src if x[0] == skill)
-              od = sum(1 for x in outside_deep if x[0] == skill)
-              print(f'SKILL | {skill} | missing_relative={mr} | missing_skill_files={ms} | outside_deep={od}')
+          print(f'FINAL_MISSING_COUNT={len(missing)}')
+          for owner, ref in missing:
+              print(f'MISSING | {owner} | {ref}')
+          if missing:
+              raise SystemExit(3)
           PY
+
+      - name: Commit only OpenCode skill repairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- .opencode/skills)" ]; then
+            echo 'No skill repairs needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .opencode/skills
+          git commit -m 'fix: restore missing OpenCode skill support files'
+          git push origin HEAD:repair/opencode-skills-clean
