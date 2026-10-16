@@ -1,108 +1,90 @@
-# SKILL: Authentication Bypass (logic / SQLi-in-login / SSO / SAML / OAuth / 2FA-precomputed / cache key)
+# Authentication Bypass — reasoning guide
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (authentication bypass (logic / sqli-in-login / sso / saml / oauth / 2fa-precomputed / cache key)) or pasted request matching this class
+Use this file when evidence suggests the application may accept an unauthenticated or insufficiently authenticated actor as a stronger identity. Do not treat this as a generic 403-bypass or header/payload checklist.
 
----
+## Goal
 
-## IDENTITY IN THIS SKILL
-Pre-auth bypasses are the highest-value bugs in any program. I scan login flow for parsing inconsistencies, race conditions, and cache poisoning before brute-force.
+Identify the application's **authentication state machine** and determine whether any transition to an authenticated/privileged state can occur without satisfying the intended proof of identity.
 
----
+Authentication bypass is about a broken identity proof or state transition, not merely receiving HTTP 200.
 
-## DETECTION
-(see exploitation)
+## Model the flow first
 
-## EXPLOITATION
-### Bypass via SQL/NoSQL in login
-- See `sqli_all_types.md` payloads.
+For the specific flow under test, map:
 
-### Path normalization bypass
-```
-GET /admin                      → 403
-GET /admin/                     → 200
-GET /admin..;/                  → 200 (Tomcat)
-GET /admin/.                    → 200
-GET /%2e/admin                  → 200
-GET /admin%20                   → 200
-GET /;param=1/admin             → 200
-GET //admin                     → 200
-GET /admin#                     → 200
-GET /admin?                     → 200
-```
+- actor state: logged out, partially authenticated, remembered device, password-verified, MFA-pending, fully authenticated, recovery state, SSO callback state, etc.
+- credential/proof presented at each step,
+- server-side session/token changes after each step,
+- redirect/callback parameters and one-time state,
+- which component enforces each check: edge/WAF, frontend, gateway, app, identity provider, backend service,
+- the protected action/data that demonstrates successful authentication.
 
-### Header-based bypass
-```
-X-Original-URL: /admin
-X-Rewrite-URL: /admin
-X-Forwarded-For: 127.0.0.1
-X-Forwarded-Host: localhost
-X-Custom-IP-Authorization: 127.0.0.1
-X-Originating-IP: 127.0.0.1
-X-Real-IP: 127.0.0.1
-X-Remote-IP: 127.0.0.1
-X-Remote-Addr: 127.0.0.1
-X-ProxyUser-Ip: 127.0.0.1
-Forwarded: for=127.0.0.1
-True-Client-IP: 127.0.0.1
-Cluster-Client-IP: 127.0.0.1
-CF-Connecting-IP: 127.0.0.1
-```
+The useful question is: **what fact does the server trust as proof that a prior authentication step really happened?**
 
-### HTTP method swap
-`GET /admin` → 403 ; `POST /admin` → 200; or `OPTIONS /admin` → 200; or `TRACE` returns body.
+## Minimal hunt loop
 
-### HTTP/2 vs HTTP/1.1 differential
-WAF only inspects HTTP/1.1 → request /admin via HTTP/2.
+1. Capture one normal control flow from unauthenticated to the strongest state legitimately available.
+2. Identify the server-visible state transition at each step.
+3. Change one assumption at a time: omit, replay, reorder, substitute, downgrade, cross-account swap, stale-state reuse, or alternate protocol/path only when the observed architecture makes it plausible.
+4. Compare the resulting server-side identity and authorization state, not just status codes.
+5. Confirm bypass by accessing an action/data set that genuinely requires the stronger identity.
+6. Falsify benign explanations such as public fallback content, cached responses, frontend-only redirects, stale browser state, anonymous sessions, or an error body returned with 200.
 
-### Same path different host
-Vhost confusion: `Host: admin.target.com` from external IP if internal nginx routes by Host header.
+## High-signal questions
 
-### Default creds
-```
-admin / admin
-admin / password
-admin / 123456
-admin / changeme
-root / root
-test / test
-guest / guest
-admin / target.com
-admin / Spring2024!
-```
+Prefer questions derived from the application over generic tricks:
 
-### Race condition login
-Submit login + 2FA confirm in the same window before MFA enforcement check.
+- Can step N be reached without a server record proving step N-1?
+- Is a password/MFA/recovery result bound to the same account/session that consumes it?
+- Can a proof generated for actor A be replayed or attached to actor B?
+- Can a stale or parallel authentication flow overwrite a newer security state?
+- Does a callback trust user-controlled identity/account fields rather than the verified identity from the IdP?
+- Does an alternate endpoint/version enforce a weaker authentication precondition for the same protected action?
+- Does the edge enforce something that the origin itself does not, creating a real parser/routing discrepancy?
 
-## PAYLOADS (real, copy-paste, grouped)
-(see above)
+Only investigate method/header/path/protocol normalization when evidence suggests multiple enforcement layers or routing disagreement. Do not spray bypass headers by default.
 
-## BYPASS TECHNIQUES
-(method/header/path encoding/encoding tier — see above)
+## Recovery, MFA, SSO and remembered-state boundaries
 
-## CHAIN POTENTIAL
-Auth bypass → ATO → tenant takeover.
+Treat these as distinct protocols. Record what binds each artifact to:
 
-## TOOLS
-ffuf with header wordlist; Burp Param Miner; ja3/jarm differential; sqlmap on login fields.
+- account,
+- session/browser,
+- challenge,
+- nonce/state,
+- redirect URI/client,
+- device,
+- expiration/use count.
 
-## COMMANDS
-```bash
-# 403 bypasser
-ffuf -u 'https://target/admin' -H 'X-Original-URL: /admin' -mc 200,302
-# Method bruter
-for m in GET POST PUT PATCH DELETE OPTIONS HEAD TRACE PROPFIND; do
-  echo -n "$m: "; curl -sk -o /dev/null -w '%{http_code}\n' -X $m https://target/admin
-done
-```
+A weak binding is a candidate only if it can move an attacker into a stronger identity state.
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Some 200 responses are actually error pages with 200 status. Check body, not just status.
+For MFA, distinguish "primary credential accepted" from "fully authenticated". For SSO, distinguish identity-provider success from application account binding. For recovery, distinguish account discovery from actual control.
 
-## TRIAGE ANGLE (per platform)
-Show authenticated-only data extracted via the bypass.
+## Evidence contract
 
-## SEVERITY & CVSS
-8.5–9.8 depending on access gained.
+A validated auth bypass should show:
 
-## REFERENCES
-PortSwigger Auth • PayloadsAllTheThings/Authentication
+1. initial attacker state,
+2. expected authentication prerequisite,
+3. exact altered/missing/replayed transition,
+4. server-side evidence of the stronger identity/session,
+5. protected action/data proving the bypass,
+6. a clean control where the prerequisite is enforced normally,
+7. the strongest plausible benign explanation tested and rejected.
+
+Do not score severity here; pass demonstrated access/impact facts to `reporting-mode`.
+
+## Stop conditions
+
+Reject or park when:
+
+- only the HTTP status changes while the protected body/action remains unavailable,
+- a frontend route is reachable but backend data/actions remain protected,
+- behavior depends on the researcher's already-authenticated browser state,
+- an alternate method/path returns generic/public content only,
+- the observed difference is solely WAF/CDN behavior with no origin-side privilege change,
+- the candidate cannot be reproduced from a clean-enough auth state.
+
+## References on demand
+
+Load protocol-specific material only when needed: OAuth/OIDC -> `oauth_misconfig.md`, SAML -> `saml_attacks.md`, MFA -> `2fa_mfa_bypass.md`, JWT -> `jwt_attacks.md`. Use payload/header/path reference material only after the architecture gives a concrete reason to test that differential.
