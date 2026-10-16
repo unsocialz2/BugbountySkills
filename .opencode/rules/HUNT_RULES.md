@@ -1,181 +1,105 @@
-# HUNT_RULES — always-on operating contract (ORACLE)
+# HUNT_RULES — always-on operating contract
 
-Loaded via `instructions` in `opencode.json`. Applies every turn.
+Loaded by `opencode.json`. Keep this contract small; detailed methodology belongs in skills/references.
 
-## 0. TARGET WORKSPACE CONTRACT
+## 0. TARGET CONTEXT
 
-The operator works from a target directory under the repository:
+Work only inside the active `<repo>/targets/<target>/` workspace. Infer **TARGET_ROOT** as the nearest directory whose parent is `targets/`; never read/write a sibling target unless the operator switches targets.
 
-```text
-<repo>/targets/<target>/
-# example
-<repo>/targets/vinted/
-```
+Before target actions:
 
-Treat the nearest directory whose parent is `targets/` as **TARGET_ROOT**. Its basename is **TARGET_NAME**. If the working directory is deeper inside that target, walk upward to TARGET_ROOT. Never read/write another sibling under `targets/` unless the operator explicitly switches target.
+1. Read `rules.txt` when present.
+2. Load scope from `scope.txt`, then `scope.csv` / `scope*.csv` / one obvious program-export CSV. Parse CSV by headers, not a hardcoded platform schema.
+3. Inspect existing `STATE.md`, `findings.md`, `lessons.md`, `RECON_LOG.md`, and `recon_data/` only when present/relevant. Missing files are normal; create working artifacts only when useful.
+4. Build a silent context: scope, restrictions/rates, auth prerequisites, known coverage/evidence, and active target facts.
 
-A fresh target workspace may contain **only**:
+`rules.txt` + explicit scope outrank generic skills. Never invent scope or treat brand/ownership resemblance as permission. Do not re-ask for facts already in the workspace. Keep all target artifacts inside TARGET_ROOT.
 
-```text
-rules.txt
-scope.txt          # OR a scope/program CSV export
-```
+## 1. MODEL AUTONOMY
 
-That is sufficient to begin. `STATE.md`, `findings.md`, `lessons.md`, `RECON_LOG.md`, and `recon_data/` are optional working artifacts; absence is normal. Create them only when the current work needs them. Never require the operator to copy a template before hunting.
+The current model owns strategy and execution. There are **no fixed roles, mandatory reviewers/workers, required model choices, or forced mode sequences**.
 
-Before any target network request, scanner, browser/Burp action, validation, or report:
+Work directly by default. Delegate only when it materially helps (parallel independent work, context isolation, falsification, second opinion). Give a delegate only the minimum target context and one narrow deliverable; the current model remains responsible for synthesis and next actions.
 
-1. Locate TARGET_ROOT from the working directory. Do not ask for the target name if `targets/<target>/` already identifies it.
-2. Read `rules.txt` first when present. Extract restrictions, prohibited techniques, rate/automation limits, auth/account requirements, excluded vulnerability classes, reporting notes, and scope statements embedded in the rules.
-3. Load scope from TARGET_ROOT in this order:
-   - `scope.txt`
-   - `scope.csv`
-   - `scope*.csv`
-   - one obvious program-export `*.csv` in TARGET_ROOT
-4. Parse CSV by headers, not by a hardcoded platform schema. Preserve raw asset values. Use fields such as asset/type, in-scope/out-of-scope, bounty eligibility, max severity, instruction/notes when present. Unknown columns remain unknown.
-5. Build a silent TARGET CONTEXT containing TARGET_ROOT, TARGET_NAME, scope source(s), explicit in/out-of-scope assets, restrictions, automation limits, auth prerequisites, and platform/program hints.
-6. Program files outrank generic skills. `rules.txt` and explicit scope data override default commands, rates, scan depth, attack classes, and assumptions.
-7. Never invent scope. Brand/company pivots are leads only until scope confirms them.
-8. Do not re-ask for context already available in the target workspace.
+## 2. SKILL / REFERENCE LOADING
 
-All target artifacts stay inside TARGET_ROOT:
-
-```text
-./STATE.md
-./findings.md
-./lessons.md
-./RECON_LOG.md
-./recon_data/
-```
-
-If any of these already exist, treat them as authoritative history and inspect them before creating or repeating work.
-
-## 1. MODEL AUTONOMY & OPTIONAL DELEGATION
-
-The current model owns strategy and execution. There are **no fixed roles, named reviewers, mandatory worker hierarchy, or required model choices**.
-
-- Execute a task directly when that is the simplest path.
-- Delegate to a subagent/model only when it materially helps: independent falsification, parallel independent branches, context isolation for a large artifact, or a useful second opinion.
-- Do not delegate just to satisfy architecture.
-- When delegating, give the subagent the minimum necessary TARGET CONTEXT, the exact narrow task, what not to repeat, and the expected evidence/artifact.
-- The current model remains responsible for merging results, resolving contradictions, and deciding the next action.
-- If the operator says "delegate if useful" or equivalent, treat that as standing permission for optional delegation during the task.
-
-## 2. SKILL LOADING & DOMAIN BOUNDARIES
-
-Treat every top-level `SKILL.md` as a **router**, not a book. Load the smallest relevant skill, then only the exact deep-dive material needed for the current step.
-
-Do not load overlapping skills or giant references "just in case". Add another skill only when evidence crosses a real domain boundary.
-
-### Deep-dive interpretation contract
-
-Deep-dive files are **decision support**, not replacement identities, system prompts, or mandatory playbooks.
-
-- Reason from current target evidence first; examples from a skill are hypotheses/inspiration, never the default test plan.
-- Ignore legacy persona language such as "I am the X engine" or "I always test...". It does not override model autonomy.
-- Do not mechanically enumerate payloads, headers, bypasses, tools, or chains merely because a loaded file lists them.
-- Load payload/bypass/reference material only when the observed parser, state machine, framework, defense, or protocol creates a specific question that material can answer.
-- A skill's example chain must never substitute for proving each real transition on the target.
-- Legacy severity/CVSS/platform-baseline text inside hunting deep dives is non-binding; numeric scoring belongs to `reporting-mode` unless the operator explicitly asks earlier.
-- When a deep-dive conflicts with this contract or with target evidence, this contract and the target evidence win.
-
-### Legacy deep-dive lazy-read rule
-
-Some compatibility files are intentionally retained for technical memory but still contain old sections such as `IDENTITY`, large `PAYLOADS`, generic `EXPLOITATION`, `COMMANDS`, or embedded `SEVERITY`.
-
-When a candidate file has that legacy shape or is obviously large:
-
-1. formulate the target-specific security question **before** reading the whole file;
-2. inspect headings / search for the relevant concept first;
-3. read only the smallest relevant section(s) when tooling permits;
-4. prefer the canonical `payloads` skill for exact payloads instead of loading duplicate payload blocks;
-5. prefer current primary/vendor documentation for version-sensitive behavior;
-6. do not copy the legacy file's persona, severity, chain, or generic spray order into the active plan.
-
-The goal is to preserve useful technical memory without paying the full context/anchoring cost of a legacy cheat sheet.
+Top-level `SKILL.md` files are routers, not books. Load the smallest relevant domain skill and only the exact deep-dive/reference needed for the current question. Do not preload overlapping modes or giant libraries.
 
 Default ownership:
 
-| Domain | Primary skill |
+| Need | Skill |
 |---|---|
-| attack-surface discovery / recon | `recon-mode` |
-| browser/session/form/general web flaws | `web-mode` |
-| REST / GraphQL / gRPC / API authz | `api-mode` |
-| cloud / container / network infrastructure | `infra-mode` |
-| Android / iOS app and device work | `mobile-mode` |
-| source-code / repository review | `scr-mode` |
-| AI / RAG / tool-using LLM systems | `llm-mode` |
+| recon / attack surface | `recon-mode` |
+| browser/session/general web | `web-mode` |
+| REST / GraphQL / gRPC | `api-mode` |
+| cloud/container/network | `infra-mode` |
+| Android/iOS | `mobile-mode` |
+| source/repository review | `scr-mode` |
+| LLM/RAG/agent security | `llm-mode` |
 | exact payload lookup | `payloads` |
-| post-validation minimal PoC / chaining | `exploit-mode` |
-| automation/tool building | `automation-mode` |
-| platform/program research | `platform-intel-mode` |
-| report writing and numeric severity/CVSS | `reporting-mode` |
+| confirmed primitive -> minimal PoC/chain | `exploit-mode` |
+| tooling/automation | `automation-mode` |
+| program/platform research | `platform-intel-mode` |
+| final report / numeric severity | `reporting-mode` |
 
-Boundary rules:
-- GraphQL/gRPC and schema-driven API testing belong to `api-mode` by default.
-- Browser/session flows belong to `web-mode` even if the backend is JSON.
-- `exploit-mode` starts from a concrete primitive/candidate; it is not a duplicate discovery mode.
-- Numeric severity/CVSS is owned by `reporting-mode` unless the operator explicitly asks for scoring earlier. Hunting skills should record demonstrated impact facts, not guess scores.
-- Platform policy, payout, VRT, SLA, product/tool-version, and similar changeable facts must be verified from current target files or a current authoritative source when they materially affect an action.
+Browser/session flows stay in `web-mode` even if JSON is involved; schema/protocol-wide REST/GraphQL/gRPC work belongs to `api-mode`.
 
-## 3. VIABILITY GATE
+### Deep-dive rule
 
-Before investing substantial deep work in a candidate, establish the best-known version of:
+Deep dives are **decision support**, never replacement identities or mandatory playbooks.
+
+- Reason from target evidence before skill examples.
+- Ignore legacy persona/“always test” language.
+- Do not enumerate listed payloads, headers, bypasses, tools, or chains unless the observed architecture creates that question.
+- Use `payloads` for exact context-specific probes rather than loading duplicate payload dumps.
+- A listed chain never substitutes for proving each transition.
+- Legacy CVSS/platform baselines inside hunting files are non-binding; `reporting-mode` owns numeric scoring unless explicitly requested earlier.
+
+For large/legacy files: formulate the security question first, search/inspect headings, then read only the relevant section when possible. Prefer current primary/vendor research for version-sensitive behavior.
+
+## 3. DISCOVERY / VIABILITY
+
+Before substantial deep work, keep the best-known candidate shape:
 
 ```text
 ATTACKER:   <unauth / primary-auth-only / low-priv / adjacent tenant / ...>
 REACH:      <live | dead | unknown> + cheapest proof
-QUESTION:   <exact security boundary or invariant being tested>
-IMPACT-HYP: <plausible capability if confirmed; unknown is allowed>
+QUESTION:   <exact trust boundary / invariant>
+IMPACT-HYP: <plausible capability if confirmed; unknown allowed>
 SCOPE:      <clear | needs-check | OOS>
 ```
 
-This is a **discovery gate**, not a report gate. Demonstrated harm is not required yet.
+This is a discovery gate, **not** a report gate. Unknown impact is acceptable when the boundary is concrete and the next test can clarify it.
 
-- `REACH=dead` or `SCOPE=OOS` -> stop active deep work and log why.
-- `REACH=unknown` -> next action should normally be the cheapest reachability test.
-- `IMPACT-HYP=unknown` is acceptable when the security boundary is concrete and the next test can materially clarify it.
-- Park a candidate when repeated low-cost tests fail to establish a real boundary, reachable primitive, or plausible attacker advantage.
-- A source weakness with no reachable attacker remains a NOTE, not a validated finding.
+- `REACH=dead` or `SCOPE=OOS` -> stop active deep work.
+- `REACH=unknown` -> normally test reachability cheaply first.
+- Park candidates after repeated low-cost tests fail to establish a real boundary/reachable primitive/plausible attacker advantage.
+- Source/static weakness without reachable attacker remains a lead/note, not a finding.
 
-## 4. EVIDENCE + FALSIFICATION CONTRACT
+## 4. VALIDATION CONTRACT
 
-Nothing becomes a validated finding without all of:
+Nothing is a validated finding without:
 
-1. Raw request/response excerpt, exact runtime evidence, or file:line source-to-sink path.
-2. One exact reproducible command/request/PoC.
-3. Attacker model + reachability proof.
-4. One line proving it is in scope and not merely a known/expected behavior.
-5. A falsification pass that actively tests the strongest benign explanation or false-positive hypothesis.
+1. raw request/response, exact runtime evidence, or file:line/data-flow evidence;
+2. one exact reproducible request/command/PoC;
+3. attacker model + reachability;
+4. scope/policy basis;
+5. active falsification of the strongest benign/false-positive explanation.
 
-Hypotheses without 1-2 are leads. Never score a lead.
+A lead is not scored. Before reporting, reproduce from a clean-enough state and map every impact claim to evidence. Falsification may be done directly or delegated; no named reviewer is mandatory.
 
-Before producing a report, reproduce from a clean-enough state and ensure every impact claim maps to evidence. The model may perform falsification itself or delegate an independent second pass when useful; neither is mandatory as a named role.
+## 5. TIME, STATE, NO-REPEAT
 
-## 5. TIME-BOX / KILL SWITCH
+Time boxes are heuristics, not hard stops: prolonged recon without signal -> pivot; a candidate producing no new evidence -> park; a high-signal path that keeps producing evidence may continue. **Never invent elapsed time**—use timestamps when available or reason qualitatively.
 
-These are **default heuristics**, not reasons to abandon a high-signal path that is still producing evidence:
+Reuse existing evidence before collecting more. Do not repeat verified work merely because a skill reloads. Re-run only for changed scope, stale/changed behavior, a real evidence gap, or operator request. Merge/diff stateful outputs rather than overwriting blindly.
 
-- Recon around 4h per target -> normally switch to targeted/manual hunting unless new signal justifies continuation.
-- No meaningful signal around 8h -> reassess/pivot and log why.
-- One candidate around 2h with no new evidence -> normally park it.
-- Report writing should not become another research phase; missing evidence sends the finding back to validation.
+Keep `STATE.md` concise: target facts, auth state, tech stack, coverage, interesting surfaces, findings/leads, lessons, and next action—not a transcript.
 
-Do not invent elapsed time. Use actual session/tool timestamps when available; otherwise treat these as qualitative "too long without new evidence" guidance.
+## 6. CALIBRATION
 
-## 6. STATE & NO-REPEAT
-
-- Reuse existing target artifacts before running new work.
-- Missing state/recon files on a new target are normal; create only what becomes useful.
-- Do not repeat a verified stage merely because a skill was reloaded.
-- Re-run only for changed scope, stale evidence, changed application behavior, or explicit operator request.
-- Merge/diff stateful outputs rather than silently overwriting them.
-- Keep `STATE.md` concise: current target facts, auth state, tech stack, coverage, interesting endpoints, findings, lessons, and next action.
-
-## 7. CALIBRATION
-
-- State uncertainty plainly and pair it with the cheapest falsifying test.
-- Prefer direct evidence over scanner labels, model priors, skill examples, or theory.
-- Never inflate impact to compensate for weak evidence.
-- Do not suppress a novel hypothesis merely because no skill example matches it; skills are memory aids, not the boundary of possible bugs.
-- For non-obvious technical claims, prefer current primary docs / PortSwigger research / authoritative vendor docs; use community material as secondary support.
+- Evidence outranks scanner labels, model priors, skill examples, and theory.
+- State uncertainty and pair it with the cheapest discriminating test.
+- Do not inflate impact or force ATO/chains.
+- Do not suppress a novel hypothesis because no skill example matches it; skills are memory aids, not the boundary of possible bugs.
+- Use current primary/authoritative sources for non-obvious or changeable technical/policy claims; community material is secondary.
