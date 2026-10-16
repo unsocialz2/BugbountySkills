@@ -1,65 +1,83 @@
-# SKILL: 2FA / MFA Bypass
+# 2FA / MFA Bypass — state and binding reasoning guide
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (2fa / mfa bypass) or pasted request matching this class
+Use this file when the product has a distinct multi-factor or step-up authentication state and evidence suggests that state may not be enforced consistently.
 
----
+MFA bypass is not "find any endpoint that works before OTP." The question is whether the server accepts an action that should require a stronger authentication state without the intended second factor.
 
-## IDENTITY IN THIS SKILL
-MFA layers fail in many places: missing on critical endpoints, brute-able codes, race conditions, response manipulation, code reuse, fallback weakness.
+## Goal
 
----
+Model how the application represents MFA state, what the second factor is bound to, and which actions require that state.
 
-## DETECTION
-Map every authenticated endpoint after MFA. Strip MFA cookie/header — does sensitive action still succeed?
+## Map the MFA state machine
 
-## EXPLOITATION
-1. **MFA missing on sensitive endpoints** — `/api/email/change`, `/api/2fa/disable`, `/api/password/change` reachable with auth-only cookie pre-MFA.
-2. **Brute-force code** — no rate-limit on `/api/2fa/verify`. 6-digit = 10⁶; race: 100 req/sec finishes in 167min (often in scope).
-3. **Response manipulation** — change `{"verified":false}` → `{"verified":true}` in response (only works if client trusts JSON, which is a bug class itself).
-4. **Status code swap** — 401 → 200; client redirects on 200 only.
-5. **Multiple session token reuse** — verify with one token, but the pre-MFA token still grants full access.
-6. **Code reuse** — same code valid across multiple verify calls.
-7. **Race condition** — submit verify + sensitive action in parallel; pre-MFA token may complete the action before MFA check.
-8. **Backup code list** — predictable backup codes; or admin-resettable.
-9. **SMS fallback** — request OTP via SMS to attacker number after a phone-number-change endpoint that itself is MFA-not-required.
-10. **OAuth bypass** — sign in via Google account that already verifies email; 2FA enforcement may not apply to OAuth path.
+For the relevant flow, record:
 
-## PAYLOADS (real, copy-paste, grouped)
-(behavior-based — see above)
+- primary-authenticated but MFA-pending state,
+- fully authenticated state,
+- remembered/trusted device state if present,
+- step-up state for especially sensitive actions,
+- recovery/fallback state,
+- session/token/cookie changes between these states,
+- what account/challenge/session/device each verification artifact is bound to.
 
-## BYPASS TECHNIQUES
-- Send `code: ''` (empty) — sometimes parses as bypass.
-- Send `code: null` (json) — same.
-- Send `code: [1,2,3]` (array) — type confusion in some frameworks.
-- Send the OTP twice to verify and to reset endpoints simultaneously.
-- Replace `code` with `code[]=` array.
+The key question is: **what server-side evidence proves that this exact session/account completed the required factor?**
 
-## CHAIN POTENTIAL
-MFA bypass → ATO; or MFA bypass → admin → tenant takeover.
+## Minimal hunt loop
 
-## TOOLS
-Turbo Intruder for race conditions; Burp Repeater; intruder for code brute.
+1. Capture one normal MFA flow and note all server-visible state changes.
+2. Identify one protected action that demonstrably requires the stronger state.
+3. Change one assumption at a time: skip, replay, reorder, cross-session swap, stale-state reuse, alternate login path, or recovery/fallback path only when the architecture makes it plausible.
+4. Verify whether the server-side authentication state actually changes or whether only the UI changes.
+5. Confirm the result by performing the protected action from the tested state.
+6. Falsify benign explanations such as remembered-device policy, grace periods, already-elevated sessions, account-specific MFA exemptions, or cached frontend state.
 
-## COMMANDS
-```python
-# Turbo Intruder template for code brute
-def queueRequests(target, wordlists):
-    engine = RequestEngine(endpoint=target.endpoint, concurrentConnections=20)
-    for i in range(0, 1000000):
-        engine.queue(target.req, str(i).zfill(6))
-def handleResponse(req, interesting):
-    if 'success' in req.response or req.status == 200:
-        table.add(req)
-```
+## Binding questions
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Some 2FA failures simply set a session flag — need to chain with another request to manifest.
+High-signal questions include:
 
-## TRIAGE ANGLE (per platform)
-Show end-to-end ATO without OTP knowledge.
+- Is the factor result bound to the same account that consumes it?
+- Is it bound to the same session/browser/challenge?
+- Can a proof from one parallel login flow affect another?
+- Does verification upgrade only one token/session, or are weaker sessions accidentally treated as upgraded too?
+- Are alternate login methods subject to the same MFA policy?
+- Does disabling/changing MFA require a state at least as strong as enabling it?
+- Are recovery/fallback flows equivalent in assurance to the normal MFA path?
+- Are step-up requirements checked server-side on the sensitive action itself?
 
-## SEVERITY & CVSS
-8.5–9.5.
+Do not brute-force or flood verification endpoints unless program rules explicitly allow it and the security question actually depends on rate limiting. Prefer low-volume evidence about binding and state enforcement first.
 
-## REFERENCES
-2FA Bypass.pdf (uploaded) • HackTricks 2FA bypass • bb_kb/Account_Takeover/
+## Recovery and fallback
+
+Treat backup codes, support recovery, trusted devices, alternate identity providers, and phone/email fallback as separate authentication protocols. Analyze their guarantees directly instead of assuming they are weaker.
+
+A fallback path is only a bypass if it grants the same protected state without satisfying the product's intended assurance level.
+
+## Evidence contract
+
+A validated MFA bypass should show:
+
+1. starting auth state,
+2. factor normally required,
+3. exact altered/skipped/replayed transition,
+4. resulting server-side auth state,
+5. protected action proving the stronger state was accepted,
+6. normal control path where the factor is enforced,
+7. account/session/challenge binding evidence,
+8. strongest benign explanation tested and rejected.
+
+Do not jump directly to ATO. If the bypass only grants a narrower action, record that narrower impact. Use `account_takeover_chains.md` only when an evidence-backed account-control path remains.
+
+## Stop conditions
+
+Reject or narrow when:
+
+- only client-side navigation changes,
+- the sensitive backend action still enforces MFA/step-up,
+- the tested session was already trusted/elevated,
+- alternate login is intentionally exempt by documented policy and does not weaken another boundary,
+- a stale code/session response does not result in stronger server-side capability,
+- no second principal or protected security action is affected.
+
+## Cross-skill use
+
+Use `auth_bypass_all_types.md` for the wider login state machine, `rate_limiting_bypass.md` only when rate limiting is the actual boundary under test, OAuth/SAML/JWT files for protocol-specific questions, and `account_takeover_chains.md` only after a real primitive is confirmed.
