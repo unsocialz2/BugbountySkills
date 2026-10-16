@@ -1,65 +1,100 @@
-# SKILL: IDOR / BOLA / BFLA (Insecure Direct Object Reference / Broken Object/Function Level Auth)
+# IDOR / BOLA / BFLA — authorization reasoning guide
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (idor / bola / bfla (insecure direct object reference / broken object/function level auth)) or pasted request matching this class
+Use this file for browser/web flows where a user-controlled reference, action, or workflow may cross an ownership/role boundary. API-wide authorization testing belongs to `api-mode`.
 
----
+## Goal
 
-## IDENTITY IN THIS SKILL
-The most common high-bounty class in modern APIs. I substitute IDs (numeric, UUID, hash) and observe 200 vs 403.
+Determine whether the server enforces **who may perform which action on which resource**, independent of what identifiers or UI controls the client exposes.
 
----
+Do not reduce authorization testing to changing an ID and comparing `200` vs `403`.
 
-## DETECTION
-1. Map all endpoints with `:id` or `userId=` style.
-2. With user A's session, replace ID with user B's ID. Compare response.
-3. Try: increment numeric IDs, predict UUIDs (UUIDv1 leaks MAC + time → predict), substitute admin's ID, use former IDs (deleted accounts often still resolve).
-4. Method swap: `GET /api/users/123` works but `PUT /api/users/123` should be admin-only — try as user.
+## Build the minimum actor-resource-action matrix
 
-## EXPLOITATION
-- Direct ID swap: `/api/orders/12345` → `/api/orders/12346`.
-- UUID brute via timing oracle (UUIDv1) or predictable shape.
-- Sequential ID in JSON body: `{"userId": 1}` → `{"userId": 2}`.
-- Hidden parameter inject: `{"userId": 123, "isAdmin": true}` (mass assignment).
-- Method bypass: `PUT /api/users/123/role` not exposed in UI but routed.
-- Plural collection: `GET /api/users?ids=1,2,3,4,5,6,7,8,9,10`.
+For the current feature, record only what you need:
 
-## PAYLOADS (real, copy-paste, grouped)
-```http
-GET /api/users/<other_id>          # vertical IDOR
-GET /api/orders/<other_user_order> # horizontal IDOR
-GET /api/users/me                  # often "me" alias works for IDs
-GET /api/users/me/../<other_id>    # traversal-style
-GET /api/users.json?id[]=1&id[]=2  # array param
-GET /api/admin/users/<id>          # method/path confusion
-PATCH /api/users/<id> {"role":"admin"}  # BFLA + mass assignment
+```text
+ACTOR A: <role/account>
+ACTOR B: <other role/account>
+RESOURCE A: <owned by A>
+RESOURCE B: <owned by B>
+ACTION: <read/update/delete/share/export/...>
 ```
 
-## BYPASS TECHNIQUES
-- 403 on numeric ID → try UUID, base64-encoded ID, hash.
-- 403 on direct path → query string version.
-- 403 on JSON body → form body, XML body.
-- 403 on `GET` → `POST` with method override `_method=GET` or `X-HTTP-Method-Override: GET`.
-- IDs encoded in JWT — re-sign or alg=none if JWT vuln present (see jwt_attacks.md).
+Establish normal controls first:
 
-## CHAIN POTENTIAL
-IDOR → admin object access → BFLA on admin endpoint → tenant takeover.
+- A -> resource A: expected allowed behavior,
+- B -> resource B: expected allowed behavior,
+- A -> resource B: the actual boundary test,
+- optional role/privilege control only when vertical authorization is relevant.
 
-## TOOLS
-Autorize (Burp), AuthMatrix, Burp Repeater + extensions
+The identifier format (numeric, UUID, slug, hash, composite key) is secondary. Knowing another object's identifier is not itself a vulnerability.
 
-## COMMANDS
-```bash
-# Burp Autorize: log in as user A, set unauthorized headers to user B's, browse — extension flags every endpoint that returns the same to both.
-```
+## Reason from the authorization decision
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Public profile data accessible by ID is by design. Triagers look for sensitive data (PII, payment, settings).
+Ask:
 
-## TRIAGE ANGLE (per platform)
-Show user A obtaining user B's PII / settings / actions. Crisp screenshot.
+- What server-side fact should authorize this action: ownership, membership, tenant, role, relationship, capability, share grant, workflow state?
+- Where does that fact come from: session, token claims, database relation, object field, route parent, client-supplied body, cached state?
+- Is authorization checked consistently for read vs mutation vs delete vs export/share actions?
+- Can the same object be reached through another route/version/representation with a different enforcement path?
+- Does changing parent/child identifiers break tenant or ownership binding?
+- Do collection/list endpoints expose capabilities or object references that bypass the intended discovery boundary?
+- Does a state transition change ownership/visibility while stale capabilities remain usable?
 
-## SEVERITY & CVSS
-Horizontal: 6.5–8.5; Vertical (BFLA): 9.0+.
+Test the question the architecture suggests; do not spray alternate encodings, headers, methods, or body formats without evidence of multiple parsers/enforcement layers.
 
-## REFERENCES
-OWASP API Top 10 — API1 BOLA, API5 BFLA • PortSwigger IDOR
+## Minimal hunt loop
+
+1. Choose one concrete action and resource boundary.
+2. Prove normal ownership/role behavior with a clean control.
+3. Change exactly one actor/resource relationship.
+4. Verify the **semantic result**: sensitive data returned, object changed, action executed, or capability granted.
+5. Re-read the resource/state independently when possible to prove durable effect.
+6. Falsify alternate explanations such as public/shared data, stale cache, object aliases, intended collaboration, soft-deleted visibility, or error pages with misleading status codes.
+7. Expand to sibling actions only if the first boundary failure is real or the architecture clearly shares the same authorization path.
+
+## Horizontal vs vertical boundaries
+
+Keep them distinct:
+
+- **horizontal** — same privilege level, wrong owner/tenant/object relationship,
+- **vertical** — lower-privileged actor can invoke an action/function reserved for a stronger role,
+- **contextual** — action is allowed only in a particular relationship or workflow state.
+
+A read failure does not imply a write failure and vice versa. Test the smallest meaningful action supported by evidence.
+
+## Identifier discovery vs authorization
+
+Do not spend time making identifiers predictable unless discoverability is actually part of the security boundary.
+
+If the application legitimately exposes an identifier but still denies unauthorized access, authorization is working. If a list/search/share endpoint grants a capability or cross-user object reference, analyze that capability directly rather than calling predictability the bug.
+
+## Evidence contract
+
+A strong authorization finding should preserve:
+
+1. actor/resource/action matrix,
+2. expected control request/result,
+3. cross-boundary test request/result,
+4. semantic proof of unauthorized data/action,
+5. ownership/tenant/role evidence for both sides,
+6. one falsification/negative control,
+7. scope and victim/reach facts.
+
+Do not assign numeric severity here. Pass demonstrated data/action/role impact to `reporting-mode`.
+
+## Stop conditions
+
+Reject or narrow the claim when:
+
+- the resource is intentionally public/shared,
+- only metadata already exposed elsewhere is returned,
+- a status code changes but no protected data/action becomes available,
+- the test account legitimately has a relationship granting access,
+- an action appears successful but independent state verification shows no effect,
+- the only issue is identifier predictability with correct authorization,
+- the candidate depends on an unavailable role or fabricated ownership assumption.
+
+## Cross-skill use
+
+Use `api-mode` for broad REST/GraphQL/gRPC authorization matrices, `business_logic_bugs.md` when the boundary depends on workflow/invariants rather than simple ownership/role, and `account_takeover_chains.md` only after a real authorization primitive is demonstrated.
