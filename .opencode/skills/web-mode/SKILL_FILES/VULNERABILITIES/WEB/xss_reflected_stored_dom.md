@@ -4,7 +4,7 @@ Use this file only after observed behavior suggests a real client-side injection
 
 ## Goal
 
-Answer one question: **can attacker-controlled data reach an executable browser context for another security principal?**
+Answer two questions: **can attacker-controlled data cause browser execution in a security-relevant origin/context, and what realistic victim/reach does that execution have?**
 
 Keep reflected, stored, DOM, postMessage-driven, template, and mutation-based behavior separate until evidence shows they share the same source/sink path.
 
@@ -39,7 +39,7 @@ Useful questions:
 - Which function consumes it, and after which decode/parse operations?
 - Does the framework escape by default, or is there an explicit HTML/URL/script escape hatch?
 - Is the sink reachable on a real route/state?
-- Can the attacker cause the victim to enter that state without already controlling the victim session?
+- Can the attacker cause the relevant browser context to enter that state without already controlling the protected context?
 - Does browser instrumentation show the same path static analysis predicts?
 
 Static source/sink matches are **leads** until runtime reachability is shown.
@@ -50,9 +50,9 @@ For server-mediated candidates, separate these facts:
 
 - input accepted,
 - input persisted or reflected,
-- input returned to a victim-visible surface,
+- input returned to a security-relevant rendering surface,
 - browser parses it in an executable context,
-- attacker can cause another principal to render it.
+- attacker can cause the relevant user/context to render it under realistic prerequisites.
 
 A finding requires the relevant chain, not merely the first two steps.
 
@@ -75,8 +75,8 @@ Do not default to cookie theft or ATO. `HttpOnly` does not remove XSS impact, an
 
 After execution is confirmed, ask:
 
-- Which victim role can be reached?
-- Which same-origin data/actions are available in that victim context?
+- Which victim role or security context can be reached?
+- Which same-origin data/actions are available in that context?
 - Are sensitive actions protected by re-authentication, step-up MFA, or server-side authorization?
 - Is persistence or privileged-view reach demonstrated?
 
@@ -101,11 +101,14 @@ Park or reject the candidate when evidence shows:
 
 - value is rendered only as inert text,
 - code path is unreachable/dead,
-- only the attacker can render their own payload with no meaningful chain,
+- execution is confined to an attacker-controlled/self-only context with no meaningful cross-context or security consequence,
 - the observed sink never receives attacker-controlled data,
 - runtime behavior contradicts the static hypothesis,
 - scope/policy excludes the tested behavior.
 
 ## References on demand
 
-Prefer current browser behavior and primary research. Use `payloads` only for an exact, already-understood context. Consult PortSwigger/Cure53/vendor documentation when a sanitizer, browser primitive, framework, CSP directive, or Trusted Types behavior needs confirmation.
+- Context-specific execution probes -> `payloads/references/1-xss-by-context.md` via the `payloads` skill.
+- Vendor-specific filter/WAF variants -> `payloads/references/15-waf-bypass-by-vendor.md` only after a confirmed application-side primitive.
+- CSP-specific analysis -> `csp_bypass.md` only when CSP is the remaining relevant control.
+- For sanitizer, browser primitive, framework, CSP directive, or Trusted Types behavior, prefer current primary/vendor research such as PortSwigger and Cure53.
