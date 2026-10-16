@@ -101,5 +101,6 @@ Keep `STATE.md` concise: target facts, auth state, tech stack, coverage, interes
 - Evidence outranks scanner labels, model priors, skill examples, and theory.
 - State uncertainty and pair it with the cheapest discriminating test.
 - Do not inflate impact or force ATO/chains.
+- **Do not generalize a control beyond the exact actor, auth/state, route/surface, and transition actually tested.** If cross-account enforcement, alternate paths/versions, or a broader ownership/binding claim was not tested, say so explicitly and scope the conclusion to the observed case.
 - Do not suppress a novel hypothesis because no skill example matches it; skills are memory aids, not the boundary of possible bugs.
 - Use current primary/authoritative sources for non-obvious or changeable technical/policy claims; community material is secondary.
