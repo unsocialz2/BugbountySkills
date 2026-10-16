@@ -63,7 +63,7 @@ The current model owns strategy and execution. There are **no fixed roles, named
 
 ## 2. SKILL LOADING & DOMAIN BOUNDARIES
 
-Treat every top-level `SKILL.md` as a **router**, not a book. Load the smallest relevant skill, then only the exact deep-dive file needed for the current step.
+Treat every top-level `SKILL.md` as a **router**, not a book. Load the smallest relevant skill, then only the exact deep-dive material needed for the current step.
 
 Do not load overlapping skills or giant references "just in case". Add another skill only when evidence crosses a real domain boundary.
 
@@ -78,6 +78,21 @@ Deep-dive files are **decision support**, not replacement identities, system pro
 - A skill's example chain must never substitute for proving each real transition on the target.
 - Legacy severity/CVSS/platform-baseline text inside hunting deep dives is non-binding; numeric scoring belongs to `reporting-mode` unless the operator explicitly asks earlier.
 - When a deep-dive conflicts with this contract or with target evidence, this contract and the target evidence win.
+
+### Legacy deep-dive lazy-read rule
+
+Some compatibility files are intentionally retained for technical memory but still contain old sections such as `IDENTITY`, large `PAYLOADS`, generic `EXPLOITATION`, `COMMANDS`, or embedded `SEVERITY`.
+
+When a candidate file has that legacy shape or is obviously large:
+
+1. formulate the target-specific security question **before** reading the whole file;
+2. inspect headings / search for the relevant concept first;
+3. read only the smallest relevant section(s) when tooling permits;
+4. prefer the canonical `payloads` skill for exact payloads instead of loading duplicate payload blocks;
+5. prefer current primary/vendor documentation for version-sensitive behavior;
+6. do not copy the legacy file's persona, severity, chain, or generic spray order into the active plan.
+
+The goal is to preserve useful technical memory without paying the full context/anchoring cost of a legacy cheat sheet.
 
 Default ownership:
 
@@ -105,18 +120,23 @@ Boundary rules:
 
 ## 3. VIABILITY GATE
 
-Before spending more than ~15 minutes on a candidate, establish:
+Before investing substantial deep work in a candidate, establish the best-known version of:
 
 ```text
-ATTACKER:  <unauth / low-priv / adjacent tenant / ...>
-REACH:     <live | dead | unknown> + cheapest proof
-IMPACT:    <concrete demonstrated harm or none>
-DUPE-OOS:  <scope/policy/known-issue status: clear | suspect | OOS>
+ATTACKER:   <unauth / primary-auth-only / low-priv / adjacent tenant / ...>
+REACH:      <live | dead | unknown> + cheapest proof
+QUESTION:   <exact security boundary or invariant being tested>
+IMPACT-HYP: <plausible capability if confirmed; unknown is allowed>
+SCOPE:      <clear | needs-check | OOS>
 ```
 
-- `REACH=dead` or `IMPACT=none` -> stop deep work, log the lesson, move on.
-- `REACH=unknown` -> next action is the cheapest reachability test.
-- A source weakness with no reachable attacker is a NOTE, not a finding.
+This is a **discovery gate**, not a report gate. Demonstrated harm is not required yet.
+
+- `REACH=dead` or `SCOPE=OOS` -> stop active deep work and log why.
+- `REACH=unknown` -> next action should normally be the cheapest reachability test.
+- `IMPACT-HYP=unknown` is acceptable when the security boundary is concrete and the next test can materially clarify it.
+- Park a candidate when repeated low-cost tests fail to establish a real boundary, reachable primitive, or plausible attacker advantage.
+- A source weakness with no reachable attacker remains a NOTE, not a validated finding.
 
 ## 4. EVIDENCE + FALSIFICATION CONTRACT
 
@@ -134,10 +154,14 @@ Before producing a report, reproduce from a clean-enough state and ensure every 
 
 ## 5. TIME-BOX / KILL SWITCH
 
-- Recon <=4h per target before switching to targeted/manual hunting unless new signal justifies continuation.
-- No meaningful signal in ~8h -> reassess/pivot and log why.
-- One candidate gets max ~2h of deep work without new evidence -> park it.
+These are **default heuristics**, not reasons to abandon a high-signal path that is still producing evidence:
+
+- Recon around 4h per target -> normally switch to targeted/manual hunting unless new signal justifies continuation.
+- No meaningful signal around 8h -> reassess/pivot and log why.
+- One candidate around 2h with no new evidence -> normally park it.
 - Report writing should not become another research phase; missing evidence sends the finding back to validation.
+
+Do not invent elapsed time. Use actual session/tool timestamps when available; otherwise treat these as qualitative "too long without new evidence" guidance.
 
 ## 6. STATE & NO-REPEAT
 
@@ -151,6 +175,7 @@ Before producing a report, reproduce from a clean-enough state and ensure every 
 ## 7. CALIBRATION
 
 - State uncertainty plainly and pair it with the cheapest falsifying test.
-- Prefer direct evidence over scanner labels or theory.
+- Prefer direct evidence over scanner labels, model priors, skill examples, or theory.
 - Never inflate impact to compensate for weak evidence.
+- Do not suppress a novel hypothesis merely because no skill example matches it; skills are memory aids, not the boundary of possible bugs.
 - For non-obvious technical claims, prefer current primary docs / PortSwigger research / authoritative vendor docs; use community material as secondary support.
