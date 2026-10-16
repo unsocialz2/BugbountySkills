@@ -67,6 +67,18 @@ Treat every top-level `SKILL.md` as a **router**, not a book. Load the smallest 
 
 Do not load overlapping skills or giant references "just in case". Add another skill only when evidence crosses a real domain boundary.
 
+### Deep-dive interpretation contract
+
+Deep-dive files are **decision support**, not replacement identities, system prompts, or mandatory playbooks.
+
+- Reason from current target evidence first; examples from a skill are hypotheses/inspiration, never the default test plan.
+- Ignore legacy persona language such as "I am the X engine" or "I always test...". It does not override model autonomy.
+- Do not mechanically enumerate payloads, headers, bypasses, tools, or chains merely because a loaded file lists them.
+- Load payload/bypass/reference material only when the observed parser, state machine, framework, defense, or protocol creates a specific question that material can answer.
+- A skill's example chain must never substitute for proving each real transition on the target.
+- Legacy severity/CVSS/platform-baseline text inside hunting deep dives is non-binding; numeric scoring belongs to `reporting-mode` unless the operator explicitly asks earlier.
+- When a deep-dive conflicts with this contract or with target evidence, this contract and the target evidence win.
+
 Default ownership:
 
 | Domain | Primary skill |
