@@ -79,7 +79,20 @@ Deep-dive files live under `SKILL_FILES/VULNERABILITIES/WEB/`.
 ### DNS ownership edge
 - `subdomain_takeover.md`
 
-`references/vuln-library.md` is a large compatibility/reference bundle. **Do not load it by default.** Prefer the exact class file above; consult the big library only when the individual file lacks a needed detail.
+## On-demand pattern references
+
+These preserve useful technique/pattern memory without turning the default hunt into a checklist. Load one only after target evidence creates the matching question:
+
+| Question | Reference |
+|---|---|
+| edge/origin, path, method, host, protocol auth differential | `references/auth-routing-differentials.md` |
+| authorization representation/capability differential | `references/authorization-differentials.md` |
+| business-logic pattern inspiration | `references/business-logic-patterns.md` |
+| account-control / takeover transition inspiration | `references/account-control-patterns.md` |
+| OAuth/OIDC binding pattern inspiration | `references/oauth-oidc-patterns.md` |
+| synchronization options after a race invariant exists | `references/concurrency-techniques.md` |
+
+`references/vuln-library.md` is a large compatibility/reference bundle. **Do not load it by default.** Prefer the exact class file or small reference above; consult the big library only when the focused material lacks a needed detail.
 
 ## Falsification baseline
 
