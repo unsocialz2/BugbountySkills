@@ -1,57 +1,66 @@
-# SKILL: API Authentication Attacks
-## Version: 1.0 | Domain: api | Trigger: API MODE + auth
+# API Authentication — credential and identity-state reasoning guide
 
----
+Use this file when an API endpoint or service may accept a caller without the authentication proof required for the capability being accessed.
 
-## IDENTITY
-API auth rarely uses session cookies — it uses Bearer tokens, API keys, mTLS, HMAC signatures. I attack: missing auth, broken token validation, key leakage, rate-limit-free brute, credential stuffing via API.
+## Goal
 
-## DETECTION
-- Hit every endpoint without auth header → note which return data (missing auth).
-- Send expired / malformed / empty token → note 200s (broken validation).
-- Try `Authorization: Bearer null`, `Authorization: Bearer undefined`, `Authorization: Bearer ` (empty), `Authorization: Basic YWRtaW46YWRtaW4=` (admin:admin).
+Determine whether the API establishes the **correct caller identity and authentication strength** before granting protected capability.
 
-## EXPLOITATION
-### Missing auth
-```bash
-for ep in $(cat api_endpoints.txt); do
-  code=$(curl -sk -o /dev/null -w '%{http_code}' "https://target$ep")
-  [ "$code" != "401" ] && [ "$code" != "403" ] && echo "OPEN: $ep ($code)"
-done
-```
+Do not treat every non-401 response as missing authentication.
 
-### Token confusion
-```http
-Authorization: Bearer eyJ...   → swap to another user's token
-Authorization: Bearer           → empty
-Authorization:                   → missing value
-X-API-Key: test                 → default key
-```
+## Model the authentication mechanism
 
-### API key in query string → leaked in logs / referer
-`/api/data?api_key=AKIA...` → extract from JS / mobile / wayback.
+For the relevant API surface, record:
 
-### Basic auth brute
-```bash
-hydra -L users.txt -P passwords.txt target https-post-form "/api/login:username=^USER^&password=^PASS^:invalid"
-```
+- credential type: bearer token, API key, session cookie, HMAC/signature, mTLS identity, basic auth, service credential, etc.,
+- where the credential is transported,
+- issuer/key/verification source where applicable,
+- token/key lifecycle and scope,
+- expected unauthenticated behavior,
+- resulting server-side identity/claims,
+- which endpoints/capabilities require which auth state.
 
-## PAYLOADS
-(see above)
+## Minimal hunt loop
 
-## BYPASS TECHNIQUES
-- Missing auth only on certain HTTP methods (GET open, POST requires auth).
-- Version downgrade: `/v2/users` requires auth; `/v1/users` doesn't.
-- Internal header bypass: `X-Internal: true`, `X-Forwarded-For: 127.0.0.1`.
+1. Establish a normal authenticated control and a clean unauthenticated control.
+2. Identify one authentication assumption to test: absence, malformed/stale proof, wrong credential type, wrong scope/audience, alternate endpoint/version, or inconsistent middleware only when evidence supports it.
+3. Compare the resulting **semantic capability**, not status codes alone.
+4. Confirm the server actually associates the caller with an unintended identity or grants protected data/action.
+5. Falsify explanations such as public endpoints, anonymous bootstrap data, error bodies with 200, cached responses, frontend state, or a capability intentionally available without auth.
 
-## CHAIN POTENTIAL
-Missing auth → full data exfil → ATO via email change.
+## High-signal questions
 
-## TOOLS
-- Autorize (Burp), AuthMatrix, nuclei auth templates, ffuf with auth headers.
+- Is authentication middleware applied consistently to equivalent methods/routes/versions?
+- Is a token/key verified for the correct issuer, audience, client, tenant, scope, and purpose?
+- Are expired/revoked credentials handled according to the application's intended lifecycle?
+- Does a gateway authenticate while a direct/alternate backend path does not?
+- Are API keys or service credentials used as authentication when they were intended only for identification/rate accounting?
+- Does an alternate auth mechanism create a weaker identity state for the same protected action?
 
-## SEVERITY
-P1–P2 (Critical to High) depending on data exposed.
+## Evidence contract
 
-## REFERENCES
-OWASP API Top 10 — API2 Broken Authentication
+A strong API-auth finding should preserve:
+
+1. protected capability,
+2. expected auth prerequisite,
+3. normal authenticated control,
+4. altered/missing credential case,
+5. semantic proof of unintended identity/data/action,
+6. clean negative/control case,
+7. strongest benign explanation tested and rejected.
+
+Do not assign numeric severity here.
+
+## Stop conditions
+
+Reject or narrow when:
+
+- only the status/error formatting changes,
+- returned data is intentionally public/anonymous,
+- the server does not grant a stronger identity/capability,
+- a gateway/backend difference is not reachable under in-scope conditions,
+- the candidate cannot be reproduced from a clean auth state.
+
+## Cross-skill use
+
+Use `api_authorization_bypass.md` once identity is established but resource/action authorization is wrong. Use web-mode protocol guides for browser-centric OAuth/SAML/MFA/session flows. Use `payloads` only when a concrete parser/token mechanism requires exact input variants.

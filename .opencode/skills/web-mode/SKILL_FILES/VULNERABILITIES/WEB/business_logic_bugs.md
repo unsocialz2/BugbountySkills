@@ -116,4 +116,4 @@ Park or reject when:
 
 ## Inspiration on demand
 
-If the state model stalls, examples of historical logic-bug families can be consulted as **inspiration only**. Never treat example families as the test plan. The target's own state machine and invariants remain authoritative.
+If the state model stalls, consult `references/business-logic-patterns.md` for historical invariant families as **inspiration only**. Choose at most one family that matches observed architecture, rewrite it as a target-specific invariant, and return to the evidence-driven experiment loop. Never treat the examples as the test plan.

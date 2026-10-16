@@ -88,7 +88,7 @@ Do not assign numeric severity here. Pass demonstrated data/action/role impact t
 Reject or narrow the claim when:
 
 - the resource is intentionally public/shared,
-- only metadata already exposed elsewhere is returned,
+- the returned data is intentionally available to the same actor through another supported surface and no stronger capability is gained,
 - a status code changes but no protected data/action becomes available,
 - the test account legitimately has a relationship granting access,
 - an action appears successful but independent state verification shows no effect,
@@ -98,3 +98,5 @@ Reject or narrow the claim when:
 ## Cross-skill use
 
 Use `api-mode` for broad REST/GraphQL/gRPC authorization matrices, `business_logic_bugs.md` when the boundary depends on workflow/invariants rather than simple ownership/role, and `account_takeover_chains.md` only after a real authorization primitive is demonstrated.
+
+If architecture suggests alternate representations, parent/tenant binding issues, capability-lifecycle differences, or action asymmetry, consult `references/authorization-differentials.md` as **inspiration only** rather than a spray list.

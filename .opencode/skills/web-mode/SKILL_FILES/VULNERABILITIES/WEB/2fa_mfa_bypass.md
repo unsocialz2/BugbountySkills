@@ -8,6 +8,8 @@ MFA bypass is not "find any endpoint that works before OTP." The question is whe
 
 Model how the application represents MFA state, what the second factor is bound to, and which actions require that state.
 
+A valid attacker model can be a party who already has the primary credential/session but **does not possess the required second factor**. Testing with a controlled account is sufficient to demonstrate that boundary; a second test account is not inherently required.
+
 ## Map the MFA state machine
 
 For the relevant flow, record:
@@ -73,10 +75,10 @@ Reject or narrow when:
 
 - only client-side navigation changes,
 - the sensitive backend action still enforces MFA/step-up,
-- the tested session was already trusted/elevated,
+- the tested session was already trusted/elevated before the test,
 - alternate login is intentionally exempt by documented policy and does not weaken another boundary,
 - a stale code/session response does not result in stronger server-side capability,
-- no second principal or protected security action is affected.
+- the tested state gains no capability beyond what the intended primary-authenticated/MFA-pending state is supposed to have.
 
 ## Cross-skill use
 

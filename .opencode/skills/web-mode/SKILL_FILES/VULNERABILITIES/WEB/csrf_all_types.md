@@ -1,71 +1,85 @@
-# SKILL: CSRF (Classic / JSON / Same-Site=Lax / Login-CSRF / Logout-CSRF)
+# CSRF — browser authority and request-binding reasoning guide
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (csrf (classic / json / same-site=lax / login-csrf / logout-csrf)) or pasted request matching this class
+Use this file when a browser automatically supplies credentials to a state-changing endpoint and evidence suggests the server may accept a cross-site request without the intended request-origin/session binding.
 
----
+## Goal
 
-## IDENTITY IN THIS SKILL
-CSRF still alive when: SameSite=None, missing CSRF token, predictable token, GET state-change, JSON CSRF (Content-Type bypass), CORS-allow-credentials lapse.
+Determine whether an attacker-controlled site/context can cause the victim's browser to perform a **security-relevant state change using ambient victim authority** without the intended anti-CSRF protection.
 
----
+Do not equate “request succeeds without a token” with CSRF until the cross-site browser delivery conditions are also proven.
 
-## DETECTION
-- Remove CSRF token → does request still succeed? Yes = bug.
-- Replace token with attacker's token → success = wrong validation.
-- Reuse old token → success = no per-session.
-- Change `Content-Type: application/json` to `text/plain` → success = JSON CSRF.
-- Same-Site=Lax + GET state-change endpoint → CSRF possible.
+## Model the browser/request boundary
 
-## EXPLOITATION
-### Classic form CSRF
-```html
-<form action="https://target.com/api/email/change" method="POST">
-  <input name="email" value="attacker@tld">
-</form><script>document.forms[0].submit()</script>
-```
+For the action under test, identify:
 
-### JSON CSRF via text/plain
-```html
-<form action="https://target.com/api/v1/payments" method="POST" enctype="text/plain">
-  <input name='{"to":"attacker","amount":1000,"x":' value='"y"}'>
-</form><script>document.forms[0].submit()</script>
-```
+- credential type automatically attached by the browser,
+- cookie SameSite/Secure/domain/path behavior,
+- request method and content type,
+- whether custom headers are required,
+- CORS/preflight behavior when script-based requests matter,
+- Origin/Referer/token checks,
+- anti-CSRF token source and what it is bound to,
+- whether the action changes durable security/business state.
 
-### XHR-based CSRF (when CORS allows credentialed cross-origin POST)
-Requires `Access-Control-Allow-Credentials: true` + `Access-Control-Allow-Origin: https://attacker.tld`.
+The key question is: **can an attacker-controlled origin cause the browser to send a request the server accepts as the victim?**
 
-### Login CSRF
-Force victim to log in as attacker; later activity tied to attacker's account → leak victim's data into attacker's account.
+## Minimal hunt loop
 
-## PAYLOADS (real, copy-paste, grouped)
-(see above)
+1. Capture one normal state-changing request and verify the durable effect.
+2. Remove or alter one anti-CSRF assumption at a time.
+3. Determine whether a realistic cross-site delivery mechanism can reproduce the accepted request under current browser rules.
+4. Verify the state change independently.
+5. Falsify benign explanations such as same-site attacker control being required, non-ambient credentials, preflight blocking, ineffective request body, idempotent/no-op behavior, or re-authentication on the sensitive action.
+6. Expand only if the first cross-site state-change primitive is real.
 
-## BYPASS TECHNIQUES
-- Token stripped → succeeds → no CSRF.
-- Token validated only when present → omit param → bypass.
-- Token tied to user, not session → use attacker's token.
-- Referer/Origin allowlist with substring match → `https://attacker.tld/target.com`.
-- Referer null → submit from data: URL or via downgrade `<meta name="referrer" content="never">`.
+## Token and origin binding
 
-## CHAIN POTENTIAL
-CSRF → email change → password reset → ATO. CSRF → 2FA disable → ATO.
+When a token exists, ask:
 
-## TOOLS
-Burp CSRF PoC generator, autorize
+- Is it required?
+- Is it unpredictable enough for its role?
+- Is it bound to the relevant session/account/flow?
+- Is validation skipped when the field/header is absent or malformed?
+- Can a token from another session/account satisfy the check?
 
-## COMMANDS
-```bash
-# Burp Engagement Tools → Generate CSRF PoC
-```
+When Origin/Referer is the control, verify the actual comparison and browser behavior rather than assuming header absence or formatting creates a bypass.
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Same-Site=Lax default in modern Chrome means GET CSRF still works for top-level navigations; POST CSRF needs SameSite=None or no SameSite attribute.
+## SameSite and delivery reasoning
 
-## TRIAGE ANGLE (per platform)
-Show end-to-end ATO PoC, not just "request succeeded".
+Treat cookie policy and delivery mechanism as part of exploitability. GET/navigation, form POST, fetch/XHR, redirects, iframes, and same-site subdomains have different browser constraints.
 
-## SEVERITY & CVSS
-ATO via CSRF: 8.0+.
+Do not rely on stale browser assumptions; reproduce in a current browser when SameSite/CORS behavior is decisive.
 
-## REFERENCES
-PortSwigger CSRF • PayloadsAllTheThings/CSRF Injection
+## Login/logout and identity-switch flows
+
+Login CSRF, logout CSRF, account linking, and identity-switch actions have different impacts from classic “change victim data” CSRF. Define the violated guarantee and prove the resulting account/session state rather than forcing an ATO chain.
+
+## Evidence contract
+
+A strong CSRF finding should preserve:
+
+1. security-relevant action,
+2. victim credential/ambient-authority model,
+3. anti-CSRF control expected,
+4. exact accepted cross-site request shape,
+5. realistic browser delivery proof,
+6. durable state-change evidence,
+7. negative/control path,
+8. strongest benign explanation tested and rejected.
+
+Numeric severity belongs to `reporting-mode`.
+
+## Stop conditions
+
+Reject or narrow when:
+
+- browser credentials are not sent in the attacker-controlled delivery context,
+- required headers/content type trigger a preflight the attacker cannot satisfy,
+- server-side token/origin validation works correctly,
+- the action is non-state-changing or produces no meaningful security/business effect,
+- a step-up/re-authentication boundary prevents the sensitive action,
+- only the researcher's own controlled session/origin can trigger the behavior with no realistic victim delivery.
+
+## References on demand
+
+Exact request/PoC shapes live in `payloads/references/9-csrf.md`. Load only the delivery/control variant relevant to the observed browser and endpoint behavior. Use `cors_misconfig.md` only if CORS is actually part of the delivery path, and `account_takeover_chains.md` only after a concrete account-control capability exists.

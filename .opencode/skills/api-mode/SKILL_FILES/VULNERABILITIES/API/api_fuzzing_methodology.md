@@ -1,42 +1,70 @@
-# SKILL: API Fuzzing Methodology
-## Version: 1.0 | Domain: api
+# API Fuzzing — hypothesis-driven differential testing guide
 
----
+Use this file when the API surface is understood well enough that targeted input variation can answer a concrete parser, validation, authorization, or state question.
 
-## IDENTITY
-Systematic fuzzing of every parameter, header, body field, and path segment against an API.
+## Goal
 
-## METHODOLOGY
-1. **Inventory:** Collect all endpoints (Swagger, crawl, JS, mobile, kiterunner).
-2. **Auth matrix:** Run every endpoint as: unauthenticated, low-priv user, admin. Compare.
-3. **Parameter fuzz:** For each param, inject:
-   - SQLi: `' OR 1=1-- -`, `" OR 1=1-- -`
-   - XSS: `<svg/onload=alert(1)>`
-   - SSRF: `http://169.254.169.254/`
-   - SSTI: `{{7*7}}`
-   - LFI: `../../../../etc/passwd`
-   - Command injection: `; id`
-   - NoSQL: `{"$ne":null}`
-   - Type juggling: int→string, string→array, null, empty
-4. **Content-Type fuzz:** Same body as JSON, XML, form, multipart.
-5. **Method fuzz:** GET/POST/PUT/PATCH/DELETE/OPTIONS/HEAD.
-6. **Header fuzz:** Inject auth-bypass headers per endpoint.
-7. **Rate limit test:** 100 rapid-fire identical requests.
+Use **small, discriminating variations** to discover where equivalent inputs are parsed, validated, authorized, or normalized differently.
 
-## TOOLS
-```bash
-# Nuclei API templates
-nuclei -l api_endpoints.txt -t http/cves/ -t http/exposures/ -t http/vulnerabilities/ -severity medium,high,critical
+Do not inject every vulnerability-class payload into every parameter.
 
-# kiterunner
-kr scan https://target -A=apiroutes-210126:20210126
+## Start from a question
 
-# ffuf param brute
-ffuf -u 'https://target/api/search?FUZZ=test' -w ~/wordlists/SecLists/Discovery/Web-Content/burp-parameter-names.txt -mc 200
+Before fuzzing, state what you are trying to distinguish, for example:
 
-# Arjun
-arjun -u 'https://target/api/data' -m GET POST
-```
+- does this field accept a different type than the schema/UI suggests,
+- do JSON/form/XML paths reach different validators,
+- do two HTTP methods hit the same business action with different middleware,
+- does an undocumented parameter change ownership/role/state,
+- does parser normalization create a security-relevant discrepancy?
 
-## REFERENCES
-OWASP API Security Testing Guide
+## Minimal loop
+
+1. Establish a stable control request.
+2. Change one dimension only: value, type, field presence, nesting, content type, method, header, or path representation.
+3. Compare semantic result and authoritative state.
+4. Repeat enough to rule out cache/jitter/random backend errors.
+5. Escalate to a vulnerability-specific skill only when the differential supports that hypothesis.
+6. Stop broadening when additional variations no longer change the security question.
+
+## Useful variation dimensions
+
+Select only those justified by observed API design:
+
+- type: string/integer/boolean/null/array/object,
+- presence: omitted/empty/default/duplicate field,
+- nesting/parent-child representation,
+- JSON vs form/XML/multipart when the API actually accepts them,
+- method variants that plausibly map to the same action,
+- version/route aliases,
+- documented vs undocumented fields,
+- boundary/length/enum values,
+- header-driven behavior where the gateway/framework exposes such controls.
+
+## Auth and state before payloads
+
+Prioritize identity, authorization, writable-state, version drift, and parser differences before generic injection payloads. Once a concrete sink/engine is suspected, hand off to the owning vulnerability skill or `payloads` for exact probes.
+
+## Evidence contract
+
+Record:
+
+1. control request,
+2. single changed dimension,
+3. semantic/state difference,
+4. why that difference matters to a security boundary,
+5. repeatability,
+6. strongest benign explanation tested.
+
+## Stop conditions
+
+Stop or narrow when:
+
+- changes only affect validation/error formatting,
+- no authoritative state/capability difference exists,
+- behavior is documented schema coercion,
+- broad variation is producing noise without a concrete hypothesis.
+
+## Tools
+
+Choose schema-aware/manual tooling that preserves clean controls and low-noise differentials. Tool choice is secondary to the experiment design.

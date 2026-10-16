@@ -1,64 +1,74 @@
-# SKILL: postMessage Attacks
+# postMessage Security — origin, data, and sink reasoning guide
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (postmessage attacks) or pasted request matching this class
+Use this file when cross-window/frame communication via `postMessage`, `message` events, or equivalent browser messaging appears in the target.
 
----
+## Goal
 
-## IDENTITY IN THIS SKILL
-Cross-origin window.postMessage handlers without origin check or with weak deserialization → DOM XSS / data exfil.
+Determine whether an attacker-controlled window/origin can send data that the receiving application treats as trusted **without adequate sender/origin validation and downstream data validation**.
 
----
+A missing `event.origin` check alone is not automatically a vulnerability; the received message must reach a security-relevant action, data disclosure, navigation, or executable sink.
 
-## DETECTION
-Grep client JS for `addEventListener('message',...)` and `window.onmessage`. Look for missing `event.origin` checks or deserialization of `event.data`.
+## Map the message channel
 
-## EXPLOITATION
-### Missing origin check
-```javascript
-// vulnerable handler
-window.addEventListener('message', e => {
-  document.getElementById('x').innerHTML = e.data.html;   // XSS
-});
-```
-Attacker page:
-```html
-<iframe src="https://target.com/?x=1" id=t></iframe>
-<script>document.getElementById('t').contentWindow.postMessage({html:'<img src=x onerror=alert(1)>'},'*')</script>
-```
+For each relevant handler, record:
 
-### Weak origin check (substring)
-```javascript
-if (e.origin.includes('target.com')) { ... }   // matches target.com.attacker.tld
-```
+- receiver page/origin and state required,
+- who can obtain a reference to the receiver window/frame,
+- accepted sender origin/source assumptions,
+- message data shape/schema,
+- validation/normalization before use,
+- downstream sinks/actions reached,
+- whether a reply leaks data back to `event.source` or another window.
 
-### eval / function ctor on data
-```javascript
-window.addEventListener('message', e => eval(e.data));   // RCE-like via XSS
-```
+The key question is: **what trust decision is made based on message sender and message contents?**
 
-## PAYLOADS (real, copy-paste, grouped)
-(see above)
+## Minimal hunt loop
 
-## BYPASS TECHNIQUES
-Origin must use exact equality. Devs often write `startsWith` or `includes` → bypassable.
+1. Capture one legitimate message exchange and its expected sender/receiver relationship.
+2. Identify the exact origin/source/data checks performed by the receiver.
+3. Alter one trust assumption at a time using a controlled sender context.
+4. Trace accepted data to the final semantic action/sink.
+5. Confirm the effect in the real application state.
+6. Falsify benign explanations such as inert data handling, unreachable frames, source-window checks elsewhere, same-origin-only embedding, or a sink that escapes/sanitizes the value.
 
-## CHAIN POTENTIAL
-postMessage → DOM XSS → ATO.
+## High-signal questions
 
-## TOOLS
-Burp DOM Invader (post message tab) — best automated detector
+- Is origin validation exact and based on the canonical origin value?
+- Is `event.source` or frame relationship important to the intended protocol?
+- Are wildcard target origins used for sensitive replies?
+- Can attacker-controlled message fields influence HTML/URL/navigation/script-like sinks?
+- Does a message trigger authenticated actions without a user-intent/authorization check?
+- Can the receiver expose sensitive data to an untrusted sender through a reply channel?
+- Are nested frames, popup/opener flows, or alternate embedding contexts treated differently?
 
-## COMMANDS
-DOM Invader → toggle postMessage logging → walk app
+## Relationship to DOM XSS
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Modern apps use BroadcastChannel and structured cloning — same risk class.
+If message data reaches an executable DOM sink, the final primitive is a DOM-XSS path. Use `xss_reflected_stored_dom.md` to reason about execution/reach after this file establishes the cross-origin message trust failure.
 
-## TRIAGE ANGLE (per platform)
-Show DOM XSS PoC firing from attacker.tld iframe parent.
+Do not automatically label every weak origin check as XSS.
 
-## SEVERITY & CVSS
-7.5–9.0.
+## Evidence contract
 
-## REFERENCES
-PortSwigger DOM Invader / postMessage
+A strong finding should preserve:
+
+1. receiver context,
+2. intended sender/origin relationship,
+3. actual attacker-controlled sender context,
+4. accepted message shape,
+5. final security-relevant sink/action/data disclosure,
+6. runtime proof,
+7. negative/control message showing the intended boundary where possible.
+
+## Stop conditions
+
+Reject or narrow when:
+
+- attacker cannot obtain a usable window/frame relationship,
+- receiver rejects the untrusted sender,
+- accepted data remains inert and causes no security-relevant effect,
+- the only issue is stylistic/weak-looking origin code with no bypassable trust boundary,
+- the tested effect is self-only with no meaningful cross-origin/security consequence.
+
+## Tools on demand
+
+Browser instrumentation/DOM messaging inspection can help enumerate real message flows, but use it to understand the protocol rather than to spray arbitrary message bodies.
