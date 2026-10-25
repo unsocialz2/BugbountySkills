@@ -58,7 +58,7 @@ For each hypothesis:
 4. Observe the **durable business state**, not only the immediate response.
 5. Verify downstream consequences from an independent read/view when possible.
 6. Try the strongest benign explanation: eventual consistency, idempotent response, UI-only stale state, sandbox behavior, delayed rollback, intended sharing/delegation, or documented product behavior.
-7. Stop if the state self-corrects or no meaningful attacker advantage remains.
+7. If state self-corrects, test whether any unauthorized read, completed action, or reusable capability occurred before rollback. Reject the transient-state hypothesis only when no meaningful attacker advantage is demonstrated; unresolved observability remains inconclusive.
 
 ## Cross-actor and lifecycle reasoning
 

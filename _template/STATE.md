@@ -6,6 +6,9 @@ SCOPE SOURCE:   # scope.txt / scope.csv / program export
 RULES SOURCE:   # rules.txt + policy source/date if known
 AUTH STATE:
 TECH STACK:
+HYPOTHESES:    # active question + link to HYPOTHESES.md when useful
+TEST COVERAGE: # tested boundaries + link to COVERAGE.md; include material gaps
+BLOCKERS:      # exact missing access/tooling and next independent work
 RECON COVERAGE: # concise applicable-stage summary, not a forced full-pipeline score
 INTERESTING SURFACES:
   -

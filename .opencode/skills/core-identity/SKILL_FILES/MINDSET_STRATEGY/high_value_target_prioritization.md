@@ -1,41 +1,18 @@
-# SKILL: High-Value Target Prioritization
-## Version: 1.0 | Domain: mindset
+# Prioritize questions by evidence and access
 
----
+Rank reachable features, not vulnerability names or noisy response headers.
 
-## ENDPOINTS THAT PAY MOST
-- Authentication / authorization endpoints
-- Payment / billing
-- Admin panels
-- File upload / file processing
-- API integrations (OAuth callbacks, webhooks)
-- Email / SMS sending
-- Internal admin / debug endpoints accidentally exposed
-- GraphQL / REST endpoints with rich query language
-- Endpoints handling other users' data (DM, comments, sharing)
+Consider together:
+- attacker-accessible roles and test resources available now;
+- value controlled by the feature: data, authority, money, trust, or entitlements;
+- a concrete boundary crossing, recent change, inconsistent representation, or unexplained behavior;
+- cost of establishing a legitimate baseline and observing the actual outcome;
+- previous tests and what a new experiment can distinguish.
 
-## PARAMETERS WORTH FUZZING
-- `id`, `user`, `account`, `org`, `tenant`
-- `redirect`, `next`, `return`, `callback`, `url`
-- `file`, `path`, `template`, `view`
-- `cmd`, `exec`, `eval`, `script`
-- `query`, `search`, `q`, `filter`
-- `email`, `username`, `name`
-- `role`, `permission`, `is_admin`, `verified`
-- `_method`, `_csrf`, `_token`
-- `format`, `output`, `type`
+Choose the question with the best supported combination; avoid invented numerical probabilities. A high-impact feature with no usable access may be blocked while a modest, accessible feature offers a productive next test.
 
-## QUERY-STRING MINING
-- Use Param Miner (Burp), Arjun, x8 to find hidden params.
-- Try every interesting param against every endpoint.
+Before broad fuzzing, use the product normally and capture the relevant successful flow. Hidden parameters matter when schema, source, traffic, or observed behavior suggests the backend consumes them. A stack trace, 500, long cookie list, or exposed schema is a lead, not a reliable ranking of bug richness.
 
-## RESPONSE PATTERNS THAT INDICATE BUG-RICHNESS
-- Stack traces in error responses
-- Verbose error messages (e.g., "User with ID 123 not found")
-- Backend service names in headers (X-Powered-By, X-Backend)
-- Long `Set-Cookie` lists
-- Exposed `/api/swagger.json`, `/openapi.json`, `/graphql` (introspection on)
-- Endpoints returning 500 on edge cases
+Keep a short ranked hypothesis queue when there are competing leads. Record the reason for prioritization and the cheapest discriminating test. Execute one experiment at a time unless independent work actually benefits from concurrency. Re-rank on new evidence, not after every failed request.
 
-## REFERENCES
-zseanos-methodology.pdf, Bug Hunters Methodology Day 2
+When progress stalls, inspect a different actor, lifecycle transition, or representation of the same feature before automatically switching targets or spraying payloads.

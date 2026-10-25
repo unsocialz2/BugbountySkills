@@ -125,7 +125,7 @@ nuclei -l urls.txt -t 'http/cves/' -tags ssti
 Sandbox engines (e.g., Twig sandbox mode, Jinja2 SandboxedEnvironment) — RCE escapes are CVE-tracked; reference latest.
 
 ## TRIAGE ANGLE (per platform)
-Always show full RCE PoC (`id`, `hostname`, `whoami`). Triage will accept lower if sandbox proven hard.
+Use the least intrusive proof of the demonstrated template boundary. Escalate to execution only when needed, supported, and allowed; do not predict triage acceptance.
 
 ## SEVERITY & CVSS
 9.8 typical (RCE).

@@ -1,6 +1,6 @@
 ---
 name: automation-mode
-description: Build or improve authorized bug-bounty automation: recon pipelines, asset/scope monitoring, notifications, custom nuclei templates, ffuf workflows, Burp automation, VPS/container setup, and hunting scripts. Generated automation must inherit the active target's scope/rules and avoid hardcoded aggressive defaults.
+description: "Build or improve authorized bug-bounty automation: recon pipelines, asset/scope monitoring, notifications, custom nuclei templates, ffuf workflows, Burp automation, VPS/container setup, and hunting scripts. Generated automation must inherit the active target's scope/rules and avoid hardcoded aggressive defaults."
 ---
 
 # AUTOMATION MODE — workflow/tool router

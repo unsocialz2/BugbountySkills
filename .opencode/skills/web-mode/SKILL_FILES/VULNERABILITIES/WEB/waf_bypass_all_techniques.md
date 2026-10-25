@@ -74,7 +74,7 @@ nowafpls   # Burp ext: appends junk to bypass body inspection size
 ```
 
 ## EDGE CASES / NOT-A-BUG TRAPS
-Vendor patches happen daily. Always start with origin discovery — fundamental win.
+Verify version-sensitive behavior. Consider origin routing only when evidence supports that question and the origin is explicitly in scope.
 
 ## TRIAGE ANGLE (per platform)
 Show WAF block, then your bypassed payload landing.

@@ -25,7 +25,7 @@ def handleResponse(req, interesting):
 ### Account Takeover (ATO) Chains
 **Detect:** map every modify-account endpoint; ATO is the *impact*, chain the primitives.
 **Exploit chains:** XSS/CSRF → `POST /api/email/change attacker@tld` → forgot-password → reset to attacker → login as victim. Reset token leaking via Referer from external img in email. OAuth account-merge squatting (pre-create with victim's email via social sign-in, no verification). 2FA bypass + reset. Session fixation via CSRF login. Cookie scope abuse via subdomain takeover. "Reset by phone" after changing number via missing-MFA endpoint.
-**Chain:** always end at literal ATO PoC — log in as victim, show their data. **CVSS 9.0+.**
+**Chain:** demonstrate only the capability the evidence supports, using controlled accounts. ATO is not a required endpoint; scoring belongs to reporting-mode.
 
 ### Auth Bypass (logic / SQLi-in-login / SSO / cache key)
 **Detect:** scan login flow for parsing inconsistencies before brute force.
@@ -343,7 +343,7 @@ go run ppfuzz https://target/?param=value
 
 ### SSRF (basic / blind / DNS rebinding / gopher)
 **Detect:** URL params (`?url=`, `?image=`, `?webhook=`, `?fetch=`, `?proxy=`, `?next=`, file upload URL fetcher, HTML→PDF, SSO callback). Collaborator hit confirms. Test `127.0.0.1`, `[::1]`, `169.254.169.254`.
-**Cloud metadata (always start here):**
+**Cloud metadata (only when architecture, scope, and the SSRF primitive justify it):**
 ```
 http://169.254.169.254/latest/meta-data/iam/security-credentials/
 http://[fd00:ec2::254]/latest/meta-data/

@@ -1,32 +1,11 @@
-# SKILL: Target Selection
-## Version: 1.0 | Domain: mindset
+# Target selection
 
----
+Choose a target on which you can test meaningful product behavior under explicit program rules.
 
-## CRITERIA
-1. **Scope size** — bigger surface, more bugs.
-2. **Tech stack familiarity** — you'll find more bugs in stacks you know cold.
-3. **Recently changed** — new code = new bugs.
-4. **Low researcher density** — fewer hunters = fewer dupes.
-5. **Generous bounty tier** — for the impact level you can deliver.
-6. **Acceptance rate** — high rate = triage trusts evidence.
+Compare access to accounts/roles/tenants, stack familiarity, ability to create test objects, scope restrictions, observable product changes, and time available for understanding workflows. Scope size and bounty ceiling alone do not predict useful results.
 
-## FINDING UNDERHUNTED PROGRAMS
-- Browse private invite list — newly added programs first.
-- Filter Hacktivity by `created<=30 days ago AND state=resolved` per program — ratio shows volume vs triagers.
-- Cross-check with Wayback's archive of program scope page for recent expansions.
+Treat researcher density, acceptance rates, and duplicate likelihood as unknown unless supported by relevant data. Public disclosures are incomplete and do not reveal a program's undisclosed backlog.
 
-## INDICATORS OF FRESH SCOPE
-- New domain in scope
-- Recent acquisition (target acquired Company X → Company X's domains in scope)
-- New product launch
-- Re-platforming (e.g., monolith → microservices)
+A new release, acquisition, or related domain is a discovery lead. Only explicit current program scope establishes permission to test the asset. Confirm eligibility and exclusions from the program's current policy.
 
-## "BOUNTY OF THE WEEK" METHODOLOGY
-- Pick one target Monday morning.
-- Spend full week deep-diving — don't bounce.
-- Submit Friday.
-- Repeat.
-
-## REFERENCES
-NahamSec methodology talks, Bug Bounty Hunter's Handbook
+Prefer enough continuity to understand a product. Reconsider when access is persistently blocked, meaningful surfaces are exhausted, or another target offers better-supported questions. Do not promise a report by a calendar deadline.

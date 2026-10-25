@@ -1,40 +1,9 @@
-# SKILL: Duplicate Avoidance
-## Version: 1.0 | Domain: mindset
+# Duplicate assessment
 
----
+Use available public disclosures and target-local prior findings to understand known root causes and fixes. Absence of a public report does not establish novelty.
 
-## PRE-SUBMISSION CHECKS
-1. Search Hacktivity for the program: bug class + endpoint
-2. Search Bugcrowd Hacktivity API
-3. Search Twitter / blog posts for "writeup [target] [class]"
-4. Check program's last 30 days disclosed bugs
-5. Check #infosec channels mentioning the target
+Compare root cause, affected component, authority boundary, required fix, and demonstrated impact. A different endpoint or payload is not automatically a distinct finding. A variant is useful when the evidence establishes an unaddressed boundary or a materially different root cause/impact.
 
-## STRATEGIES TO MINIMIZE DUPES
-- **First-mover**: monitor new scope additions and report within hours.
-- **Variant analysis**: take a public bug class report, find the exact same class on a different endpoint of the same target.
-- **Deep over wide**: 100 hours on one bug = lower dupe rate than 100 hours on 10 surface scans.
-- **Off-the-beaten-path**: focus on subdomains <10 ranking on H1's bug report counts.
-- **Specialize**: GraphQL bugs, OAuth misconfigs, race conditions — fewer hunters do these well.
+Do not label whole vulnerability classes as inherently low-duplicate or promise that spending longer guarantees originality. Prefer product-specific understanding, changed behavior, and coverage gaps supported by evidence.
 
-## BUG CLASSES WITH HIGH DUPE RATES
-- Reflected XSS in obvious params
-- Subdomain takeover on common services
-- Open S3 buckets named `target-*`
-- Default-creds on common admin paths
-
-## BUG CLASSES WITH LOW DUPE RATES
-- Race conditions
-- Server-side prototype pollution
-- Logical chains across multiple bugs
-- Custom auth schemes (SAML / OAuth)
-- WebSocket / postMessage handlers
-- File upload edge cases (mime confusion, path manipulation)
-- Cache deception with custom param
-
-## IF YOU SUSPECT DUPE
-- Submit anyway with thorough impact (sometimes original was lower-severity).
-- Cite the suspected dupe in your report — shows good faith.
-
-## REFERENCES
-Hacktivity dupe analysis blogs, Critical thinking podcast
+When overlap is plausible, record what is known and what remains uncertain. Follow current program guidance on related reports; present the evidence honestly without manufacturing a unique angle or inflating severity.

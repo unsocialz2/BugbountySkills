@@ -98,10 +98,10 @@ pwncat-cs -lp 4444
 ```
 
 ## EDGE CASES / NOT-A-BUG TRAPS
-Modern hardened apps with `execFile`/parameterized exec often feel safe but template engines (SSTI), deserialization, and dependency vulns still bite. Always test deserialization paths.
+Modern hardened apps with `execFile`/parameterized exec often feel safe but template engines (SSTI), deserialization, and dependency vulns still bite. Investigate deserialization only when an attacker-controlled path is evidenced.
 
 ## TRIAGE ANGLE (per platform)
-Always show `id`, `hostname`, `uname -a`, `cat /etc/passwd`. Don't dump customer data. PoC short.
+Use the minimum permitted harmless marker that proves execution. Do not collect system files or customer data just to decorate the PoC.
 
 ## SEVERITY & CVSS
 9.8 (Critical) Auth-less; 8.8 if requires auth.

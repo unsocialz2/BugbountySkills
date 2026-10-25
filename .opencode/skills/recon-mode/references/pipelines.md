@@ -83,7 +83,7 @@ for c in $(cat cnames.txt); do dig +short $c @1.1.1.1 | grep -q '^$' && echo "DA
 # AXFR (zone transfer) on every NS
 for ns in $(dig +short ns example.com); do echo "=== $ns ==="; dig @"$ns" example.com AXFR +noidnout; done | tee axfr.txt
 
-# DNSSEC NSEC zone walk (full zone without AXFR) — always try first
+# DNSSEC NSEC zone walk (full zone without AXFR) — consider only when relevant and allowed
 ldns-walk -s 1.1.1.1 example.com
 
 # SPF/DMARC misconfig → email spoofing primitive (P3-P2)
@@ -116,33 +116,9 @@ cdncheck -i httpx_urls.txt -o cdn.txt
 cat httpx.jsonl | jq -r .url | gowitness file -f - --threads 50 --disable-db -P screenshots/
 ```
 
-### 5. JS endpoint + secret extraction
-```bash
-katana -list alive.txt -d 5 -jc -kf all -aff -o crawl.txt
-cat crawl.txt | grep -E '\.js(\?|$)' | sort -u > js_urls.txt
-cat alive.txt | gau --subs --threads 10 | grep -E '\.js(\?|$)' >> js_urls.txt
-sort -u js_urls.txt -o js_urls.txt
+### 5. JavaScript and source maps
 
-mkdir -p js && cd js && cat ../js_urls.txt | xargs -I{} -P 20 curl -sk --max-time 15 -o "$(echo {} | md5sum | cut -d' ' -f1).js" "{}"
-
-# Endpoint extraction (jsluice is best in 2024)
-find js/ -name '*.js' | xargs -I{} jsluice urls -m '*' {} | sort -u >> endpoints_from_js.txt
-find js/ -name '*.js' | xargs -I{} jsluice secrets {} > js_secrets.txt
-
-# Secret scan
-trufflehog filesystem --json js/ > js_truffle.json
-rg -i 'aws_secret|aws_access|stripe_(test|live)|sk_live_|sk_test_|xoxb-|xoxp-|xapp-|pk_live_|pk_test_|api[_-]?key|client[_-]?secret|firebase|sendgrid|twilio|mailgun|github_token|ghp_|ghu_|ghs_|jwt|bearer\s+[a-z0-9]+|password\s*[:=]\s*["\x27]' js/
-
-# Sourcemap recovery (gold mine — check for //# sourceMappingURL= in every JS)
-for u in $(cat js_urls.txt); do curl -sk --max-time 10 "$u.map" -o /tmp/x.map && [ -s /tmp/x.map ] && echo "FOUND .map: $u.map"; done
-npx sourcemap-explorer file.js.map   # or sourcemapper -url "...main.js.map" -output recovered/
-
-# DOM XSS sink hunt
-rg -n 'document\.write|innerHTML\s*=|outerHTML\s*=|insertAdjacentHTML|\.html\(|eval\(|setTimeout\(["\x27]\\$|setInterval\(["\x27]|Function\(|setAttribute\((?:["\x27](?:on|src|href))|location\s*=|location\.href|location\.replace|location\.assign|window\.open|postMessage' js/
-# postMessage handlers
-rg -n 'addEventListener\(["\x27]message["\x27]' js/ -A 10
-```
-Grep server-rendered SPA state for leaked objects: `__INITIAL_STATE__`, `__APOLLO_STATE__`, `__NEXT_DATA__`, `__NUXT__`. Service workers (`sw.js`) cache API URLs; internal hosts like `api-internal.corp.example.com` leak as fallbacks — each is a recon win.
+Use `../SKILL_FILES/RECON/05_javascript_analysis.md` for collection and validation with `../scripts/collect_assets.py`. Preserve distinct files, provenance, and partial failures; do not maintain a second downloader here.
 
 ### 6. Wayback / historical URL mining
 ```bash
@@ -238,7 +214,7 @@ for v in 1 2 3 v1 v2 v3 latest internal beta legacy old; do
   curl -sk -o /dev/null -w "$v: %{http_code}\n" "https://$TARGET/api/$v/users"
 done
 ```
-Always test all methods + trailing-slash variants (`/api/users` 401 vs `/api/users/` 200). Test `Accept: application/vnd.example.v1+json`. GraphQL aliases (`x: user(id:1) y: user(id:2)`) bypass per-field rate limits.
+Test method/path/version variants only when routing evidence supports the question; a status-code difference is not privileged success. GraphQL alias behavior and limits must be measured with bounded controls rather than assumed.
 
 ### 9. Port scanning & services
 ```bash
@@ -406,27 +382,6 @@ rg -oE '[a-z0-9-]+\.firebaseio\.com' ext/ | sort -u | while read fb; do curl -s 
 ```
 App-only endpoints (`/api/v3/internal/...` with no auth assuming "only mobile hits this") are a frequent high-value finding. Insecure deep links, exported ContentProviders, `setJavaScriptEnabled(true)` + `addJavascriptInterface` WebViews, and `usesCleartextTraffic="true"` are all reportable.
 
-### 16. Full automation pipeline (skeleton — run every 6h, diff + notify)
-```bash
-TARGET=$1; DATE=$(date +%Y%m%d-%H%M); OUT=$HOME/hunting/$TARGET/$DATE; mkdir -p "$OUT" && cd "$OUT"
-subfinder -d "$TARGET" -all -silent | tee subs_subfinder.txt
-chaos-client -d "$TARGET" -silent | tee subs_chaos.txt
-github-subdomains -d "$TARGET" -t "$GITHUB_TOKEN" -o subs_github.txt
-cat subs_*.txt | sort -u > subs.txt
-alterx -l subs.txt -enrich -silent > permutations.txt
-puredns resolve permutations.txt -r ~/.config/resolvers.txt --wildcard-batch 1500000 -q > resolved.txt
-cat subs.txt resolved.txt | sort -u > all_subs.txt
-httpx -l all_subs.txt -threads 100 -timeout 7 -follow-redirects -status-code -title -tech-detect -ip -cdn -tls-grab -web-server -json -o httpx.jsonl
-cat httpx.jsonl | jq -r .url > alive.txt
-katana -list alive.txt -d 3 -jc -kf all -silent -o crawl.txt
-cat alive.txt | gau --threads 10 --subs > gau.txt
-cat crawl.txt gau.txt | sort -u | uro > all_urls.txt
-grep -E '\.js(\?|$)' all_urls.txt | sort -u > js_urls.txt
-cat js_urls.txt | xargs -I{} -P 20 curl -sk --max-time 10 -o "js/$(echo {} | md5sum | cut -d' ' -f1).js" "{}"
-trufflehog filesystem js --only-verified --json > js_secrets.json
-nuclei -l alive.txt -severity medium,high,critical -t ~/nuclei-templates/ -rl 100 -timeout 10 -silent -o nuclei.txt -json -store-resp -store-resp-dir nuclei_resp/
-PREV=$(ls -1 ~/hunting/$TARGET/ | sort | grep -v "^$DATE" | tail -1)
-[ -n "$PREV" ] && comm -23 <(sort all_subs.txt) <(sort ~/hunting/$TARGET/$PREV/all_subs.txt) > new_subs.txt
-[ -s nuclei.txt ] && notify --title "[$TARGET] nuclei findings"   # diff-before-notify; only ping on delta
-```
-cron: `5 */6 * * * recon_pipeline.sh example.com >> /var/log/recon-example.log 2>&1` — plus certstream listener to trigger on new CT certs, axiom for distributed scanning (`axiom-scan all_subs.txt -m httpx -p 80,443,8080,8443`). Keep `~/.nuclei-ignore.yaml` to silence always-alerting templates; throttle to avoid self-DoS/rate-limit breaches.
+### 16. Recon automation
+
+Use `../SKILL_FILES/RECON/16_recon_automation_pipeline.md` for the maintained stage contract. Choose stages and limits from the active target; scheduling, scope expansion, and notifications are not implicit defaults.

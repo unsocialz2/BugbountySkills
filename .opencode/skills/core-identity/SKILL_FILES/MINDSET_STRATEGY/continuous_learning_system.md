@@ -36,6 +36,10 @@ Each week:
 - Reverse engineering (Ghidra, Frida)
 - Programming (deep Python, Go, JS/Node)
 
+## Feedback from actual hunts
+
+For accepted, rejected, duplicate, and abandoned candidates, record which assumption was right or wrong, the missed discriminating test, and the evidence. Change guidance only when a concrete failure supports the change. Evaluate changed decision rules with `../../references/skill-evaluation.md` (relative to this file directory); keep expected answers separate from evaluated prompts. Do not equate a lab score with guaranteed bounty results.
+
 ## WEEKLY GOAL
 - Pick 1 skill from tree.
 - Move from "know the name" → "know the patterns" → "know the variants" → "have shipped a finding using it".

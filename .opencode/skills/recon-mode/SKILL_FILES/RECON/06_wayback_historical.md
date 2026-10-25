@@ -70,7 +70,7 @@ done > robots_history.txt
 - **Soft 404 in archives** — archive page may render but be archived during a maintenance redirect. Spot-check before fuzzing.
 - **Private archive pages** — some are not crawled because of `robots.txt`; URLScan.io often has them.
 - **API contract leakage** — old `/swagger.json`, `/openapi.json`, `/api-docs` paths often hosted historically; fetch via wayback timetravel.
-- **JS files with secrets** — old JS bundles may still have `apiKey: '...'` that was rotated, but sometimes wasn't (rotation is hard). Always test live.
+- **JS files with secrets** — old JS bundles may still have `apiKey: '...'` that was rotated, but sometimes wasn't (rotation is hard). Classify the credential and scope first; validate only through a bounded permitted test when needed.
 - **Internal staging URLs** — `staging.example.com` might be archived even if no longer DNS-live; pivot for new subdomains.
 
 ## OUTPUT FORMAT

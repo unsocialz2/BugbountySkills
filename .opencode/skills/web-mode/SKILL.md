@@ -16,8 +16,8 @@ Default to `api-mode` when the surface is primarily REST/GraphQL/gRPC/schema-dri
 ## Hunt loop
 
 1. Map the specific flow/state transition under test.
-2. Pick the single most plausible vulnerability class from observed behavior.
-3. Load only that class file.
+2. Establish the normal successful flow and its actors, resources, authority, and lifecycle. Keep a short queue of competing boundary hypotheses when useful; do not commit to a vulnerability label prematurely.
+3. Choose the most informative next experiment and load only the reference it needs. Execute narrowly without discarding other hypotheses.
 4. Run the viability gate and the smallest proving test.
 5. Actively falsify the strongest benign explanation.
 6. If confirmed, map the primitive's real reach and only then test a plausible chain.

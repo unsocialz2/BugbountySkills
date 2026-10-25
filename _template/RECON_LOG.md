@@ -1,6 +1,7 @@
 # RECON_LOG — <target> (append-only ledger)
 
 Source of truth for what recon was already done, with enough context to decide whether it is still fresh/useful.
+Before marking DONE, validate output format, expected counts/provenance, representative content, and tool errors. Empty output is not absence of assets unless collection completed correctly. Preserve the last good baseline when a refresh is partial.
 A stage marked DONE is not rerun blindly; refresh only for stale evidence, changed scope/behavior, or explicit operator request.
 
 | Date | Stage | Status | Artifact | Delta / reason |

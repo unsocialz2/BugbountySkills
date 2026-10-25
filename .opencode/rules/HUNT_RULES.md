@@ -76,6 +76,16 @@ This is a discovery gate, **not** a report gate. Unknown impact is acceptable wh
 - Park candidates after repeated low-cost tests fail to establish a real boundary/reachable primitive/plausible attacker advantage.
 - Source/static weakness without reachable attacker remains a lead/note, not a finding.
 
+### Discovery and coverage memory
+
+For multi-step hunts, keep a small target-local `HYPOTHESES.md` queue and `COVERAGE.md` experiment ledger (starter shapes in `_template/`). A single simple test can use equivalent fields in existing notes instead. Do not load or populate a giant universal checklist.
+
+- Model the feature's legitimate workflow before choosing a vulnerability label. Track competing explanations when needed; select one discriminating experiment at a time.
+- Record exact actor/tenant, resource, action, lifecycle/auth state, control, observed result, and evidence. A failed request with no successful control does not establish a security boundary.
+- Distinguish `not-tested`, `blocked`, `inconclusive`, `enforced-in-tested-case`, and `boundary-failure`. Do not silently convert unavailable access into a negative result.
+- Park leads with a reason and reopen condition. Session expiry, tool failure, and missing objects require repair or a blocker, not a claim that the feature is secure.
+- Recon completion requires usable output, not a zero exit code. Verify expected format, errors, counts, provenance, and representative content before downstream use. Partial/error output never replaces the last good baseline.
+
 ## 4. VALIDATION CONTRACT
 
 Nothing is a validated finding without:
@@ -93,6 +103,8 @@ A lead is not scored. Before reporting, reproduce from a clean-enough state and 
 Time boxes are heuristics, not hard stops: prolonged recon without signal -> pivot; a candidate producing no new evidence -> park; a high-signal path that keeps producing evidence may continue. **Never invent elapsed time**—use timestamps when available or reason qualitatively.
 
 Reuse existing evidence before collecting more. Do not repeat verified work merely because a skill reloads. Re-run only for changed scope, stale/changed behavior, a real evidence gap, or operator request. Merge/diff stateful outputs rather than overwriting blindly.
+
+A temporary invalid state can still have lasting impact. Check actions and disclosure during the window before dismissing a rollback.
 
 Keep `STATE.md` concise: target facts, auth state, tech stack, coverage, interesting surfaces, findings/leads, lessons, and next action—not a transcript.
 

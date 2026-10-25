@@ -96,7 +96,7 @@ shodan search 'http.title:"Swagger UI" hostname:example.com'
 ## EDGE CASES
 - **Path versioning vs Header versioning** — `Accept: application/vnd.example.v1+json`. Test all variants.
 - **Internal-only API hosts** — leaked in mobile/JS as fallback. `https://api-internal.example.com` may be reachable from internet despite naming.
-- **Method confusion** — `GET /api/admin/users` returns 403, `POST` returns 200. Always test all methods (`OPTIONS` to enumerate, then HEAD/GET/POST/PUT/PATCH/DELETE).
+- **Method confusion** — `GET /api/admin/users` returns 403, `POST` returns 200. Use observed/schema-supported methods and a valid control; prove protected data or an action, not a status difference. Do not invoke destructive methods as generic discovery.
 - **Trailing slash behavior** — `/api/users` 401 vs `/api/users/` 200 — common framework routing inconsistency.
 - **HTTP/2 method whitelist bypass** — some WAFs only know HTTP/1.1; send same request via HTTP/2 with `httpx --http2`.
 - **GraphQL aliases** — bypass per-field rate limit with batched aliases (`x: user(id:1) y: user(id:2)`); also defense-evasion for IDOR.

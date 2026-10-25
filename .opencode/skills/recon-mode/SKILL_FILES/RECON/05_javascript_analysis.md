@@ -1,108 +1,36 @@
-# SKILL: JavaScript Analysis
-## Version: 1.0 | Domain: recon | Trigger: any web target has bundled JS; especially SPAs and admin panels
+# JavaScript analysis — preserve artifacts and follow product flows
 
----
+Collect scripts from the relevant successful browser flow, including lazy-loaded chunks and service workers when they participate in the feature. Archives and unauthenticated crawlers may miss current authenticated routes. Record URL, source page/flow, auth context, collection time, and content hash. Filter exact URLs through current scope/exclusions before fetching.
 
-## IDENTITY IN THIS SKILL
-Frontend JavaScript leaks endpoints, parameters, secrets, business logic, role enums, hidden routes, internal API hosts, analytics keys, and (occasionally) full backend code via sourcemaps.
+## Reliable collection
 
----
+Use the bundled `scripts/collect_assets.py` relative to the recon-mode skill folder. From TARGET_ROOT, pass a pre-approved URL file and a NEW run directory:
 
-## TOOLS
-- `katana / hakrawler / gospider: crawl + extract JS`
-- `subjs: extract JS URLs from a domain`
-- `linkfinder / jsluice / mantra / jsleak: extract endpoints + secrets from JS`
-- `secretfinder: regex-based secret scan`
-- `GAP (Burp ext): parameter mining from JS`
-- `JS Miner (Burp ext): inline secret + endpoint mining`
-- `trufflehog filesystem: regex / verifier secret scan over downloaded JS`
-- `sourcemapper / unwebpack-sourcemap: pull source from .js.map`
-- `uglify-restore / prettier --parser babel: deobfuscate`
-
-## COMMANDS & WORKFLOWS
-### Crawl + collect all JS files from target
 ```bash
-katana -list alive.txt -d 5 -jc -kf all -aff -o crawl.txt
-cat crawl.txt | grep -E '\.js(\?|$)' | sort -u > js_urls.txt
-# add gau / waybackurls historical JS
-cat alive.txt | gau --subs --threads 10 | grep -E '\.js(\?|$)' >> js_urls.txt
-sort -u js_urls.txt -o js_urls.txt
+# Set RECON_SKILL to this skill's absolute directory and REQUEST_INTERVAL
+# to the target-policy-compatible spacing in seconds before executing.
+python3 "${RECON_SKILL:?}/scripts/collect_assets.py" \
+  --urls recon_data/js_urls_in_scope.txt \
+  --output recon_data/js-run-001 --kind javascript \
+  --interval "${REQUEST_INTERVAL:?}"
 ```
 
-### Download all JS for offline analysis
-```bash
-mkdir -p js && cd js && cat ../js_urls.txt | xargs -I{} -P 20 curl -sk --max-time 15 -o "$(echo {} | md5sum | cut -d' ' -f1).js" "{}"
-```
+The helper uses distinct URL-derived filenames, verifies TLS, declines redirects, caps response size, records provenance/hashes, and returns failure if any URL fails. It never replaces an existing run. It does not implement program scope parsing: the supplied exact URL list must already be approved. Review redirect destinations separately before a new request. Do not reuse the old xargs command-substitution download pattern: it computes one filename before xargs iterates.
 
-### Extract endpoints from JS
-```bash
-for f in js/*.js; do
-  python3 ~/tools/LinkFinder/linkfinder.py -i "$f" -o cli
-done | sort -u > endpoints_from_js.txt
-# OR jsluice (Tom Hudson) — best in 2024
-find js/ -name '*.js' | xargs -I{} jsluice urls -m '*' {} | sort -u >> endpoints_from_js.txt
-find js/ -name '*.js' | xargs -I{} jsluice secrets {} > js_secrets.txt
-```
+Manifest URLs may contain sensitive query values. Keep raw artifacts local with restricted access and redact before sharing. Authenticated collection is better captured through the existing browser/proxy session; do not add secrets to command-line arguments. Failed/expired-session responses are coverage gaps. JavaScript filtering rejects common HTML/error pages but is not a JavaScript parser; inspect representative content and compare downloaded scripts to the expected flow.
 
-### Secret scanning on downloaded JS
-```bash
-trufflehog filesystem --json js/ > js_truffle.json
-secretfinder -i js/ -o cli > js_secretfinder.txt
-# Custom regex sweep for things truffle misses
-rg -i 'aws_secret|aws_access|stripe_(test|live)|sk_live_|sk_test_|xoxb-|xoxp-|xapp-|pk_live_|pk_test_|api[_-]?key|client[_-]?secret|firebase|sendgrid|twilio|mailgun|github_token|ghp_|ghu_|ghs_|jwt|bearer\s+[a-z0-9]+|password\s*[:=]\s*["\']' js/
-```
+## Analysis
 
-### Sourcemap recovery (gold mine)
-```bash
-for u in $(cat js_urls.txt); do
-  curl -sk --max-time 10 "$u.map" -o /tmp/x.map && [ -s /tmp/x.map ] && echo "FOUND .map: $u.map"
-done
-# Then unpack:
-npx sourcemap-explorer file.js.map
-# OR
-git clone https://github.com/denandz/sourcemapper && go run sourcemapper.go -url "https://example.com/main.js.map" -output recovered/
-```
+Select the saved JS files from the manifest, keeping the working directory stable. Search for the feature's routes, request builders, role checks, object relationships, state transitions, and error handling. Follow call sites and data flow rather than reporting strings or sink names alone. Use installed tool help to verify optional extractor flags.
 
-### DOM XSS sink hunting in client JS
-```bash
-rg -n 'document\.write|innerHTML\s*=|outerHTML\s*=|insertAdjacentHTML|\.html\(|eval\(|setTimeout\(["\']\\$|setInterval\(["\']|Function\(|setAttribute\((?:["\'](?:on|src|href))|location\s*=|location\.href|location\.replace|location\.assign|window\.open|postMessage' js/
-```
+Endpoint extraction should retain methods, required headers, request shape, version, and owning feature where available. Establish a successful legitimate request before security mutations. An apparent secret must be classified by intended exposure and permissions; a publishable client key is not automatically a credential finding. Any live credential verification requires a scoped, bounded target-specific decision.
 
-### postMessage handlers (great for XSS / DOM clobbering chains)
-```bash
-rg -n 'addEventListener\(["\']message["\']' js/ -A 10
-```
+## Source maps
 
-### Webpack bundle deobfuscation (when source maps unavailable)
-```bash
-# Unminify visually
-find js/ -name '*.js' -size +50k -exec js-beautify -o {}.pretty {} \;
-# Try debowerify / unwebpack
-npx unminify js/main.js > main.unminified.js
-```
+Resolve an observed sourceMappingURL against the script URL. Inline data maps can be decoded offline. Explicit .map guesses are hypotheses and must be filtered through scope like other URLs. Do not append `.map` after a query string or treat any nonempty response as success.
 
+Use the same collector with `--kind sourcemap`, an approved map URL list, and another new output directory. It checks JSON/version/basic map structure; indexed maps with inline submaps are supported, externally referenced sections are left for separate review. It does not prove mappings are semantically valid. Inspect sources/content and use an appropriate local parser before relying on extracted code. Do not automatically fetch sourceRoot/sources URLs.
 
+## Handoff
 
-
-## EDGE CASES
-- **Lazy-loaded chunks** — main bundle dynamically imports `/static/js/chunk-*.js`. Crawl + the manifest in `runtime.*.js` gives you the chunk graph.
-- **Source maps in prod** — devs forget to strip them. Always check for `//# sourceMappingURL=` at the bottom of every JS file.
-- **Service workers** — `sw.js` often caches API URLs and lists endpoints not used in the visible app.
-- **`window.__INITIAL_STATE__`** — Server-rendered SPAs leak full user objects, role lists, feature flags. Grep page source for `__INITIAL_STATE__`, `__APOLLO_STATE__`, `__NEXT_DATA__`, `__NUXT__`.
-- **Internal API hostnames** — leaked in client JS as fallback URLs. `https://api-internal.corp.example.com` not in your subdomain list = recon win.
-
-## OUTPUT FORMAT
-```
-JAVASCRIPT_ANALYSIS({target}):
-  <key>: <value>
-  ...
-NEXT: handoff to next stage
-```
-
-## SOURCES
-- Bug Hunters Methodology Live Day One Recon (jhaddix)
-- zseanos-methodology
-- Elite_BugBounty_Methodology
-- ProjectDiscovery / Assetnote / SecLists
-- HackTricks recon section
-- PortSwigger Research blog
+Record requested/saved/failed counts, relevant feature coverage, and evidence paths. A missing authenticated chunk or failed fetch means PARTIAL, not DONE. Hand off concrete request shapes to web/API testing and reachable source-to-sink candidates to source review. Exposure of a bundle or source map alone does not prove a vulnerability.

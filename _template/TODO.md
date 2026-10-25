@@ -4,7 +4,9 @@
 - [ ] Inspect existing `STATE.md`, `RECON_LOG.md`, findings, and `recon_data/` before new work.
 - [ ] Audit applicable recon stages; mark DONE / PARTIAL / MISSING / N/A.
 - [ ] Choose the highest-signal missing step instead of blindly running the full pipeline.
-- [ ] Prioritize alive/auth/API/business-critical surfaces from actual evidence.
+- [ ] Establish a normal successful product flow and required account/tenant access.
+- [ ] Prioritize reachable, business-relevant boundaries from evidence; retain competing hypotheses.
+- [ ] Record meaningful experiments and gaps in HYPOTHESES.md / COVERAGE.md when useful.
 - [ ] For each candidate: viability gate -> minimal proof -> falsification -> demonstrated impact.
 - [ ] Use `exploit-mode` only after a concrete primitive exists and a compact PoC/chain is useful.
 - [ ] Use `reporting-mode` for final severity/CVSS and platform-ready writeup.

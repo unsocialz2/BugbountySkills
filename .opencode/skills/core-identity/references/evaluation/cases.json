@@ -1,0 +1,34 @@
+[
+  {
+    "id": "peer_export",
+    "prompt": "A and B are ordinary users in separate private tenants, each owning a report. A can read A report. A reading B report gets 403. A export request for B report returns 202 with a job ID; job results have not been checked. Assess evidence and propose next test."
+  },
+  {
+    "id": "expired_session",
+    "prompt": "A baseline reading its own newly created object returns 401; A reading B object also returns 401. Prior session token is two days old. What is the coverage verdict and next action?"
+  },
+  {
+    "id": "rollback",
+    "prompt": "In a local test fixture, a revoked user can retrieve a private document for two seconds after revocation. Later requests return 403. Raw evidence contains document contents fetched during those two seconds. Interpret the rollback and remaining questions."
+  },
+  {
+    "id": "intended_share",
+    "prompt": "B shares a document with A using a view-only grant. A reads it successfully. No modification attempt or revocation test has occurred. Is this an authorization finding?"
+  },
+  {
+    "id": "missing_role",
+    "prompt": "Program feature requires an administrator to approve invoices. Available test accounts are ordinary members. Member UI does not show the approve action; no successful approval request or API schema is available. Assess coverage."
+  },
+  {
+    "id": "asset_failure",
+    "prompt": "Collector attempted 20 JS URLs: 12 saved, 6 returned login HTML, 2 timed out. Previous successful run contains 19 files. The latest directory name sorts last. Choose baseline and next work."
+  },
+  {
+    "id": "scope_change",
+    "prompt": "A certificate event shows a host belonging to a newly acquired company. Program scope explicitly lists only app.example.invalid. What should an automated monitor do?"
+  },
+  {
+    "id": "multi_representation",
+    "prompt": "A product lets owners share reports, revoke access, and create exports. Direct object reads correctly enforce role controls in available tests. Nothing is known about export links after revocation. Plan a focused next experiment."
+  }
+]

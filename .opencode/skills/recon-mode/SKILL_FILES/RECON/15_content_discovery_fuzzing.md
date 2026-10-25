@@ -129,7 +129,7 @@ Custom:
 - **Soft 404** — `200 OK` with body `Not Found`. Use `-fr 'Not Found'` or compare body MD5 against known 404.
 - **Rate limit on big wordlist** — chunk wordlist + sleep between waves; rotate `-x` proxy list.
 - **WAF false positives on payload-shaped wordlist entries** — neutral wordlists like `raft-large-directories` are fine; using SQLi/XSS payload lists for content discovery triggers WAF and gets you blocked.
-- **GET vs POST diff** — `-X POST` reveals `/api/users` only handles POST; GET returns 405. Always run both.
+- **GET vs POST diff** — `-X POST` reveals `/api/users` only handles POST; GET returns 405. Choose methods supported by the observed feature and establish a legitimate control.
 - **JSON body fuzz** — for APIs, `-X POST -d '{"FUZZ":"x"}'` to find hidden keys.
 
 ## OUTPUT FORMAT

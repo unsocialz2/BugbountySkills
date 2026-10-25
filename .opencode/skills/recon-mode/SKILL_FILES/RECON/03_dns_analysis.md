@@ -66,7 +66,7 @@ prips $(cat netblocks.txt) | dnsx -ptr -resp-only -silent | sort -u > rdns.txt
 ## EDGE CASES
 - **Wildcard CNAMEs** — `*.example.com → cdn.thirdparty.com`. The wildcard itself isn't takeover-able; specific named subs that go through the wildcard might be. Test each.
 - **Split-horizon DNS** — internal vs external view. You only see external. Pivot via leaked /etc/hosts in S3 or GitHub.
-- **DNSSEC NSEC walking** — yields full zone for free if NSEC (not NSEC3). Always try first.
+- **DNSSEC NSEC walking** — yields full zone for free if NSEC (not NSEC3). Use only when relevant to the current discovery question and allowed by target rules.
 - **Cloudflare/Akamai-fronted MX** — origin server IP often leaked via MX record (mail server).
 - **Email security misconfig (high-impact P3-P2):** SPF too permissive + DMARC `p=none` + missing DKIM = phishing primitive. Send forged email from `payments@target.com` to triager.
 

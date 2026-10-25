@@ -79,7 +79,10 @@ Every executed stage should leave:
 1. a target-local artifact under `recon_data/` (or a clearly named target-local file),
 2. a concise `RECON_LOG.md` row with date/stage/artifact/delta,
 3. deduped output suitable for downstream use,
-4. only the **delta** fed into expensive downstream stages when practical.
+4. only the **delta** fed into expensive downstream stages when practical,
+5. output validation (format/content/counts/errors) before DONE; partial output must not replace the last good baseline.
+
+For reliable JS/source-map collection, the JavaScript stage documents `scripts/collect_assets.py`. It accepts exact pre-approved URLs; it does not infer scope.
 
 ## Handoff boundaries
 

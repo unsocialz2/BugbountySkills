@@ -21,7 +21,7 @@ Use `web-mode` instead when the key trust boundary is a browser/session/form/ren
 ## API hunt loop
 
 1. Inventory only the endpoints/schemas relevant to the current question.
-2. Build the minimum auth matrix needed: unauthenticated / low-priv / higher-priv only where available and permitted.
+2. Establish a successful legitimate request. Build the relevant actor/resource/action/state matrix, including peer accounts or separate tenants where needed and available. Missing roles, stale sessions, and invalid controls are blocked/inconclusive coverage, not evidence of enforcement.
 3. Prioritize authorization before broad injection fuzzing.
 4. Load one exact deep-dive file.
 5. Confirm behavior with a minimal differential request.
