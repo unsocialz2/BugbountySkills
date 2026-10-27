@@ -10,7 +10,9 @@
 - [ ] For each candidate: viability gate -> minimal proof -> falsification -> demonstrated impact.
 - [ ] Use `exploit-mode` only after a concrete primitive exists and a compact PoC/chain is useful.
 - [ ] Use `reporting-mode` for final severity/CVSS and platform-ready writeup.
-- [ ] Update concise state and lessons before ending the session.
+- [ ] Before cleanup, preserve permitted decisive evidence and the cleanup result.
+- [ ] Before handoff, apply HUNT_RULES §4 decision checkpoint; reconcile current coverage/blockers and recon run counts.
+- [ ] Update concise state and lessons; name the exact experiment behind any requested prerequisite.
 
 Optional starter copy:
 

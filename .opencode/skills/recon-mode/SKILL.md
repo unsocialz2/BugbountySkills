@@ -77,10 +77,14 @@ Load **one stage file at a time**:
 Every executed stage should leave:
 
 1. a target-local artifact under `recon_data/` (or a clearly named target-local file),
-2. a concise `RECON_LOG.md` row with date/stage/artifact/delta,
+2. a concise `RECON_LOG.md` row with run ID, timestamp, input/output counts, snapshot identity, completion status, and delta,
 3. deduped output suitable for downstream use,
 4. only the **delta** fed into expensive downstream stages when practical,
 5. output validation (format/content/counts/errors) before DONE; partial output must not replace the last good baseline.
+
+Save completion/exit/error evidence alongside results. Zero hits is meaningful only for the successfully completed input/template set; missing completion makes the run unverified. Keep input/output hashes or immutable per-run paths so later files cannot silently change an old coverage claim. Refresh counts when appending a new run; flag stale summaries rather than assuming the newest file was already tested.
+
+After discovery, hand off a reachable feature, its normal flow/access requirements, and a concrete boundary question. Raw file/host/repository counts do not demonstrate manual coverage; broad discovery need not finish before a useful feature experiment starts.
 
 For reliable JS/source-map collection, the JavaScript stage documents `scripts/collect_assets.py`. It accepts exact pre-approved URLs; it does not infer scope.
 

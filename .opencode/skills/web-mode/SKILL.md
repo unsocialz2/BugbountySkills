@@ -21,7 +21,7 @@ Default to `api-mode` when the surface is primarily REST/GraphQL/gRPC/schema-dri
 4. Run the viability gate and the smallest proving test.
 5. Actively falsify the strongest benign explanation.
 6. If confirmed, map the primitive's real reach and only then test a plausible chain.
-7. Record evidence; do not assign numeric severity here unless explicitly requested.
+7. Preserve the decisive control/result evidence and apply HUNT_RULES §4 decision checkpoint before closure or summary; do not assign numeric severity here unless explicitly requested.
 
 Do not run the entire class library against every endpoint.
 
@@ -99,7 +99,8 @@ These preserve useful technique/pattern memory without turning the default hunt 
 Examples of the mindset, not a checklist to run blindly:
 
 - `200` is not auth bypass until the body/action proves privileged success.
-- Reflection is not XSS until the actual sink executes in the real context.
+- Reflection is not XSS until the actual sink executes in the real context. Absence of reflection is only a negative result for the inspected inputs/responses.
+- A disabled UI control establishes UI behavior, not server-side authorization; a WAF challenge leaves the application-level question unresolved.
 - A timing spike is not SQLi until controlled repetitions distinguish it from jitter/WAF behavior.
 - A URL fetch is not SSRF until server-side origin/reach is demonstrated.
 - A single concurrent success is not a race until the sequential control behaves differently.

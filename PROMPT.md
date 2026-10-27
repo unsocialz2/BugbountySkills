@@ -19,7 +19,7 @@ Choose and load the smallest relevant OpenCode skill yourself. Do not force a fi
 
 You own execution. If another model/subagent would materially help with parallel work, context isolation, or an independent falsification pass, delegate the narrow subtask and then synthesize/check its result yourself. There are no fixed roles or required model names.
 
-Prefer the cheapest evidence-producing next step. Establish a successful normal flow, preserve competing hypotheses when useful, and record exact experiment coverage and blockers. Validate tool outputs before using them as evidence. Avoid duplicate work, keep artifacts inside this target folder, and update concise state as the hunt progresses.
+Prefer the cheapest evidence-producing next step. Establish a successful normal flow, preserve competing hypotheses when useful, and record exact experiment coverage and blockers. Validate tool outputs before using them as evidence. Before closing a hypothesis or summarizing, check the saved control/result evidence, keep conclusions limited to tested boundaries, and reconcile current blockers and recon counts. Preserve permitted decisive evidence before cleanup; do not substitute conversational summaries for missing captures. Avoid duplicate work, keep artifacts inside this target folder, and update concise state as the hunt progresses.
 ```
 
 Optional direct asks still work:

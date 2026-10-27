@@ -10,7 +10,7 @@ Before target actions:
 
 1. Read `rules.txt` when present.
 2. Load scope from `scope.txt`, then `scope.csv` / `scope*.csv` / one obvious program-export CSV. Parse CSV by headers, not a hardcoded platform schema.
-3. Inspect existing `STATE.md`, `findings.md`, `lessons.md`, `RECON_LOG.md`, and `recon_data/` only when present/relevant. Missing files are normal; create working artifacts only when useful.
+3. Inspect existing `STATE.md`, `HYPOTHESES.md`, `COVERAGE.md`, `findings.md`, `lessons.md`, `RECON_LOG.md`, and `recon_data/` only when present/relevant. Missing files are normal; create working artifacts only when useful.
 4. Build a silent context: scope, restrictions/rates, auth prerequisites, known coverage/evidence, and active target facts.
 
 `rules.txt` + explicit scope outrank generic skills. Never invent scope or treat brand/ownership resemblance as permission. Do not re-ask for facts already in the workspace. Keep all target artifacts inside TARGET_ROOT.
@@ -98,6 +98,15 @@ Nothing is a validated finding without:
 
 A lead is not scored. Before reporting, reproduce from a clean-enough state and map every impact claim to evidence. Falsification may be done directly or delegated; no named reviewer is mandatory.
 
+### Decision checkpoint — before closure, promotion, or summary
+
+This applies to negative conclusions as well as findings. Preserve a compact reviewable record of the decisive experiment: exact tested boundary, valid control, request/result or runtime/source evidence, interpretation, and remaining gap. Link a real artifact and location; “session logs” without an accessible path is not evidence. Use `_template/EXPERIMENT.md` when useful, or equivalent existing records. Retain only policy-permitted, sanitized evidence; do not collect extra customer data to satisfy documentation. Save the permitted record before cleaning up test objects.
+
+- Keep configuration declarations, observed responses, demonstrated execution, and verified effects distinct. Endpoint flags and HTTP success do not establish execution or mutation counts.
+- A random/nonexistent ID returning 404, a disabled UI control, a WAF block, and a failed scan cannot establish the underlying authorization or application behavior. Record the narrow observation and mark the unresolved question blocked/inconclusive/not-tested as appropriate.
+- `enforced-in-tested-case` needs a meaningful control showing that the valid resource/action is reachable and that the relevant boundary caused denial. It does not certify the endpoint or vulnerability class generally.
+- Before a summary or closure, open the cited evidence, check that it supports the exact claim, and preserve uncertainty. Missing evidence means an unverified historical observation, not a fabricated proof or an automatic retest. Detailed checks: `.opencode/skills/core-identity/references/decision-checkpoint.md` relative to repo root.
+
 ## 5. TIME, STATE, NO-REPEAT
 
 Time boxes are heuristics, not hard stops: prolonged recon without signal -> pivot; a candidate producing no new evidence -> park; a high-signal path that keeps producing evidence may continue. **Never invent elapsed time**—use timestamps when available or reason qualitatively.
@@ -106,7 +115,11 @@ Reuse existing evidence before collecting more. Do not repeat verified work mere
 
 A temporary invalid state can still have lasting impact. Check actions and disclosure during the window before dismissing a rollback.
 
-Keep `STATE.md` concise: target facts, auth state, tech stack, coverage, interesting surfaces, findings/leads, lessons, and next action—not a transcript.
+Keep `STATE.md` concise: target facts, auth state, tech stack, coverage, interesting surfaces, findings/leads, lessons, and next action—not a transcript. Reconcile it against current experiment IDs and evidence before handoff: supersede stale blockers, retain the history, and never convert “not observed in these tests” to “no bugs of this class.”
+
+Tie recon counts to a named run and input/output snapshot (counts, timestamp, hash or immutable artifact). An empty scanner result alone does not prove a successful no-hit run; retain completion/error evidence. If output changes, append a new run/update the current pointer rather than silently reusing old counts.
+
+Before expanding to another surface or recommending paid access/device/identity, name the unresolved question, prerequisite, discriminating test, and why it outranks reachable alternatives. A blocker applies to that experiment, not the entire target. Do not make purchases or create accounts from a recommendation alone.
 
 ## 6. CALIBRATION
 

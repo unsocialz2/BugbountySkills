@@ -30,5 +30,45 @@
   {
     "id": "multi_representation",
     "prompt": "A product lets owners share reports, revoke access, and create exports. Direct object reads correctly enforce role controls in available tests. Nothing is known about export links after revocation. Plan a focused next experiment."
+  },
+  {
+    "id": "random_id_denial",
+    "prompt": "Anonymous GET /reports/<random UUID> returns 404. No existing report or successful control is available. A draft marks object authorization enforced and says no IDOR. Review this conclusion."
+  },
+  {
+    "id": "ui_entitlement",
+    "prompt": "A free account sees an upgrade dialog for an advanced model. No server request for that feature was inspected. The analyst marks server entitlement enforcement verified. Review coverage."
+  },
+  {
+    "id": "webhook_acceptance",
+    "prompt": "Metadata marks 18 workflows unauthenticated. Only two were invoked; one returned an IP and one returned 200 with an empty object for a synthetic unsigned webhook event. No stored state was observed. Draft: all 18 execute publicly and signature bypass is confirmed. Review."
+  },
+  {
+    "id": "missing_capture",
+    "prompt": "Coverage says cross-workspace read was denied and links to session logs. The local logs directory contains only two empty error files; there is no saved transcript or request/response. Test objects have been deleted. Summarize confidence without new testing."
+  },
+  {
+    "id": "stale_inventory",
+    "prompt": "Recon log records enumeration output as zero names; the current referenced file has 540 unique names and no snapshot identifier. It is unknown when the file changed or which names were subsequently tested. Assess coverage."
+  },
+  {
+    "id": "resolved_blocker",
+    "prompt": "An early coverage section says sharing tests need a login. Later rows document a valid logged-in session and share visibility tests with evidence. Cross-account testing still lacks a second identity. Prepare current state."
+  },
+  {
+    "id": "feature_priority",
+    "prompt": "One account can create, share and revoke project exports. A separate batch feature needs credits; a mobile feature needs a physical device. No experiment links or comparison support the statement that only buying access can produce useful work. Recommend the next decision."
+  },
+  {
+    "id": "empty_scan",
+    "prompt": "A zero-byte scan results file is present. No command, input list, template set, completion, or error log is saved. The summary says no takeover vulnerabilities exist. Review the summary."
+  },
+  {
+    "id": "waf_reflection",
+    "prompt": "A redirect test hits a WAF challenge. A separate marker search in one HTML response finds no reflection. Draft: redirects and XSS are secure across this product. Review."
+  },
+  {
+    "id": "cleanup_evidence",
+    "prompt": "A controlled sharing experiment has a successful baseline and a meaningful result. Test objects must now be deleted. Raw responses contain session tokens and only the researcher-owned fixture data. What should be retained and when?"
   }
 ]

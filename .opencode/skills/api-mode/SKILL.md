@@ -26,7 +26,7 @@ Use `web-mode` instead when the key trust boundary is a browser/session/form/ren
 4. Load one exact deep-dive file.
 5. Confirm behavior with a minimal differential request.
 6. Falsify alternate explanations such as cached data, error bodies with 200 status, leaked identifiers, or role mismatch.
-7. Record demonstrated impact facts; scoring belongs to `reporting-mode` unless explicitly requested.
+7. Save the control and semantic result with an exact evidence reference. Apply HUNT_RULES §4 decision checkpoint before closure or summary; scoring belongs to `reporting-mode` unless explicitly requested.
 
 ## Deep-dive router
 
@@ -74,6 +74,8 @@ TEST:    A -> B unexpected success/failure detail
 ```
 
 For GraphQL, name the exact operation/field/mutation and auth state. For gRPC, name service/method plus metadata/auth state.
+
+A nonexistent ID returning 404 is not an ownership control. Use an existing controlled resource and its legitimate successful access before interpreting a cross-actor denial. Metadata auth flags count configured routes, not successful execution. Webhook 200/202 responses prove neither signature bypass nor a state change; preserve processing uncertainty until an allowed controlled observation resolves it.
 
 ## Cross-skill boundaries
 

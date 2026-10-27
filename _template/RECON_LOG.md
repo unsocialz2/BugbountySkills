@@ -1,32 +1,12 @@
-# RECON_LOG — <target> (append-only ledger)
+# RECON_LOG — <target> (append-only run ledger)
 
-Source of truth for what recon was already done, with enough context to decide whether it is still fresh/useful.
-Before marking DONE, validate output format, expected counts/provenance, representative content, and tool errors. Empty output is not absence of assets unless collection completed correctly. Preserve the last good baseline when a refresh is partial.
-A stage marked DONE is not rerun blindly; refresh only for stale evidence, changed scope/behavior, or explicit operator request.
+Add rows for executed stages, not a mandatory full pipeline. Preserve the last good baseline on failed/partial refreshes. A new run must not overwrite the identity of an earlier run.
 
-| Date | Stage | Status | Artifact | Delta / reason |
-|------|-------|--------|----------|----------------|
-|      | 1 passive seed | | | |
-|      | 2 enum+resolve | | | |
-|      | 3 DNS analysis | | | |
-|      | 4 alive probe | | | |
-|      | 5 JS analysis | | | |
-|      | 6 wayback mining | | | |
-|      | 7 port scan | | | |
-|      | 8 fingerprint | | | |
-|      | 9 github/code leaks | | | |
-|      | 10 search-engine dorks | | | |
-|      | 11 shodan/censys/fofa | | | |
-|      | 12 cloud assets | | | |
-|      | 13 mobile recon | | | |
-|      | 14 API discovery | | | |
-|      | 15 content discovery | | | |
-|      | 16 automation/dedup | | | |
+| Run ID / UTC time | Stage / scope version | Input artifact / count | Output artifact / count | Snapshot hash or immutable path | Completion / errors evidence | Status | Delta / decision |
+|-------------------|-----------------------|------------------------|-------------------------|----------------------------------|------------------------------|--------|------------------|
 
-Status values: `DONE`, `PARTIAL`, `MISSING`, `N/A`, `REFRESHED`.
+Status: `DONE`, `PARTIAL`, `FAILED`, `UNVERIFIED`, `MISSING`, `N/A`. A refresh is a new run with one of these outcomes, not proof of completeness by itself.
 
-## Audit notes
+Before DONE, validate format, representative content, counts, input coverage, and tool completion/errors. A zero-length results file with no completion record is UNVERIFIED, not “zero findings.” Record tool/version and the exact input/template selection in the run evidence when needed to reproduce the result. Keep secrets out of recorded command arguments.
 
-<!-- Example:
-| 2026-10-14 | AUDIT | PARTIAL | gaps: DNS, JS secrets | next: DNS only; port scan N/A by rules |
--->
+Counts describe the named snapshot. When an artifact changes, append a new run and update STATE's current run pointer; do not silently reuse old counts. Distinguish collection completeness from downstream testing coverage. A scanner's no-hit result does not establish absence of a vulnerability class.

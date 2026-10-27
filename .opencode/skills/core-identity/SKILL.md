@@ -20,12 +20,12 @@ description: Core ORACLE hunting behavior and strategy. Use for session start, S
 ## Session loop
 
 1. Bootstrap TARGET CONTEXT from the current `targets/<target>/` folder via `HUNT_RULES.md §0`.
-2. Read existing `STATE.md`, `findings.md`, `lessons.md`, `RECON_LOG.md`, and relevant artifact inventory if present.
+2. Read current STATE plus relevant hypothesis, coverage, findings, recon, and evidence records; distinguish historical notes from verified artifacts.
 3. Establish the relevant normal product flow; choose the most informative unresolved question from a small hypothesis queue, keeping alternatives visible.
 4. Load the smallest relevant domain skill and, from it, only the exact deep-dive file needed.
 5. Run/plan the cheapest evidence-producing step allowed by scope/rules.
 6. Falsify promising candidates before escalating them.
-7. Update concise target-local state; do not turn STATE into a transcript.
+7. Apply `references/decision-checkpoint.md` before closure or handoff: check cited evidence and controls, reconcile stale blockers, and update concise state without strengthening conclusions.
 
 ## STATE shape
 
@@ -34,7 +34,10 @@ TARGET:
 SCOPE SOURCE:
 AUTH STATE:
 TECH STACK:
-RECON COVERAGE:
+RECON COVERAGE: # current run / snapshot
+ACTIVE QUESTION: # hypothesis ID + next experiment
+TEST COVERAGE: # evidence-backed results and unresolved gaps
+BLOCKERS: # current, experiment-specific
 INTERESTING SURFACES:
 FINDINGS:
 LESSONS:
@@ -57,6 +60,7 @@ Load one of these only when the current question needs it:
 | duplicate avoidance | `SKILL_FILES/MINDSET_STRATEGY/duplicate_avoidance.md` |
 | time management | `SKILL_FILES/MINDSET_STRATEGY/time_management_hunting.md` |
 | patch/disclosure trend hunting | `SKILL_FILES/MINDSET_STRATEGY/staying_ahead_of_patches.md` |
+| closure, enforcement claims, or session summaries | `references/decision-checkpoint.md` |
 | hypothesis selection and experiment coverage | `references/hypothesis-and-coverage.md` |
 | skill evaluation after workflow changes | `references/skill-evaluation.md` |
 | learning system | `SKILL_FILES/MINDSET_STRATEGY/continuous_learning_system.md` |

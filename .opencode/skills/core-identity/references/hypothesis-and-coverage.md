@@ -10,4 +10,6 @@ An experiment should name its prediction and what result would falsify it. Vary 
 
 Coverage belongs to the tested tuple: actor/tenant, resource, action/representation, lifecycle state, and relevant version. Record a compact row per meaningful experiment or homogeneous batch; include exceptions instead of duplicating every request. No automatic Cartesian-product testing is required.
 
+Evidence references must resolve to reviewable artifacts, not only conversational summaries. Apply `decision-checkpoint.md` before promotion, closure, or handoff. Keep historical tests, link superseding tests, and refresh current gaps when access changes.
+
 A parked hypothesis needs a reason and reopening trigger: new role, reachable route, changed release, missing artifact, or a genuinely new discriminating test. Resume by reading these records, not re-running an old checklist.
