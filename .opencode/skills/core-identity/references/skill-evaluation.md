@@ -11,3 +11,5 @@ After answering, grade against the matching rubric: pass only when all required 
 Repeat with new held-out product scenarios before drawing broad conclusions; a perfect fixture score is not proof of real-world discovery performance.
 
 Save evaluation outputs in an isolated temporary workspace or the active target's authorized local evaluation folder. Do not place secrets in fixtures. Repository script tests cover collection correctness separately and do not measure hunting ability.
+
+For an executed tool-use pilot, use the runnable harness in discovery-pilot.md. Preserve fixture self-test results, recorded candidate sessions and before/after outcome counts as three different kinds of evidence. Do not give fixture source, private polarity or grading keys to a candidate.

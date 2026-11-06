@@ -64,6 +64,7 @@ Load one of these only when the current question needs it:
 | closure, enforcement claims, or session summaries | `references/decision-checkpoint.md` |
 | hypothesis selection and experiment coverage | `references/hypothesis-and-coverage.md` |
 | actual load/execution evidence or runtime comparison | `references/execution-provenance.md` |
+| runnable local discovery comparison | `references/discovery-pilot.md` |
 | skill evaluation after workflow changes | `references/skill-evaluation.md` |
 | learning system | `SKILL_FILES/MINDSET_STRATEGY/continuous_learning_system.md` |
 

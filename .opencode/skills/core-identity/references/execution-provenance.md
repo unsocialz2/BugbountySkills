@@ -17,3 +17,5 @@ Avoid recording credential values, complete environment dumps or unrelated conve
 For controlled evaluation, freeze the exact skill files, runtime/model/settings and application state for each arm. A different agent/model or a prose-only exercise can test a hypothesis about instructions, but is not a measurement of the operator's actual OpenCode discovery performance. Record that limitation.
 
 OpenCode loading reference (verify against the installed version): https://opencode.ai/docs/skills/
+
+The local discovery pilot records actual context/skill/reference deliveries and HTTP actions through its own gateway; see discovery-pilot.md. This supplies lab evidence only, not an automatic export of a production OpenCode session or an attestation of the declared model/settings.

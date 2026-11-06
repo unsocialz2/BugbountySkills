@@ -1,6 +1,35 @@
 # Small controlled discovery pilot
 
-Use when deciding whether a strategic skill revision improves actual discovery. This protocol is not an executed result or authorization to test external systems.
+Use when deciding whether a strategic skill revision improves actual discovery. The runnable local harness below implements this protocol. A prepared pilot or its self-tests are not an executed model result or authorization to test external systems.
+
+## Runnable local pilot
+
+The skill includes `scripts/discovery_lab.py` and independently authored synthetic fixtures in `scripts/discovery_lab_app.py`, both relative to the core-identity skill root. Python's standard library and local Git are sufficient; no provider SDK, API key, external target, purchase or real account is needed. The fixture source and oracle must not be given to the candidate. Once an evaluator knows these fixtures, treat them as regression tests and use freshly authored cases for claims about general discovery.
+
+From a coordinator shell, choose two distinct local skill commits, a NEW output directory (normally `.lab-runs/<new-id>` under the repo, never a live target workspace), and declare the intended model/runtime/settings. Unknown provenance must remain labelled unknown.
+
+```bash
+python3 "${CORE_SKILL:?}/scripts/discovery_lab.py" prepare \
+  --repo "${REPO_ROOT:?}" --output "${NEW_PILOT_ROOT:?}" \
+  --baseline "${BASELINE_REF:?}" --candidate "${CANDIDATE_REF:?}" \
+  --max-actions 24 --max-seconds 600 \
+  --model-label "${MODEL_LABEL:?}" --runtime-label "${RUNTIME_LABEL:?}" \
+  --settings-label "${SETTINGS_LABEL:?}"
+python3 "$CORE_SKILL/scripts/discovery_lab.py" serve --root "$NEW_PILOT_ROOT"
+```
+
+The server binds only to `127.0.0.1`, chooses a local port, and writes coordinator dispatch paths to `public/index.json`. Give each fresh evaluated session only ONE run's `brief.json` and its allowed workspace. Do not give the index, private plan, snapshot/source files, app tests, prior answers or grades. Candidate instructions and references are delivered through that run's `/context`, `/skills/<id>` and `/files/<snapshot-relative path>` endpoints. App actions use the normal API described by `/context`, with two supplied researcher-owned synthetic account tokens. No other target or run is permitted.
+
+The evaluator submits one `POST /report` with `verdict` (`finding`, `no-finding` or `blocked`), `summary`, and actual `evidence_ids`. The report endpoint acknowledges receipt without revealing the oracle or score. `/context` starts the run clock; application calls count toward the action budget. Instruction reads are separately recorded. Reports remain possible after budget exhaustion. The private server trace records actual calls and synthetic responses, skill/reference delivery events, measured elapsed time and chained hashes. It also records the supplied **fake lab** authorization headers so the grader can replay the actions; never put real credentials or production traffic into this harness.
+
+```bash
+python3 "$CORE_SKILL/scripts/discovery_lab.py" grade \
+  --root "$NEW_PILOT_ROOT" --output "$NEW_PILOT_ROOT/grade.json"
+```
+
+The grader independently replays recorded application actions on fresh matching fixtures and checks log/snapshot/harness integrity. A finding requires cited successful-control and actual violation events. A repaired negative requires cited control and relevant boundary evidence; an untouched case is not a supported negative. It reports misses, unsupported findings, blocked/incomplete runs, load deliveries and cost separately. A malformed/fabricated citation does not earn finding credit. This is oracle-assisted local grading, not a replacement for human policy/root-cause review.
+
+The server refuses a restart that would silently reset an observed app; prepare a new pilot to reset. It stops on Ctrl-C, its bounded lifetime, or when the coordinator creates the local `private/STOP` file. Keep raw runs ignored/private; do not commit them or expose the loopback server through a tunnel. Blinding is a procedural evaluation rule, **not an OS-enforced sandbox**. Model/runtime labels are coordinator declarations, and a skill delivered over HTTP is not proof the model obeyed it. This harness does not instrument production OpenCode sessions.
 
 ## Freeze and hide the answer
 

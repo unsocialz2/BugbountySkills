@@ -8,3 +8,6 @@ targets/
 .massdns*
 resolvers.txt
 validated_resolvers.txt
+
+# local discovery-pilot fixtures, traces and private scoring
+.lab-runs/
