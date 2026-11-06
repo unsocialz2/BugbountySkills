@@ -76,6 +76,14 @@ This is a discovery gate, **not** a report gate. Unknown impact is acceptable wh
 - Park candidates after repeated low-cost tests fail to establish a real boundary/reachable primitive/plausible attacker advantage.
 - Source/static weakness without reachable attacker remains a lead/note, not a finding.
 
+### Select a testable feature
+
+Before substantial enumeration or a new surface, identify an allowed normal workflow, an available actor, an owned/synthetic resource (or legitimately public input), and an observable outcome. Resolve cheap missing prerequisites before broadening recon. Missing login does not prohibit evidence-based unauthenticated research, but repeated generic 401/403 probes do not substitute for a feature test. If access stays blocked, park that feature and compare a reachable alternative or another suitable target.
+
+Use the program-required researcher identity and valid actor/resource controls; temporary email or a second session of the same account is not automatically equivalent. Establish the actual method/request from normal client traffic or exact source/schema before concluding from guessed routes. Per-action controls matter: empty lists, invalid writes, same-privilege admins and unpopulated objects cannot support every ownership/role claim.
+
+After basic controls hold, use the feature's actual lifecycle and alternate representations to form the next hypothesis (for example sharing/revocation and an observed export path). Do not run a universal checklist or declare a feature exhausted from a few ID substitutions. Keep different explanations and their discriminating tests visible. Detailed guidance: `.opencode/skills/core-identity/references/feature-discovery.md` relative to repo root.
+
 ### Discovery and coverage memory
 
 For multi-step hunts, keep a small target-local `HYPOTHESES.md` queue and `COVERAGE.md` experiment ledger (starter shapes in `_template/`). A single simple test can use equivalent fields in existing notes instead. Do not load or populate a giant universal checklist.
@@ -102,6 +110,7 @@ A lead is not scored. Before reporting, reproduce from a clean-enough state and 
 
 This applies to negative conclusions as well as findings. Preserve a compact reviewable record of the decisive experiment: exact tested boundary, valid control, request/result or runtime/source evidence, interpretation, and remaining gap. Link a real artifact and location; “session logs” without an accessible path is not evidence. Use `_template/EXPERIMENT.md` when useful, or equivalent existing records. Retain only policy-permitted, sanitized evidence; do not collect extra customer data to satisfy documentation. Save the permitted record before cleaning up test objects.
 
+- Record lab modifications and distinguish observation-only instrumentation from changes to flags, routing, origin policy, authentication, or target behavior. A synthetic crypto roundtrip, direct internal-method call, dummy-token store write, or a modified feature path does not establish an external attacker path or real-user impact. Validate natural reachability and the semantic outcome separately; consult the feature-discovery reference.
 - Keep configuration declarations, observed responses, demonstrated execution, and verified effects distinct. Endpoint flags and HTTP success do not establish execution or mutation counts.
 - A random/nonexistent ID returning 404, a disabled UI control, a WAF block, and a failed scan cannot establish the underlying authorization or application behavior. Record the narrow observation and mark the unresolved question blocked/inconclusive/not-tested as appropriate.
 - `enforced-in-tested-case` needs a meaningful control showing that the valid resource/action is reachable and that the relevant boundary caused denial. It does not certify the endpoint or vulnerability class generally.
@@ -123,6 +132,7 @@ Before expanding to another surface or recommending paid access/device/identity,
 
 ## 6. CALIBRATION
 
+- Track technical evidence, program eligibility, and submission/duplicate status separately. A demonstrated issue marked duplicate is a different outcome from a disproven hypothesis; cite whether triage or only the operator supplied that status. VDP credit, informational exposure and bounty acceptance are not interchangeable. A policy that accepts credential/disclosure reports without replay can justify a narrowly evidenced report; do not invent access or break policy to prove it.
 - Evidence outranks scanner labels, model priors, skill examples, and theory.
 - State uncertainty and pair it with the cheapest discriminating test.
 - Do not inflate impact or force ATO/chains.

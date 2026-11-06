@@ -97,4 +97,4 @@ For reliable JS/source-map collection, the JavaScript stage documents `scripts/c
 - Public source repository/code -> `scr-mode`.
 - A concrete candidate needing validation/chaining -> corresponding domain skill first; `exploit-mode` only after a real primitive exists.
 
-Recon discovers and prioritizes. It does not need to finish every possible stage before high-signal manual hunting starts.
+Recon discovers and prioritizes. It does not need to finish every possible stage before high-signal manual hunting starts. Before another broad expansion, compare a reachable feature experiment against further inventory: what normal control/resource and boundary will the new stage unlock? When access is the recurring blocker, follow core-identity/references/feature-discovery.md (relative to the skills directory), rather than treating more hosts as progress by themselves. Explicit recon-only assignments still remain recon-only.

@@ -22,9 +22,9 @@ Use `web-mode` instead when the key trust boundary is a browser/session/form/ren
 
 1. Inventory only the endpoints/schemas relevant to the current question.
 2. Establish a successful legitimate request. Build the relevant actor/resource/action/state matrix, including peer accounts or separate tenants where needed and available. Missing roles, stale sessions, and invalid controls are blocked/inconclusive coverage, not evidence of enforcement.
-3. Prioritize authorization before broad injection fuzzing.
+3. Prioritize the most informative boundary exposed by this feature; authorization is often useful when a valid actor/resource contrast exists. Do not force authorization testing onto public processing features or use missing accounts as a universal blocker.
 4. Load one exact deep-dive file.
-5. Confirm behavior with a minimal differential request.
+5. Confirm behavior with a minimal differential request against a real successful action control, not an empty-resource list or unsupported method. Derive exact request shapes from the normal client/schema instead of repeated route guessing.
 6. Falsify alternate explanations such as cached data, error bodies with 200 status, leaked identifiers, or role mismatch.
 7. Save the control and semantic result with an exact evidence reference. Apply HUNT_RULES §4 decision checkpoint before closure or summary; scoring belongs to `reporting-mode` unless explicitly requested.
 

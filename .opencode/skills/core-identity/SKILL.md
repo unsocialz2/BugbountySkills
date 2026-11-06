@@ -21,7 +21,7 @@ description: Core ORACLE hunting behavior and strategy. Use for session start, S
 
 1. Bootstrap TARGET CONTEXT from the current `targets/<target>/` folder via `HUNT_RULES.md §0`.
 2. Read current STATE plus relevant hypothesis, coverage, findings, recon, and evidence records; distinguish historical notes from verified artifacts.
-3. Establish the relevant normal product flow; choose the most informative unresolved question from a small hypothesis queue, keeping alternatives visible.
+3. Select a testable feature via `references/feature-discovery.md` when access, baseline quality, repeated recon or lab reachability is unresolved; keep competing explanations and an observable normal control.
 4. Load the smallest relevant domain skill and, from it, only the exact deep-dive file needed.
 5. Run/plan the cheapest evidence-producing step allowed by scope/rules.
 6. Falsify promising candidates before escalating them.
@@ -55,6 +55,7 @@ Load one of these only when the current question needs it:
 | Need | Deep-dive file |
 |---|---|
 | core behavior background | `SKILL_FILES/00_core_identity_and_behavior.md` |
+| access, feature depth, natural attacker path, or repeated low-yield recon | `references/feature-discovery.md` |
 | target selection | `SKILL_FILES/MINDSET_STRATEGY/target_selection.md` |
 | high-value prioritization | `SKILL_FILES/MINDSET_STRATEGY/high_value_target_prioritization.md` |
 | duplicate avoidance | `SKILL_FILES/MINDSET_STRATEGY/duplicate_avoidance.md` |

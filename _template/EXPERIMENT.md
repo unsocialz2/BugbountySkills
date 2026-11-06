@@ -5,11 +5,14 @@ Use for an experiment that changes a decision, not every request. Save as a targ
 - Hypothesis / exact boundary:
 - Date / product version or source commit:
 - Actor labels, role/tenant, resource ownership, lifecycle/auth state:
+- Normal flow / authority source and expected attacker delta:
 - Expected rule and competing explanation:
 - Successful control and evidence path/section:
 - Test request/command/sequence (sanitized, reproducible):
 - Response/runtime observation and evidence path/section:
 - Independent state check / transient effect, when relevant:
+- Setup changes: observation-only / behavior-changing / normal configuration, with baseline differences:
+- Natural external entry / lifecycle proof and remaining reachability gap:
 - Falsification result:
 - Narrow conclusion / coverage verdict:
 - Remaining uncertainty / next test or reopen condition:

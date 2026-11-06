@@ -14,7 +14,7 @@ RECON COVERAGE: # current run IDs/snapshots and counts, not a full-pipeline scor
 INTERESTING SURFACES:
   -
 FINDINGS:
-  -
+  - # technical evidence / policy eligibility / submission outcome; attribute duplicate/triage source
 LESSONS:
   -
 NEXT:

@@ -23,7 +23,7 @@ Default to `api-mode` when the surface is primarily REST/GraphQL/gRPC/schema-dri
 6. If confirmed, map the primitive's real reach and only then test a plausible chain.
 7. Preserve the decisive control/result evidence and apply HUNT_RULES §4 decision checkpoint before closure or summary; do not assign numeric severity here unless explicitly requested.
 
-Do not run the entire class library against every endpoint.
+Do not run the entire class library against every endpoint. If basic controls hold, follow the same feature through its observed lifecycle and representations before declaring it exhausted. Record whether a browser PoC depends on localhost, origin/site/partition, trusted-origin configuration or a modified client. Use core-identity/references/feature-discovery.md (relative to the skills directory) when choosing the next experiment or validating those prerequisites.
 
 ## Routing by class
 

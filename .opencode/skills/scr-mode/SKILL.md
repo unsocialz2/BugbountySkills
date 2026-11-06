@@ -13,7 +13,7 @@ description: Source-code and repository security review. Use for taint/data-flow
 2. Identify dangerous sinks or security-sensitive state transitions.
 3. Trace attacker-controlled data source -> transformations/guards -> sink.
 4. Record exact file:line evidence and the missing/broken control.
-5. Determine runtime reachability. Unreachable code weakness = NOTE, not a validated finding.
+5. Determine runtime reachability and external attacker control under the actual supported build/configuration. A synthetic roundtrip, dead client field, test vector or static asset version is a lead, not proof of live data or vulnerable server execution; evidence of a reachable boundary is needed for a validated finding.
 6. If live validation is required, hand off to the owning runtime skill rather than duplicating it here.
 
 Prefer manual data-flow reasoning over bulk tool output. Static tools generate leads; they do not establish exploitability by themselves.

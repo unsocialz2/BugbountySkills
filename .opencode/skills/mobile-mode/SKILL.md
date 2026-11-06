@@ -42,6 +42,7 @@ The top-level skill intentionally does **not** pin Frida/tool versions. Environm
 
 - Lack of obfuscation, lack of pinning, root detection behavior, backup flags, and similar best-practice issues are not findings unless target policy accepts them and concrete impact is demonstrated.
 - A rooted/emulated lab may be useful for analysis but does not automatically make rooted-only impact reportable.
+- Record observation-only instrumentation separately from forced feature flags, guard bypasses, browser/component replacements and direct internal calls. Prove the claimed external entry and lifecycle on a naturally reachable supported configuration before calling a harness result end-to-end impact. Dummy token storage is not successful login. Use core-identity/references/feature-discovery.md (relative to the skills directory) for this discriminator.
 - APK-derived backend endpoints hand off to `api-mode`/`web-mode` for server-side validation; do not duplicate those methodologies here.
 - Deep links/WebViews stay here until the exploit crosses into a backend/API boundary.
 - Tool/version troubleshooting should consult `ENV.md` and the exact deep-dive file, not be embedded permanently in this router.
