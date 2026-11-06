@@ -19,6 +19,22 @@ The helper uses distinct URL-derived filenames, verifies TLS, declines redirects
 
 Manifest URLs may contain sensitive query values. Keep raw artifacts local with restricted access and redact before sharing. Authenticated collection is better captured through the existing browser/proxy session; do not add secrets to command-line arguments. Failed/expired-session responses are coverage gaps. JavaScript filtering rejects common HTML/error pages but is not a JavaScript parser; inspect representative content and compare downloaded scripts to the expected flow.
 
+## Completion and offline verification
+
+The collector creates `run.json` with the deduplicated input digest, requested/saved/failed counts, timing, limits, and manifest digest. It starts as `running`; only the terminal update marks completion. An interruption leaves an incomplete run instead of silently implying success. An exhausted run with errors is `partial` or `failed`, even though processing finished.
+
+Before selecting a baseline or handing off saved artifacts, verify the run locally:
+
+```bash
+python3 "${RECON_SKILL:?}/scripts/verify_asset_run.py" recon_data/js-run-001
+```
+
+The verifier performs no network requests or writes. It checks completion, counts, input/manifest digests, distinct records, expected artifact paths, file sizes and hashes; it rejects symlink artifacts. Exit 0 means a complete, internally consistent run; nonzero means partial, failed, missing, or inconsistent evidence. A complete run still needs scope/feature coverage and representative content review. Hashes detect drift relative to this snapshot; they do not authenticate the collector or prove a vulnerability. Older runs lacking `run.json` remain unverified, not automatically invalid or subject to a full re-fetch. Keep usable partial artifacts and repair only the gap justified by the current question. This verifier applies to this collector format, not arbitrary scanner output.
+
+## Program identification headers
+
+When program rules require identification headers, supply `--headers-file` pointing to a local JSON object, for example `{"X-HackerOne-Handle":"your-handle"}`. Check the actual header requirement before collection; the helper does not infer it from rules.txt. Values are sent to every approved URL in that invocation but are omitted from run metadata and normal error output. Use separate runs when different origins require different identification. Do not supply secrets; Cookie/Authorization and transport-control headers are rejected. Use the existing browser/proxy workflow for authenticated collection. TLS verification and redirect refusal remain enabled.
+
 ## Analysis
 
 Select the saved JS files from the manifest, keeping the working directory stable. Search for the feature's routes, request builders, role checks, object relationships, state transitions, and error handling. Follow call sites and data flow rather than reporting strings or sink names alone. Use installed tool help to verify optional extractor flags.

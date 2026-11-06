@@ -12,7 +12,7 @@ Automate the stage needed for the current question, not a universal enum-to-scan
 
 Validate upstream output before downstream work. Keep raw observations and filtered in-scope candidates distinct. Check redirect destinations before following them. Preserve the last good baseline on partial failure; a missing item is not a removal until collection completeness is established.
 
-For JavaScript/source-map collection, use `05_javascript_analysis.md` and the recon-mode `scripts/collect_assets.py` helper. Do not embed duplicate downloader implementations in pipelines.
+For JavaScript/source-map collection, use `05_javascript_analysis.md` and the recon-mode `scripts/collect_assets.py` helper. Run `scripts/verify_asset_run.py` offline before treating its output as a complete baseline; interrupted and partial runs cannot replace a good baseline. Supply any required program identification headers through the documented local header file. Do not embed duplicate downloader implementations in pipelines.
 
 ## Delta and restart
 

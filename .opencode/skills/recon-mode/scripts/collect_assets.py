@@ -4,8 +4,11 @@ No redirects, retries, crawling, URL expansion, or secret verification.
 """
 import argparse
 import hashlib
+import http.client
 import json
 import math
+import os
+import re
 from pathlib import Path
 import tempfile
 import time
@@ -21,13 +24,53 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 def checked_url(url):
     p = urllib.parse.urlsplit(url)
-    if p.scheme not in ('http', 'https') or not p.hostname or p.username or p.password or p.fragment:
+    if p.scheme not in ('http', 'https') or not p.hostname or p.username is not None or p.password is not None or p.fragment:
         raise ValueError('expected HTTP(S) URL without userinfo or fragment')
     if any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in url):
         raise ValueError('URL contains whitespace/control characters')
     _ = p.port
     return url
 
+
+
+def checked_headers(headers):
+    if not isinstance(headers, dict):
+        raise ValueError('headers must be a JSON object')
+    blocked = {'authorization', 'cookie', 'proxy-authorization', 'host',
+               'content-length', 'transfer-encoding', 'connection', 'accept-encoding'}
+    result = {}
+    for name, value in headers.items():
+        if (not isinstance(name, str) or not re.fullmatch(r"[!#$%&'*+.^_`|~0-9A-Za-z-]+", name)
+                or name.lower() in blocked or name.lower() in result):
+            raise ValueError('unsupported or duplicate header name')
+        if not isinstance(value, str) or any(ord(c) < 32 or ord(c) == 127 for c in value):
+            raise ValueError('invalid header value')
+        value.encode('latin-1')
+        result[name.lower()] = value
+    return result
+
+
+def utc_now():
+    return time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+
+
+def input_digest(urls):
+    return hashlib.sha256(json.dumps(urls, ensure_ascii=True, separators=(',', ':')).encode()).hexdigest()
+
+
+def write_json_atomic(path, value):
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, mode='w', encoding='utf-8', delete=False) as stream:
+            temporary = Path(stream.name)
+            json.dump(value, stream, indent=2)
+            stream.write('\n')
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 def validate_body(body, kind, content_type):
     if not body.strip():
@@ -63,18 +106,25 @@ def validate_body(body, kind, content_type):
     # JS is a candidate artifact, not syntactically verified or a security finding.
 
 
-def fetch(opener, url, max_bytes):
-    request = urllib.request.Request(url, headers={'User-Agent': 'BugbountySkills-asset-collector/1', 'Accept-Encoding': 'identity'})
+def fetch(opener, url, max_bytes, headers=None):
+    request_headers = {'user-agent': 'BugbountySkills-asset-collector/2', **checked_headers({} if headers is None else headers)}
+    request_headers['accept-encoding'] = 'identity'
+    request = urllib.request.Request(url, headers=request_headers)
     with opener.open(request, timeout=20) as response:
         if response.status != 200:
             raise ValueError('unexpected HTTP status')
+        if response.headers.get('Content-Encoding', 'identity').lower() != 'identity':
+            raise ValueError('unsupported content encoding')
         body = response.read(max_bytes + 1)
         if len(body) > max_bytes:
             raise ValueError('response exceeds byte limit')
         return body, response.headers.get('Content-Type', '')
 
 
-def collect(urls, output, kind, interval, max_bytes, fetcher=None):
+def collect(urls, output, kind, interval, max_bytes, fetcher=None, headers=None):
+    if kind not in ('javascript', 'sourcemap'):
+        raise ValueError('unsupported artifact kind')
+    headers = checked_headers({} if headers is None else headers)
     if not math.isfinite(interval) or interval < 0 or max_bytes <= 0:
         raise ValueError('invalid interval or byte limit')
     urls = list(dict.fromkeys(checked_url(u.strip()) for u in urls if u.strip()))
@@ -83,13 +133,19 @@ def collect(urls, output, kind, interval, max_bytes, fetcher=None):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False, mode=0o700)
     opener = urllib.request.build_opener(NoRedirect())
-    fetcher = fetcher or (lambda url: fetch(opener, url, max_bytes))
+    fetcher = fetcher or (lambda url: fetch(opener, url, max_bytes, headers))
+    summary = {'schema_version': 1, 'collector_version': 2, 'kind': kind,
+               'started_utc': utc_now(), 'completed': False, 'status': 'running',
+               'requested': len(urls), 'input_sha256': input_digest(urls),
+               'interval_seconds': interval, 'max_bytes': max_bytes,
+               'custom_headers': bool(headers)}
+    write_json_atomic(output / 'run.json', summary)
     failures = 0
     with (output / 'manifest.jsonl').open('x', encoding='utf-8') as manifest:
         for index, url in enumerate(urls):
             if index:
                 time.sleep(interval)
-            record = {'url': url, 'kind': kind, 'time_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
+            record = {'url': url, 'kind': kind, 'time_utc': utc_now()}
             temporary = None
             try:
                 body, content_type = fetcher(url)
@@ -101,7 +157,7 @@ def collect(urls, output, kind, interval, max_bytes, fetcher=None):
                     stream.write(body)
                 temporary.replace(output / name)
                 record.update(status='saved', file=name, bytes=len(body), sha256=hashlib.sha256(body).hexdigest(), content_type=content_type)
-            except (OSError, ValueError, urllib.error.URLError) as error:
+            except (OSError, ValueError, urllib.error.URLError, http.client.HTTPException, RecursionError) as error:
                 failures += 1
                 # Avoid logging exception strings that may contain credentials/URLs.
                 record.update(status='failed', error=type(error).__name__)
@@ -112,6 +168,12 @@ def collect(urls, output, kind, interval, max_bytes, fetcher=None):
                 if temporary is not None: temporary.unlink(missing_ok=True)
             manifest.write(json.dumps(record) + '\n')
             manifest.flush()
+            os.fsync(manifest.fileno())
+    summary.update(completed=True, ended_utc=utc_now(), failed=failures,
+                   saved=len(urls) - failures,
+                   status='complete' if failures == 0 else ('failed' if failures == len(urls) else 'partial'),
+                   manifest_sha256=hashlib.sha256((output / 'manifest.jsonl').read_bytes()).hexdigest())
+    write_json_atomic(output / 'run.json', summary)
     return failures
 
 
@@ -122,10 +184,12 @@ def main():
     parser.add_argument('--kind', required=True, choices=('javascript', 'sourcemap'))
     parser.add_argument('--interval', required=True, type=float, help='minimum seconds between requests, selected from target policy')
     parser.add_argument('--max-bytes', type=int, default=10_000_000)
+    parser.add_argument('--headers-file', type=Path, help='JSON object of non-credential program identification headers; never logged')
     args = parser.parse_args()
     try:
-        failures = collect(args.urls.read_text().splitlines(), args.output, args.kind, args.interval, args.max_bytes)
-    except (OSError, ValueError) as error:
+        headers = json.loads(args.headers_file.read_text(encoding='utf-8-sig')) if args.headers_file else {}
+        failures = collect(args.urls.read_text(encoding='utf-8-sig').splitlines(), args.output, args.kind, args.interval, args.max_bytes, headers=headers)
+    except (OSError, ValueError, UnicodeError) as error:
         parser.exit(2, f'Collection setup failed: {type(error).__name__}\n')
     print(f'Collection complete; failed URLs: {failures}. Inspect manifest before downstream work.')
     return 1 if failures else 0
