@@ -4,6 +4,7 @@
 TARGET:
 SCOPE SOURCE:   # scope.txt / scope.csv / program export
 RULES SOURCE:   # rules.txt + policy source/date if known
+EXECUTION:    # skill commit/runtime/model; evidence or unknown; actual load log if available
 AUTH STATE:
 TECH STACK:
 HYPOTHESES:    # active question + link to HYPOTHESES.md when useful

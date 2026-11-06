@@ -2,6 +2,8 @@
 
 Use after meaningful hunting-workflow changes or recurring missed/false findings. These evaluations are local reasoning exercises, not authorization to test external targets.
 
+These fixtures evaluate interpretation and next-step planning. They do not by themselves measure discovery, actual tool execution or missed vulnerabilities. Use `discovery-pilot.md` for an end-to-end comparison; do not relabel a fixture score as discovery improvement.
+
 Use `evaluation/cases.json` as raw case prompts. Give the evaluated model HUNT_RULES.md, the relevant router/reference, and one case's `prompt` only. Keep `evaluation/rubric.json` hidden until grading. Request its observation, hypothesis, verdict, evidence limits, next discriminating test, proposed coverage row, and one-sentence handoff summary. The summary must not strengthen the detailed verdict. Do not coach it with the expected answer. Run each case in fresh context and keep model/settings constant when comparing revisions.
 
 After answering, grade against the matching rubric: pass only when all required distinctions hold and no listed failure occurs. Report per-case outcome, unsupported claims, missed boundaries, unnecessary repeated tests, and unresolved prerequisites. Measure time/request cost only when actually recorded. The case set includes missing evidence, misleading negative controls, webhook acceptance, stale inventory/blockers, and prerequisite prioritization. Validate case/rubric IDs and JSON separately; structural checks are not model behavior results.

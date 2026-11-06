@@ -1,119 +1,34 @@
-# SKILL: API Discovery
-## Version: 1.0 | Domain: recon | Trigger: after web crawl + JS analysis; or 'find APIs on TARGET'
+# API discovery — recover valid feature requests
 
----
+Start with the normal client, first-party schemas, source call sites and saved traffic. Record exact host/path/method, required identity/header/body, version, resource provenance, and owning feature. Discovering a route is different from successfully exercising it or proving a boundary failure.
 
-## IDENTITY IN THIS SKILL
-Identify REST endpoints, GraphQL schemas, gRPC services, WebSocket endpoints, internal APIs leaked in mobile/JS, and undocumented versions/methods. APIs are where business logic — and bug bounties — live.
+## Bounded documentation checks
 
----
+Create a target-local list of exact schema/documentation URLs justified by the app or a small relevant shortlist. Confirm each URL against scope/exclusions and program request limits. Do not combine every version, host, admin method, and schema path into an automatic scan.
 
-## TOOLS
-- `katana / hakrawler / gospider crawls + JS endpoint extraction (jsluice, linkfinder)`
-- `kiterunner — wordlist-based API endpoint discovery (uses SecLists/Discovery/Web-Content/api/)`
-- `ffuf with API wordlists`
-- `graphql-cop / clairvoyance / inql / graphw00f — GraphQL discovery + schema introspection`
-- `grpcurl / grpc-tools — gRPC service discovery`
-- `Burp 'API Discovery' (Pro feature) + JS Miner ext`
-- `Postman / Insomnia / Bruno — for replay + fuzzing`
-- `Swagger / OpenAPI / WSDL parser scripts`
+From TARGET_ROOT, collect GET observations with the recon-mode helper:
 
-## COMMANDS & WORKFLOWS
-### Crawl + extract endpoints from JS
 ```bash
-katana -list alive.txt -d 5 -jc -kf all -aff -o crawl.txt
-find js/ -name '*.js' -exec jsluice urls -m '*' {} \; | sort -u > endpoints_jsluice.txt
-cat crawl.txt endpoints_jsluice.txt | sort -u > all_endpoints.txt
+# RECON_SKILL is the absolute recon-mode skill directory.
+# REQUEST_INTERVAL is program-compatible spacing in seconds.
+python3 "${RECON_SKILL:?}/scripts/probe_urls.py" \
+  --urls recon_data/schema_urls_in_scope.txt \
+  --output recon_data/schema-run-001 \
+  --interval "${REQUEST_INTERVAL:?}"
 ```
 
-### Find docs / schemas
-```bash
-# Common paths
-for path in api openapi.json openapi.yaml swagger.json swagger.yaml swagger-ui swagger-ui.html api-docs api/v1 api/v2 api/v3 docs redoc graphql graphiql playground apollo wsdl actuator actuator/beans actuator/mappings actuator/env actuator/health; do
-  ffuf -u "https://$TARGET/$path" -mc 200,401,403 -ac -of csv -o /tmp/r.csv
-done
-# nuclei has templates for these
-nuclei -l alive.txt -t http/exposures/apis/ -severity info,low,medium,high,critical
-```
+The output directory must be new. Optional `--headers-file` points to a local JSON object of required non-credential program identification headers. Values are not printed or stored in run metadata; use browser/proxy capture for authenticated requests. URLs and bodies may contain sensitive values: retain only what the program permits and redact before sharing.
 
-### kiterunner — better than ffuf for APIs (does HEAD + scrambled methods)
-```bash
-# Use the curated routes-large.kite
-kr scan https://example.com -A=apiroutes-210126:20210126 -o kr_results.txt
-kr brute https://example.com -w ~/wordlists/api/api-endpoints.txt -o kr_brute.txt
-```
+The helper verifies TLS, does not follow redirects, limits response bytes, preserves 2xx/3xx/4xx/5xx observations and content hashes, and distinguishes transport/storage errors. `run.json` starts incomplete and records final counts and a manifest hash; `responses.jsonl` links each saved body with status/type/encoding/truncation. A complete run means URL processing completed, not that a schema is valid, scope is complete, or the application is secure. Truncated/encoded bodies require appropriate review; SPA HTML at a .json URL is not an OpenAPI document. This format is not the JS collector format and is not an input to verify_asset_run.py.
 
-### GraphQL discovery + introspection
-```bash
-# Find GraphQL endpoints
-for path in graphql graphiql api/graphql v1/graphql v2/graphql query subgraph; do
-  curl -sk -X POST "https://$TARGET/$path" -H 'Content-Type: application/json' \
-    -d '{"query":"{__typename}"}' -o /dev/null -w "%{http_code} https://$TARGET/$path\n"
-done
-# Introspect (often disabled in prod, but try)
-curl -sk -X POST https://$TARGET/graphql -H 'Content-Type: application/json' \
-  --data '{"query":"query IntrospectionQuery { __schema { queryType { name } mutationType { name } subscriptionType { name } types { ...FullType } directives { name description locations args { ...InputValue } } } } fragment FullType on __Type { kind name description fields(includeDeprecated: true) { name description args { ...InputValue } type { ...TypeRef } isDeprecated deprecationReason } inputFields { ...InputValue } interfaces { ...TypeRef } enumValues(includeDeprecated: true) { name description isDeprecated deprecationReason } possibleTypes { ...TypeRef } } fragment InputValue on __InputValue { name description type { ...TypeRef } defaultValue } fragment TypeRef on __Type { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name ofType { kind name } } } } } } } }"}' \
-  | jq . > schema.json
-# If introspection disabled → use clairvoyance to brute-force
-clairvoyance -o schema.json -w ~/wordlists/graphql/graphql-words.txt https://$TARGET/graphql
-# graphw00f — fingerprint engine (Apollo, Hasura, Relay, AWS AppSync, GraphQL Yoga, etc.)
-graphw00f -t https://$TARGET/graphql -d
-```
+For path-wordlist discovery rather than a fixed URL list, use the maintained example in `15_content_discovery_fuzzing.md`. A fuzzing job needs explicit input and substitution; do not invoke ffuf repeatedly on fixed URLs while overwriting one output file.
 
-### gRPC discovery
-```bash
-grpcurl -plaintext $HOST:$PORT list   # if reflection enabled
-grpcurl -plaintext $HOST:$PORT list mypackage.MyService
-# Without reflection — need .proto files; sometimes leaked in JS / mobile / GitHub
-```
+## Protocol-specific continuation
 
-### WebSocket discovery + connection
-```bash
-# Find WS handshake endpoints in crawl
-rg -oE 'wss?://[^\s"\'<>]+' js/ alive.txt > ws_endpoints.txt
-# Connect with wscat
-wscat -c "wss://example.com/ws" -H "Authorization: Bearer $TOKEN"
-```
+- **REST/OpenAPI:** parse documents only after checking format. Recover a valid allowed request and its resource/role relationship; stale docs are leads.
+- **GraphQL:** use an observed endpoint and a bounded legitimate query first. Introspection is discovery, not a finding by itself. If disabled, decide whether permitted schema recovery would answer the current feature question before brute-force tooling. Metadata lists do not establish operation execution.
+- **gRPC:** reflection/proto definitions may reveal methods. Use TLS and authenticated metadata appropriate to the observed service; plaintext is not a generic default.
+- **WebSocket:** recover the actual handshake, origin/auth model and message shape from a normal flow. A successful upgrade does not establish authorization for messages or rooms.
+- **Versions/methods:** inspect aliases supported by client/schema/routing evidence. Preserve semantic results, not just status differences. Do not invoke destructive methods as generic discovery.
 
-### Detect API versioning
-```bash
-# Same endpoint, different versions sometimes have different auth
-for v in 1 2 3 v1 v2 v3 latest internal beta legacy old; do
-  curl -sk -o /dev/null -w "$v: %{http_code}\n" "https://$TARGET/api/$v/users"
-done
-```
-
-### Find OpenAPI / Swagger via favicon hash → Shodan
-```bash
-# Many Swagger UIs share favicon hash. Pivot like this for org-wide discovery.
-shodan search 'http.favicon.hash:1606627656'   # default Swagger UI hash
-shodan search 'http.title:"Swagger UI" hostname:example.com'
-```
-
-
-
-
-## EDGE CASES
-- **Path versioning vs Header versioning** — `Accept: application/vnd.example.v1+json`. Test all variants.
-- **Internal-only API hosts** — leaked in mobile/JS as fallback. `https://api-internal.example.com` may be reachable from internet despite naming.
-- **Method confusion** — `GET /api/admin/users` returns 403, `POST` returns 200. Use observed/schema-supported methods and a valid control; prove protected data or an action, not a status difference. Do not invoke destructive methods as generic discovery.
-- **Trailing slash behavior** — `/api/users` 401 vs `/api/users/` 200 — common framework routing inconsistency.
-- **HTTP/2 method whitelist bypass** — some WAFs only know HTTP/1.1; send same request via HTTP/2 with `httpx --http2`.
-- **GraphQL aliases** — bypass per-field rate limit with batched aliases (`x: user(id:1) y: user(id:2)`); also defense-evasion for IDOR.
-- **Documentation rot** — Swagger lists endpoints that no longer exist; missing endpoints exist. Diff `/openapi.json` against actual probe.
-
-## OUTPUT FORMAT
-```
-API_DISCOVERY({target}):
-  <key>: <value>
-  ...
-NEXT: handoff to next stage
-```
-
-## SOURCES
-- Bug Hunters Methodology Live Day One Recon (jhaddix)
-- zseanos-methodology
-- Elite_BugBounty_Methodology
-- ProjectDiscovery / Assetnote / SecLists
-- HackTricks recon section
-- PortSwigger Research blog
+Do not auto-fetch arbitrary server URLs referenced by schemas; those are untrusted leads requiring scope review. Hand valid request shapes and concrete boundary questions to api-mode/web-mode. Keep unknown methods, unavailable identity, blocked edges and invalid controls visible instead of declaring no API or no vulnerability.

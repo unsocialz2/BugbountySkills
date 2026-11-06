@@ -1,153 +1,36 @@
-# 01 — Policy Triage Gate
+# Mobile policy triage — explicit conditions
 
-**Run this before installing anything.** A mobile finding is worth exactly what
-the program says it is worth, and the classes hunters report first are the
-classes that get closed Informative.
+Read the current target scope and mobile exclusions before target actions or lab setup. This reference determines which questions and proofs are eligible; it does not predict payout, require a purchase, or create permission for additional actions.
 
-## THE CORE QUESTION
+## Scope and eligibility decisions
 
-> Does this program accept a finding that only reproduces on a device you had to
-> modify to get it?
+| Condition supported by program policy | Decision |
+|---|---|
+| App is explicitly listed, or a clearly applicable broader asset rule includes it | Record package/bundle/build and scope basis; apply the actual exclusions. |
+| App scope is absent or ambiguous | Resolve scope before active testing; do not infer inclusion from branding. |
+| Policy excludes findings that require an attacker to root/jailbreak the victim device | Do not claim a rooted-only attacker path as eligible. Observation-only instrumentation used during research is a separate question; apply any explicit research-method restrictions too. |
+| Policy excludes attacker physical/ADB access | Findings requiring that attacker access are excluded. A lab adb command may help trace an entry point, but does not prove remote browser/app delivery. |
+| Policy explicitly excludes WebView exploitation | Apply that exclusion to its stated boundary. If it does not exclude WebViews, do not manufacture an exclusion. |
+| Policy excludes missing pinning, root detection, or obfuscation as standalone findings | Do not report those properties alone. This does not automatically exclude a distinct reachable app/backend vulnerability. |
+| Policy requires a stock-device reproduction | Prove the claimed attacker path on that supported configuration, or retain a lead with the exact missing proof. Lab observations remain useful but must be labelled. |
+| Policy accepts qualified hypotheses or credential disclosure without replay | Follow that reporting path with explicit uncertainty; do not invent impact or perform prohibited validation. |
 
-If the answer is no, every rooted-device finding is dead weight and every hour
-spent on Frida, root bypass, or `allowBackup` was misallocated.
+The absence of an exclusion is not proof of acceptance. Record the relevant policy wording and source/date rather than reusing a payout table or another program's assumptions.
 
-## THE FIVE-QUESTION GATE
+## Discovery method versus attacker prerequisite
 
-Pull the program's mobile section, then answer:
+Distinguish:
 
-| # | Question | If NO |
-|---|---|---|
-| 1 | Does the scope list the app **as an asset** (Play Store ID / bundle ID)? | Don't test it. Reports are Not Applicable. |
-| 2 | Do they exclude "**rooted/jailbroken** device" findings? | Everything you can only prove while rooted is out. |
-| 3 | Do they exclude "**ADB access**" or "physical device access"? | `allowBackup`, `adb backup`, file-pull findings are out. |
-| 4 | Do they exclude "**WebView exploitation**"? | The richest Android class is gone. Rethink the target. |
-| 5 | Do they exclude "**SSL pinning bypass / root detection / obfuscation**"? | Standard pinning-bypass work is not billable. Fine — you were going to waste a day on it. |
+- observation-only hooks, traffic capture, and owned-state inspection;
+- changes to flags, guards, routing, allowlists, browser providers, or authentication;
+- the capabilities a real attacker needs on a naturally reachable supported build.
 
-## THE HIGH-VALUE PHRASE TO LOOK FOR
+Frida/root use during research does not by itself prove either eligibility or ineligibility. A finding that only works because the hook bypassed the target control needs that limitation stated. A dummy token written after forcing a feature flag is not a successful real login. Prove external entry, lifecycle, and semantic outcome separately; see `../../core-identity/references/feature-discovery.md` relative to this file's directory.
 
-Many programs *specifically* name the mobile class they want:
+## Before validation or reporting
 
-```
-*** Leaked information from Mobile (WITHOUT ROOTING) ***
-*** Sensitive Information Exposure Through insecure data storage on device ***
-```
+Use controlled identities/resources that satisfy the program's account requirements. Do not create real orders, bookings or other material side effects as a generic account-realism step. Use the program's permitted test mechanisms and existing authorization. Backend endpoints discovered in an APK need their own scope basis and runtime evidence; a mobile listing does not establish a payout or automatic backend permission.
 
-Read "(without rooting)" as a **hard constraint on your PoC**, not a caveat.
-Your screenshots must come from a stock device.
+Separate source-mapped handler, observed external delivery, reproduced behavior, and demonstrated security effect. Reachability alone is a lead, not an automatic Low finding. A logged-out ignored intent leaves logged-in behavior unresolved; do not manufacture a session or report an assumed effect.
 
-Conversely, a line like *"Server-side vulnerabilities discovered through mobile
-applications fall under Business Platforms and APIs scope"* means a bug you find
-by driving the app still pays the full web reward chart. That is permission to
-treat the app as a **map to the API**.
-
-## PER-PROGRAM PATTERNS OBSERVED
-
-Real examples. Verify current text — programs edit their policies often.
-
-### Pattern A — generous, mobile explicitly desired
-
-```
-Rewards (mobile, High asset value): Low 500 / Med 2000 / High 5000 / Crit 10000
-Qualifying: Leaked information from Mobile (WITHOUT ROOTING)
-Non-qualifying: SSL Pinning bypass, Lack of code obfuscation,
-                Loss of root detection, jailbroken-only exploits,
-                Android <= 7 only
-In scope:   Play Store com.<vendor>.app  (High value)
-```
-**Read:** huge ceiling, but everything native/anti-tamper is dead. The wins are
-deep links, IDOR, insecure storage on a clean device, and API authz.
-
-### Pattern B — tight exclusions, still fine
-
-```
-Mobile applications — In scope — P1 3500-4500 / P2 1500-2500 / P3 300-500
-Focus areas: Secrets leakage, mobile misconfigurations
-"We are looking for 0-click or 1-click vulnerabilities."
-Non-qualifying: rooted/jailbroken, ADB access, physical device access,
-                install of the malware app, WebView exploitation
-```
-**Read:** narrow, but the exclusions *help* you. No ADB dumps, no WebView RCE
-chasing, no root. Deliver a remote PoC that never touches device-local state.
-The stated focus areas are free targeting — hunt exactly those.
-Multi-brand scope = separate codebases = OneFixOneReward does not collapse them.
-
-### Pattern C — behavioural rules that can get you banned
-
-```
-"Only perform tests against your own accounts."
-"Only ever perform this testing against accounts you own, failure to do so
- could result in ban from the program."   <- stated 3x in one scope
-"You may get suspended if you make too many fake bookings
- or not a single completed booking."
-```
-**Read:** read-only access to another user's data still disqualifies you.
-For marketplaces, keep your account realistic — place one real order. Getting
-banned wastes the whole target.
-
-### Pattern D — one-off paid side quests worth grabbing
-
-```
-"For *.example.com we are accepting subdomain takeover reports with a fixed
- reward of 1000 EUR. To be eligible, demonstrate it with the MD5 of your
- username in a TXT file (md5(hunter_name).txt) hosted on the vulnerable FQDN.
- We won't qualify hypothetical takeovers nor simple DNS dangling records."
-```
-**Read:** a defined, flat, unambiguous bounty sitting next to your mobile work.
-Same program, same week, no deduction. Do it early — it is the fastest
-confirmed payout available and it does not compete with your mobile hours.
-
-### Pattern E — managed platform
-
-```
-Managed: Yes   Max: $3750   Disclosure: No
-"Will also accept flaw-hypothesis submissions, without penalty, and will work
- with you to develop a reasonable hypothesis into a working exploit."
-```
-**Read:** the platform runs triage and pays, so payout reliability beats the
-headline number. The hypothesis clause is the underrated part — a near-miss
-with a defensible reasoning chain gets developed instead of RTFS'd.
-
-## WRITE-UP GATE
-
-Before submitting, check your report against these — each maps to a real
-rejection:
-
-- [ ] PoC reproduces on a **stock, unrooted** device (if required)
-- [ ] No root detection, pinning bypass, or obfuscation gap as the headline
-- [ ] Not a third-party dependency CVE with no demonstrated attack vector
-- [ ] Not "generic Android vulnerability"
-- [ ] Not requiring physical access, MITM, or an attacker-installed app
-- [ ] Discovery method explained — some programs **delay** reports without it
-- [ ] PII redacted; no bulk data extracted
-- [ ] Status honestly labelled (see SKILL.md HONESTY GATE)
-- [ ] One vulnerability per report unless chaining is the point
-- [ ] Not an ID-guessing/UUID-bruteforce claim if the program excludes that
-
-## HONESTY GATE — CONFIRMED vs PROVEN
-
-| Status | Means | File as |
-|---|---|---|
-| **MAPPED** | in manifest/dumpsys/jadx, never fired | nothing |
-| **CONFIRMED REACHABLE** | resolves, or fires, but no effect shown | misconfiguration, Low |
-| **IMPACT PROVEN** | you demonstrated the security effect | real severity |
-
-**Real case.** A banking SDK inside a fintech app exported a BROWSABLE OAuth
-callback reachable via `gxs://`, `gxsdev://` and `gxsstg://` — dev and staging
-schemes in a production APK. Firing it with an attacker-controlled `code`
-changed **no app state**, because the handler sits behind an authenticated
-session and the test device was logged out.
-
-Correct write-up: *"production app ships dev/staging OAuth callback schemes,
-externally reachable, attacker-controlled `code`/`state` reach the handler."*
-Wrong write-up: *"OAuth code injection / account takeover."*
-
-An intent ignored while logged out proves **nothing** about logged-in behaviour.
-Say exactly that, then get a session. Overstating here is how good hunters get
-their reputation burned on a program you want to keep.
-
-## SESSION DISCIPLINE
-
-If the program demands a report within 24h of discovery, or has a strict
-one-fix-one-reward rule, batch findings into a single coherent submission rather
-than trickling near-duplicates.
+For a report, state build/device, attacker entry and preconditions, minimal reproduction, relevant control, actual outcome and falsification. Apply only the current program's stock-device, interaction, data-retention, timing and submission requirements. A one-fix rule concerns root causes; it is not a universal instruction to bundle independent findings. Scoring and final wording belong to reporting-mode.

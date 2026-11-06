@@ -145,76 +145,13 @@ wget -i historical_js.txt -P historical_js/
 trufflehog filesystem historical_js/ > historical_js_secrets.txt
 ```
 
-### 7. Content discovery / fuzzing
-```bash
-# ffuf — recursive directory + extension brute
-ffuf -u "https://$TARGET/FUZZ" \
-  -w ~/wordlists/SecLists/Discovery/Web-Content/raft-large-directories.txt \
-  -mc all -fc 404,403 -ac -recursion -recursion-depth 2 \
-  -e .json,.xml,.bak,.old,.zip,.tar.gz,.tar,.7z,.rar,.git,.svn,.env,.yml,.yaml,.txt,.log,.sql,.bak,.swp,.tmp,.orig,.dist,.example,.config,.conf,.ini,.cfg \
-  -t 50 -timeout 7 -p 0.05 -of json -o ffuf.json
+### 7. Content discovery
 
-# feroxbuster — recursion built-in, deep crawl
-feroxbuster -u https://$TARGET -w ~/wordlists/raft-large-directories.txt \
-  -t 50 -d 5 --auto-tune --auto-bail -x .json .bak .old .zip .git .env .yml \
-  -C 404 -F 403 -o ferox.txt
-
-# Vhost brute (virtual host routing on same IP)
-ffuf -u "https://$TARGET/" -H "Host: FUZZ.example.com" \
-  -w ~/wordlists/SecLists/Discovery/DNS/subdomains-top1million-110000.txt \
-  -mc 200,301,302 -fs 0 -ac -t 50 -of csv -o vhost.csv
-
-# Param brute
-arjun -u 'https://example.com/api/data' -m POST --json --headers "Authorization: Bearer $T" --stable
-x8 -u 'https://example.com/api/data' -X POST -m GET POST -w ~/wordlists/SecLists/Discovery/Web-Content/burp-parameter-names.txt
-
-# Header brute (hidden auth-bypass headers)
-ffuf -u 'https://example.com/admin' -H 'FUZZ: 127.0.0.1' \
-  -w ~/wordlists/headers.txt -mc 200,302 -fc 403,404 -ac
-# headers.txt: X-Forwarded-For, X-Real-IP, X-Originating-IP, X-Remote-IP, X-Remote-Addr,
-# X-Client-IP, X-Host, X-Forwarded-Host, X-Original-URL, X-Rewrite-URL,
-# X-Custom-IP-Authorization, True-Client-IP, Cluster-Client-IP, CF-Connecting-IP
-
-# HTTP methods
-for m in GET POST PUT PATCH DELETE OPTIONS HEAD TRACE CONNECT PROPFIND MKCOL COPY MOVE LOCK UNLOCK; do
-  curl -sk -o /dev/null -w "$m %{http_code}\n" -X "$m" "https://$TARGET/api/admin"
-done
-```
-Wildcard-response filtering: `-fs <size>` / `-fr 'Not Found'` / `-fl <line count>` against known 404. Never use SQLi/XSS payload lists for content discovery — WAF blocks you.
+Use `../SKILL_FILES/RECON/15_content_discovery_fuzzing.md` for the maintained bounded ffuf example, path-only input selection and raw denial preservation. Do not reintroduce automatic 403 filtering, mixed payload dictionaries or generic destructive-method sweeps here.
 
 ### 8. API discovery
-```bash
-# Docs / schemas (nuclei has templates: http/exposures/apis/)
-for path in api openapi.json openapi.yaml swagger.json swagger.yaml swagger-ui swagger-ui.html api-docs api/v1 api/v2 api/v3 docs redoc graphql graphiql playground apollo wsdl actuator actuator/beans actuator/mappings actuator/env actuator/health; do
-  ffuf -u "https://$TARGET/$path" -mc 200,401,403 -ac -of csv -o /tmp/r.csv
-done
 
-# kiterunner — API-aware, HEAD + scrambled methods
-kr scan https://example.com -A=apiroutes-210126:20210126 -o kr_results.txt
-kr brute https://example.com -w ~/wordlists/api/api-endpoints.txt -o kr_brute.txt
-
-# GraphQL discovery + introspection
-for path in graphql graphiql api/graphql v1/graphql v2/graphql query subgraph; do
-  curl -sk -X POST "https://$TARGET/$path" -H 'Content-Type: application/json' -d '{"query":"{__typename}"}' -o /dev/null -w "%{http_code} https://$TARGET/$path\n"
-done
-# introspection query → schema.json (jq .); if disabled, brute it:
-clairvoyance -o schema.json -w ~/wordlists/graphql/graphql-words.txt https://$TARGET/graphql
-graphw00f -t https://$TARGET/graphql -d    # fingerprint engine
-
-# gRPC (reflection)
-grpcurl -plaintext $HOST:$PORT list
-grpcurl -plaintext $HOST:$PORT list mypackage.MyService
-
-# WebSocket endpoints
-rg -oE 'wss?://[^\s"\x27<>]+' js/ alive.txt > ws_endpoints.txt
-wscat -c "wss://example.com/ws" -H "Authorization: Bearer $TOKEN"
-
-# Version detection — same path, different auth per version
-for v in 1 2 3 v1 v2 v3 latest internal beta legacy old; do
-  curl -sk -o /dev/null -w "$v: %{http_code}\n" "https://$TARGET/api/$v/users"
-done
-```
-Test method/path/version variants only when routing evidence supports the question; a status-code difference is not privileged success. GraphQL alias behavior and limits must be measured with bounded controls rather than assumed.
+Use `../SKILL_FILES/RECON/14_api_discovery.md` for normal-client/schema recovery and exact-URL observations with `../scripts/probe_urls.py`. Each run preserves URL-specific results and errors; schema discovery is not operation validation. This compatibility file intentionally delegates these stages rather than duplicating commands.
 
 ### 9. Port scanning & services
 ```bash

@@ -21,7 +21,7 @@ Before fuzzing, state what you are trying to distinguish, for example:
 ## Minimal loop
 
 1. Establish a stable control request.
-2. Change one dimension only: value, type, field presence, nesting, content type, method, header, or path representation.
+2. Start with the smallest valid semantic change: value, type, field presence, nesting, content type, method, header, or path representation. Coupled representation changes may require both header and body changes to remain valid. For a suspected interaction, compare valid controls for each factor and their combination where feasible; do not mistake an invalid request for enforcement.
 3. Compare semantic result and authoritative state.
 4. Repeat enough to rule out cache/jitter/random backend errors.
 5. Escalate to a vulnerability-specific skill only when the differential supports that hypothesis.
@@ -50,7 +50,7 @@ Prioritize identity, authorization, writable-state, version drift, and parser di
 Record:
 
 1. control request,
-2. single changed dimension,
+2. semantic change, coupled fields and controls for any tested interaction,
 3. semantic/state difference,
 4. why that difference matters to a security boundary,
 5. repeatability,

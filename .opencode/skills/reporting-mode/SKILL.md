@@ -1,6 +1,6 @@
 ---
 name: reporting-mode
-description: Final bug-bounty report writing, CVSS/severity assessment, impact wording, remediation, platform-specific templates, and dispute/escalation communication. Use only after evidence is sufficient to reproduce and support the claimed impact.
+description: Final bug-bounty report writing, CVSS/severity assessment, impact wording, remediation, platform-specific templates, and dispute/escalation communication. Use when evidence supports the claimed impact or an explicit program policy permits a qualified hypothesis/disclosure submission.
 ---
 
 # REPORTING MODE — final writeup / scoring router
@@ -9,7 +9,9 @@ This skill is the **single default owner of numeric severity/CVSS** across the p
 
 ## Entry gate
 
-Do not write a final report from a lead. Require:
+Do not present an unvalidated lead as a confirmed exploit. A final exploit report requires the fields below. If the program explicitly accepts qualified hypotheses or credential/disclosure reports without replay, follow that specific policy: cite the clause, preserve the observed disclosure and uncertainty, mark unavailable access/impact as unknown, and do not invent a score or perform prohibited validation. This exception does not authorize submission or apply to programs without that reporting path.
+
+For a confirmed exploit report, require:
 
 ```text
 BUG CLASS:

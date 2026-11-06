@@ -86,6 +86,8 @@ Save completion/exit/error evidence alongside results. Zero hits is meaningful o
 
 After discovery, hand off a reachable feature, its normal flow/access requirements, and a concrete boundary question. Raw file/host/repository counts do not demonstrate manual coverage; broad discovery need not finish before a useful feature experiment starts.
 
+For bounded GET observations of exact approved URLs, use `scripts/probe_urls.py` through the API/content discovery references; retain 403/404 observations and transport failures separately. Its response format is distinct from JS asset runs.
+
 For reliable JS/source-map collection, the JavaScript stage documents `scripts/collect_assets.py` (including program identification headers) and the read-only `scripts/verify_asset_run.py`. Verify completion and saved artifact integrity before selecting a collector baseline. These helpers accept exact pre-approved URLs; they do not infer scope or validate arbitrary scanner formats.
 
 ## Handoff boundaries

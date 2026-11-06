@@ -1,149 +1,51 @@
-# SKILL: Content Discovery & Fuzzing
-## Version: 1.0 | Domain: recon | Trigger: after recon; need hidden paths, params, files, methods
+# Content discovery — retain observations, select relevant inputs
 
----
+Use when first-party traffic, source or a concrete hypothesis justifies finding an unlinked path or parameter. Read target policy first. Do not use a giant mixed dictionary or automatic method sweep as a substitute for a feature model.
 
-## IDENTITY IN THIS SKILL
-Wordlist-based brute force of paths, files, parameters, headers, HTTP methods, vhost names — discover content that's not linked anywhere.
+## Exact URL list
 
----
+For a small approved URL list, use `scripts/probe_urls.py` as documented in `14_api_discovery.md`. It retains denial/not-found observations and distinguishes transport failure. For a wordlist job, use the bounded example below.
 
-## TOOLS
-- `ffuf — fast, recursive, scriptable`
-- `feroxbuster — Rust, async, recursion built-in`
-- `dirsearch — Python, has good wordlists bundled`
-- `gobuster — fewer features but stable`
-- `x8 — parameter discovery via response analysis`
-- `arjun — parameter brute via diff`
-- `ParamMiner (Burp ext) — by-product when you browse`
-- `kiterunner — API-aware`
+## Path-wordlist example
 
-## COMMANDS & WORKFLOWS
-### ffuf — recursive directory + extension brute
+Use a small pre-approved path-only wordlist. Set BASE_URL to the scoped HTTP(S) base, APPROVED_PATHS to that list, RUN to a new target-local run directory, REQUESTS_PER_SECOND from program policy, and IDENTIFICATION_HEADER to a non-secret researcher identification header (or an ordinary User-Agent if none is required). Install/verify ffuf locally before running.
+
 ```bash
-ffuf -u "https://$TARGET/FUZZ" \
-  -w ~/wordlists/SecLists/Discovery/Web-Content/raft-large-directories.txt \
-  -mc all -fc 404,403 -ac -recursion -recursion-depth 2 \
-  -e .json,.xml,.bak,.old,.zip,.tar.gz,.tar,.7z,.rar,.git,.svn,.env,.yml,.yaml,.txt,.log,.sql,.bak,.swp,.tmp,.orig,.dist,.example,.config,.conf,.ini,.cfg \
-  -t 50 -timeout 7 -p 0.05 -of json -o ffuf.json
+mkdir -- "${RUN:?}" || exit 1
+sha256sum -- "${APPROVED_PATHS:?}" > "$RUN/input.sha256" || exit 1
+if ffuf -u "${BASE_URL:?}/FUZZ" -w "$APPROVED_PATHS" \
+  -mc all -rate "${REQUESTS_PER_SECOND:?}" -t 1 -timeout 10 -noninteractive \
+  -H "${IDENTIFICATION_HEADER:?}" -of json -o "$RUN/results.json" \
+  2> "$RUN/errors.txt"; then
+  printf '%s\n' 'exit=0' > "$RUN/completion.txt"
+else
+  result_code=$?
+  printf 'exit=%s\n' "$result_code" > "$RUN/completion.txt"
+  exit "$result_code"
+fi
 ```
 
-### Fuzz HTTP methods
-```bash
-for m in GET POST PUT PATCH DELETE OPTIONS HEAD TRACE CONNECT PROPFIND MKCOL COPY MOVE LOCK UNLOCK; do
-  curl -sk -o /dev/null -w "$m %{http_code}\n" -X "$m" "https://$TARGET/api/admin"
-done
-```
+The example assumes no inherited ffuf preset adds filters, proxying, recursion or calibration; review/isolate the effective tool configuration first. No blanket 403/404 filter or automatic calibration is enabled by this command. A generic error signature can be suppressed in a derived review view after comparing stable controls. Preserve the original results and completion/errors. Inspect request errors and input coverage even when the process exits zero. Do not overwrite an earlier run, automatically recurse, follow redirects, disable TLS verification, rotate egress, or increase concurrency in response to a challenge. Reassess the question and program limits.
 
-### Vhost / Host header brute
-```bash
-ffuf -u "https://$TARGET/" -H "Host: FUZZ.example.com" \
-  -w ~/wordlists/SecLists/Discovery/DNS/subdomains-top1million-110000.txt \
-  -mc 200,301,302 -fs 0 -ac -t 50 -of csv -o vhost.csv
-```
+A distinctive application 403 can be a route lead for an authorized comparison; it is not proof of bypass. An identical SPA shell on unknown paths is not proof every path exists. Compare body/type/headers and normal controls, not status or byte size alone; calibration based on one response can hide dynamic differences.
 
-### Parameter brute (arjun)
-```bash
-arjun -u 'https://example.com/api/data' -m POST --json --headers "Authorization: Bearer $T" --stable
-# x8 alternative
-x8 -u 'https://example.com/api/data' -X POST -m GET POST -w ~/wordlists/SecLists/Discovery/Web-Content/burp-parameter-names.txt
-```
+## Keep dictionaries separate by input purpose
 
-### Header brute (find hidden auth bypass headers)
-```bash
-ffuf -u 'https://example.com/admin' -H 'FUZZ: 127.0.0.1' \
-  -w ~/wordlists/headers.txt -mc 200,302 -fc 403,404 -ac
-# headers.txt sample:
-# X-Forwarded-For
-# X-Real-IP
-# X-Originating-IP
-# X-Remote-IP
-# X-Remote-Addr
-# X-Client-IP
-# X-Host
-# X-Forwarded-Host
-# X-Original-URL
-# X-Rewrite-URL
-# X-Custom-IP-Authorization
-# X-Originating-IP
-# True-Client-IP
-# Cluster-Client-IP
-# CF-Connecting-IP
-```
+| Purpose | Suitable input | Do not combine by default |
+|---|---|---|
+| Paths | observed route segments, relevant framework paths, small path-only lists | SQLi/XSS values, passwords, DNS names, parameter names |
+| Parameter names | client/schema fields, a relevant name list | path lists or arbitrary payload values |
+| Parameter values | type/context-specific values for one hypothesis | every payload class on every input |
+| Hostnames | exact scoped host candidates and relevant DNS labels | content paths and credential lists |
 
-### Recursive feroxbuster (better than ffuf for deep recursion)
-```bash
-feroxbuster -u https://$TARGET -w ~/wordlists/raft-large-directories.txt \
-  -t 50 -d 5 --auto-tune --auto-bail \
-  -x .json .bak .old .zip .git .env .yml \
-  -C 404 -F 403 \
-  -o ferox.txt
-```
+If combining compatible lists, preserve source identities, normalize/deduplicate, review the result and its count before use. No universal one4all dictionary is prescribed.
 
-### Filter-Bypass content discovery (when 403 / 404 are wildcards)
-```bash
-# Discover via response size variance
-ffuf -u 'https://example.com/FUZZ' -w big.txt -mc all -fs 0,1234   # exclude default 1234-byte 404
-# OR by response time
-ffuf -u 'https://example.com/FUZZ' -w big.txt -mc all -p 0.1 -of csv | awk '$N{print}'  # custom analysis
-```
+## Methods, headers and representations
 
+Recover a successful normal request first. Compare only plausible methods/headers/versions for the same action and permitted fixtures. Do not enumerate DELETE/PUT/CONNECT/etc. against an admin route as generic content discovery. A 200 on an error body is not privileged success.
 
+Use the smallest valid semantic change. Switching JSON to form input may require changing both Content-Type and body encoding. To investigate an interaction, establish valid controls for the relevant combinations rather than insisting every experiment changes only one literal field. Hand evidence-backed parser or authorization questions to the owning API/web skill.
 
-## WORDLISTS
+## Handoff
 
-## Default wordlist set (place in ~/wordlists/)
-SecLists:
-  Discovery/Web-Content/raft-large-directories.txt
-  Discovery/Web-Content/raft-large-files.txt
-  Discovery/Web-Content/raft-large-words.txt
-  Discovery/Web-Content/big.txt
-  Discovery/Web-Content/Common-PHP-Filenames.txt
-  Discovery/Web-Content/CMS/wp_plugins.txt
-  Discovery/Web-Content/api/api-endpoints.txt
-  Discovery/Web-Content/api/objects.txt
-  Discovery/Web-Content/api/api-endpoints-res.txt
-  Fuzzing/LFI/LFI-Jhaddix.txt
-  Fuzzing/SQLi/Generic-SQLi.txt
-  Fuzzing/XSS/XSS-Jhaddix.txt
-  Discovery/DNS/subdomains-top1million-110000.txt
-  Passwords/Common-Credentials/10-million-password-list-top-10000.txt
-  Discovery/Web-Content/burp-parameter-names.txt
-  Discovery/Web-Content/AWS.txt
-
-assetnote-wordlists (https://wordlists.assetnote.io):
-  ApiObjects.txt
-  parameters_top_1m.txt
-  bruteforce-lists/api-endpoints.txt
-  longtail/raft-large-files.txt
-
-Onelistforall:
-  https://github.com/six2dez/OneListForAll
-
-Custom:
-  one4all.txt = combine + sort -u all of the above
-
-
-## EDGE CASES
-- **Wildcard responses** — every path returns 200 with the SPA shell. Use `-fs <size>` to filter, or `-fr <regex>` to filter response bodies. Or `-mc 200 -fl <line count>`.
-- **Soft 404** — `200 OK` with body `Not Found`. Use `-fr 'Not Found'` or compare body MD5 against known 404.
-- **Rate limit on big wordlist** — chunk wordlist + sleep between waves; rotate `-x` proxy list.
-- **WAF false positives on payload-shaped wordlist entries** — neutral wordlists like `raft-large-directories` are fine; using SQLi/XSS payload lists for content discovery triggers WAF and gets you blocked.
-- **GET vs POST diff** — `-X POST` reveals `/api/users` only handles POST; GET returns 405. Choose methods supported by the observed feature and establish a legitimate control.
-- **JSON body fuzz** — for APIs, `-X POST -d '{"FUZZ":"x"}'` to find hidden keys.
-
-## OUTPUT FORMAT
-```
-CONTENT_DISCOVERY_&_FUZZING({target}):
-  <key>: <value>
-  ...
-NEXT: handoff to next stage
-```
-
-## SOURCES
-- Bug Hunters Methodology Live Day One Recon (jhaddix)
-- zseanos-methodology
-- Elite_BugBounty_Methodology
-- ProjectDiscovery / Assetnote / SecLists
-- HackTricks recon section
-- PortSwigger Research blog
+Record input snapshot, exact command/tool version when relevant, completion/errors, original output and a concise selected set of leads. Distinguish observed routes, ambiguous wildcard responses, blocked application paths and untested actions. Raw discovery counts are not vulnerability counts.
