@@ -7,6 +7,12 @@ description: General web application security testing for browser/session/form f
 
 Target scope/rules and the evidence contract come from `HUNT_RULES.md`.
 
+## Preferred browser on this workstation
+
+The operator prefers **Windows ego lite / ego-browser**, including when the agent runs in Kali/WSL. Load the installed `ego-browser` skill and run `ego-browser skill` before using it; follow the guide matching the installed version. Work in an agent Space and verify the connection before claiming browser access. From Kali, invoke `/mnt/c/Users/ahmed/.local/share/ego/active_version_dir/ego-browser.exe` through WSL interop; do not launch native Linux Chromium. From Windows, use `C:/Users/ahmed/.local/share/ego/active_version_dir/ego-browser.exe` or the registered command. Follow the Windows runtime guide's `.mjs` approach with Windows file URLs even when the command is launched from Kali. An ego_cli bootstrap connection error in a restricted execution environment requires the appropriate execution permission.
+
+Keep program-required research accounts separate from personal logged-in profiles. This browser preference does not change target scope or authorization. If ego is unavailable or onboarding is incomplete, record that specific blocker and use an available fallback when useful; do not silently claim the fallback is ego. Do not import personal browser data, clear browser state, or change the OS default browser merely to satisfy a research task.
+
 ## Boundary
 
 Use this skill when the trust boundary is primarily a **web application flow**: browser session, cookies, forms, redirects, rendering, caches, HTTP intermediaries, or ordinary server-side request handling.
