@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "validated_date": "2026-11-14",
+  "unit_tests": {
+    "run": 81,
+    "passed": 80,
+    "failed": 0,
+    "errors": 0,
+    "skipped": [
+      {
+        "test": "test_exact_documented_example_preserves_403_and_404 (test_url_discovery.DocumentedFfufTests.test_exact_documented_example_preserves_403_and_404)",
+        "reason": "ffuf and bash required for documented command integration"
+      }
+    ]
+  },
+  "knowledge_integrity": {
+    "ok": true,
+    "canonical_methodologies": 52,
+    "compatibility_entries": 4,
+    "distinct_reference_urls": 141,
+    "errors": [],
+    "limits": "Structure/links/regression constraints only; source truth, all payload execution and discovery performance are not certified."
+  },
+  "browser_regressions": {
+    "status": "blocked",
+    "reason": "Chromium launch failed: TargetClosedError (environment disallows required process socket)",
+    "checks": []
+  },
+  "limits": "Unit/fixture and structure checks, not certification of all vendor payloads or general live-target discovery performance."
+}

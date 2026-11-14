@@ -88,7 +88,7 @@ After discovery, hand off a reachable feature, its normal flow/access requiremen
 
 For bounded GET observations of exact approved URLs, use `scripts/probe_urls.py` through the API/content discovery references; retain 403/404 observations and transport failures separately. Its response format is distinct from JS asset runs.
 
-For reliable JS/source-map collection, the JavaScript stage documents `scripts/collect_assets.py` (including program identification headers) and the read-only `scripts/verify_asset_run.py`. Verify completion and saved artifact integrity before selecting a collector baseline. These helpers accept exact pre-approved URLs; they do not infer scope or validate arbitrary scanner formats.
+For reliable JS/source-map collection, the JavaScript stage documents `scripts/collect_assets.py` (including program identification headers) and the read-only `scripts/verify_asset_run.py`. Verify completion and saved artifact integrity before selecting a collector baseline. These helpers accept exact pre-approved URLs; they do not infer scope or validate arbitrary scanner formats. Their CLIs now require an explicit scope/rate/count/byte policy, documented in [scope-policy.md](references/scope-policy.md), and refuse the full batch before requests when a URL/budget fails. This gates those two CLIs only; it is not a browser, DNS or arbitrary shell sandbox.
 
 ## Handoff boundaries
 

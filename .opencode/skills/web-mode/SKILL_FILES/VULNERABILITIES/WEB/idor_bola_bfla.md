@@ -1,5 +1,13 @@
 # IDOR / BOLA / BFLA — authorization reasoning guide
 
+## Contents
+
+- Goal
+- Evidence contract
+- Stop conditions
+- Discovery probes and context-bound payloads
+- Primary references
+
 Use this file for browser/web flows where a user-controlled reference, action, or workflow may cross an ownership/role boundary. API-wide authorization testing belongs to `api-mode`.
 
 ## Goal
@@ -51,7 +59,7 @@ Test the question the architecture suggests; do not spray alternate encodings, h
 4. Verify the **semantic result**: sensitive data returned, object changed, action executed, or capability granted.
 5. Re-read the resource/state independently when possible to prove durable effect.
 6. Falsify alternate explanations such as public/shared data, stale cache, object aliases, intended collaboration, soft-deleted visibility, or error pages with misleading status codes.
-7. Expand to sibling actions only if the first boundary failure is real or the architecture clearly shares the same authorization path.
+7. Follow other observed actions or representations when each has a justified hypothesis; a protected first action does not exhaust the feature.
 
 ## Horizontal vs vertical boundaries
 
@@ -100,3 +108,48 @@ Reject or narrow the claim when:
 Use `api-mode` for broad REST/GraphQL/gRPC authorization matrices, `business_logic_bugs.md` when the boundary depends on workflow/invariants rather than simple ownership/role, and `account_takeover_chains.md` only after a real authorization primitive is demonstrated.
 
 If architecture suggests alternate representations, parent/tenant binding issues, capability-lifecycle differences, or action asymmetry, consult `references/authorization-differentials.md` as **inspiration only** rather than a spray list.
+
+## Discovery probes and context-bound payloads
+
+Build two populated owned fixtures, for example tenant A's document `DOC_A` containing
+`AUDIT_A` and tenant B's document `DOC_B` containing `AUDIT_B`. Obtain each identifier normally.
+Use a real control for the exact action being tested; a working GET does not validate an update body.
+
+| Hypothesis | Minimal differential experiment | Expected protected behavior |
+|---|---|---|
+| Child is not bound to parent tenant | A reads `/tenants/TENANT_A/docs/DOC_B` versus valid A/A and B/B pairs. | Reject inconsistent relationship without leaking B's synthetic marker. |
+| Alternate representation omits ACL | Compare document view versus its observed preview/export/download for the same A/B pair. | Each surface enforces its intended policy; signed sharing capabilities may intentionally differ. |
+| Membership changes leave stale capabilities | Issue an owned fixture export while B is a member; remove B and access at the relevant later stage. | Compare documented issue-time versus use-time access; capture disclosure during the window too. |
+| Write authority differs from read | Change only `title` to `AUDIT_MARKER` on a foreign owned fixture using a valid update shape. | Independent owner read stays unchanged. Avoid delete/payment operations as first proof. |
+| User-supplied parent overrides server relationship | Retain A session and valid DOC_A body, change only observed `tenant_id` to TENANT_B. | Do not move/create the object in B's authority domain unless the actor has that permission. |
+| Collection policy differs from object policy | Use a real filter/list operation to request the two synthetic fixtures; compare ordinary object reads. | No foreign marker/capability beyond intended sharing; a count difference alone needs interpretation. |
+
+```http
+PATCH /observed/documents/DOC_B HTTP/1.1
+Host: app.example.invalid
+Content-Type: application/json
+
+{"title":"AUDIT_MARKER"}
+```
+
+Use A's complete valid request credentials and normal CSRF headers. Prove B owns the object,
+then have B read back its title before and after. A `200` echo without a committed change is not proof.
+A UUID need not be guessed if a legitimate discovery path already exposes it; report that path
+separately from the missing action authorization. Capability possession may itself grant intended
+access: consult `capability_links.md` before calling a public share link an IDOR.
+
+## Source and version boundaries
+
+Sources reviewed 2026-11-13. These are synthetic object relationships, not known routes.
+Authorization can be relationship-, state-, or attribute-based. Record the tested policy rather
+than assuming every resource has a single owner or every collaborator should be denied.
+
+## Primary references
+
+- [PortSwigger: Access control](https://portswigger.net/web-security/access-control) — horizontal, vertical and workflow-specific control.
+- [OWASP: IDOR Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html) — object reference versus ownership decision.
+- [OWASP: Authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html) — relationship and permission checks on each action.
+
+## Scoped closure and reopening
+
+Reopen for an observed preview/export/share path, parent-child relationship, different actor/tenant, or membership/ownership transition. A correct direct read does not answer write or derived-capability authorization.

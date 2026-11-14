@@ -174,8 +174,14 @@ class TransportIntegrationTests(unittest.TestCase):
             root=Path(temp)
             (root/'urls.txt').write_text(base+'/a.js\n'+base+'/redirect\n')
             (root/'headers.json').write_text(json.dumps({'X-HackerOne-Handle':'fixture-handle'}))
+            from urllib.parse import urlsplit
+            local = urlsplit(base)
+            (root/'scope-policy.json').write_text(json.dumps({
+                'version':1,'policy_id':'synthetic-loopback','source':'local test fixture',
+                'allow':[{'host':local.hostname,'schemes':['http'],'ports':[local.port]}],
+                'deny':[],'min_interval':0,'max_requests':10,'max_bytes':10000000}))
             result=subprocess.run([sys.executable,str(SCRIPTS/'collect_assets.py'),'--urls',str(root/'urls.txt'),
-                '--output',str(root/'run'),'--kind','javascript','--interval','0',
+                '--scope-policy',str(root/'scope-policy.json'),'--output',str(root/'run'),'--kind','javascript','--interval','0',
                 '--headers-file',str(root/'headers.json')],capture_output=True,text=True)
             self.assertEqual(result.returncode,1,result.stderr)
             self.assertEqual(seen,[('/a.js','fixture-handle'),('/redirect','fixture-handle')])

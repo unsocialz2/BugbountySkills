@@ -1,43 +1,9 @@
-# SKILL: Cross-Site WebSocket Hijacking (CSWSH) — dedicated
+# Cross-Site WebSocket Hijacking — compatibility route
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (cross-site websocket hijacking (cswsh) — dedicated) or pasted request matching this class
+Canonical methodology and PAYLOADS: [websocket_attacks.md](websocket_attacks.md).
+Load that guide once; do not maintain a second CSWSH recipe here.
 
----
-
-## IDENTITY IN THIS SKILL
-Same as websocket_attacks.md CSWSH section but isolated for clarity.
-
----
-
-## DETECTION
-Origin not validated on WS handshake.
-
-## EXPLOITATION
-(see websocket_attacks.md)
-
-## PAYLOADS (real, copy-paste, grouped)
-(see websocket_attacks.md)
-
-## BYPASS TECHNIQUES
-(see websocket_attacks.md)
-
-## CHAIN POTENTIAL
-(see websocket_attacks.md)
-
-## TOOLS
-websocket-csrf-poc generator
-
-## COMMANDS
-Burp → Engagement Tools → WebSocket CSRF PoC
-
-## EDGE CASES / NOT-A-BUG TRAPS
-Cookie-based WS auth + missing Origin check is the only route. Token-in-Header WS auth is safe.
-
-## TRIAGE ANGLE (per platform)
-Show cross-site script subscribing as victim.
-
-## SEVERITY & CVSS
-8.0+.
-
-## REFERENCES
-PortSwigger CSWSH
+The decisive boundary is a real foreign-origin browser gaining protected WebSocket read/action capability using authority it should not exercise.
+Origin-header oddities, a successful handshake, or a CLI-supplied victim token alone do not prove that boundary.
+Preserve the normal handshake, actual attacker-browser credential behavior and protected synthetic message/action.
+Use [csrf_all_types.md](csrf_all_types.md) only for a distinct HTTP state-changing request in the same flow.

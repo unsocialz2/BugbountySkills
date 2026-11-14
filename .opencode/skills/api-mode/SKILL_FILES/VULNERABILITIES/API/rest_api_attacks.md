@@ -76,3 +76,52 @@ Reject or narrow when:
 - no protected data/action/state becomes available.
 
 This file is a router for REST-specific ambiguity, not a generic exploit checklist.
+
+## Discovery and experiment payloads — Representation and operation mapping
+
+Examples below are synthetic request shapes, not discovered target endpoints.
+Read policy first, substitute existing owned resources, and start with a normal
+successful operation. A cheap discriminating discovery probe does not require a
+previously confirmed vulnerability. No example has been replayed against an
+external target by this revision.
+
+| Question | Minimal control / probe | Protected or benign outcome to discriminate |
+|---|---|---|
+| Path vs body relationship | Normal /tenant/T_A/doc/D_A update vs body reference to owned fixture B | Identify which authoritative relation controls the action; record object/parent policy separately. |
+| PUT/PATCH semantics | Observed partial update vs full replacement on one disposable record | Omitted fields can legitimately differ; test security defaults/read-only bindings with valid method controls. |
+| Representation parser | Normal JSON vs an actually supported form/XML representation | Change body encoding with Content-Type. Wrong Content-Type and invalid bytes test rejection only. |
+| List/single read asymmetry | Own list and direct read vs small filter selecting known B-owned fixture | Ensure pagination/filter fields remain within authorized records and distinguish public from private properties. |
+| Retries/idempotency | One sandbox transaction vs same key/same payload then same key/different payload | Compare committed state and product key scope. HTTP method idempotence does not require identical response bodies. |
+
+### Payload context
+
+```http
+PATCH /api/documents/D_A HTTP/1.1
+Host: api.example.invalid
+Authorization: Bearer TOKEN_A
+Content-Type: application/json
+
+{"title":"AUDIT_MARKER"}
+```
+Preserve the actual observed valid route/body/authentication. A method advertised
+by OPTIONS does not establish that its protected implementation executed. HTTP
+200 can contain a business error; HTTP 202 can mean only queued acceptance.
+Follow processing to the protected read or final effect without demanding
+unnecessary destructive mutation.
+
+### Evidence and reopening
+
+Keep actor/role/tenant, exact request bytes, successful normal control, probe
+response, authoritative readback or transient protected result, strongest benign
+explanation, and remaining gap. Close only the tested relationship/representation;
+reopen for an observed alternate consumer, changed lifecycle, repaired control, or
+new source evidence. Absence of output is not evidence that processing never ran.
+
+### Primary sources and applicability
+
+Sources checked 2026-11-13 for mechanism/design support; they are not target
+version or exploitability attestations. The experiment matrix is a synthesis.
+
+- [PortSwigger API testing](https://portswigger.net/web-security/api-testing) — methods, formats and endpoint discovery.
+- [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110) — method semantics, representations and idempotence.
+- [OWASP REST security](https://cheatsheetseries.owasp.org/cheatsheets/REST_Security_Cheat_Sheet.html) — endpoint security and content types.

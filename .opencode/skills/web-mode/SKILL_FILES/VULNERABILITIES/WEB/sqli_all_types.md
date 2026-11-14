@@ -1,99 +1,93 @@
-# SQL Injection — differential reasoning guide
+# SQL injection — prove query interpretation before expanding access
 
-Use this file when observed behavior suggests user-controlled data may alter a database query or query-construction path. This is a methodology guide, not a payload library.
+## Boundary and discovery
 
-## Goal
+Use for searches, reports, filters, sorting, exports, stored preferences and other features that construct SQL.
+A matching database banner, apostrophe error or slow response is a lead, not SQL injection.
+Start with a valid normal feature, even when no injection primitive is known yet.
+Follow attacker input through HTTP decoding, validation, ORM/query builder, SQL execution and result rendering.
+Identify whether the input occupies a string value, numeric value, identifier, list, sort direction or expression.
+Parameterization protects values; dynamic identifiers need a separate policy and are not automatically vulnerable.
+Do not change a read request into a mutation merely to obtain a stronger effect.
 
-Determine whether attacker-controlled input changes the **structure or semantics of a backend query** in a way the application did not intend.
+Record:
 
-Do not infer SQL injection from one error, one slow response, or the presence of a database-looking parameter.
+- actor and authorized dataset, including one researcher-owned result with a unique marker;
+- exact endpoint/method/body, parser/content type, normal result and independent readback;
+- query context and DB family as observed, or explicitly unknown;
+- whether the observation is content, error, time, stored processing or an OOB event;
+- cache, search ranking, pagination and WAF behavior that could imitate a result difference.
 
-## Model the query boundary
+## Establish the control
 
-For the candidate input, identify what you can infer about:
+1. Create two owned search records, `AUDIT_ALPHA` and `AUDIT_BETA`, through normal product flows if allowed.
+2. Capture successful queries returning each and one returning neither.
+3. Repeat a small interleaved sequence to measure ordinary result/timing variance.
+4. Record an untouched request, a syntax-only perturbation and a matched logical pair separately.
+5. Keep tenant/session/locale/pagination constant; remove stale browser session ambiguity.
 
-- input type and parser before the database layer,
-- whether the value is likely data, identifier, sort/order expression, filter fragment, search expression, or raw query text,
-- framework/ORM/query-builder behavior,
-- transformations or normalization before query construction,
-- database family only when evidence supports it,
-- whether the result is reflected, boolean-differential, timing-only, error-based, or out-of-band.
+The purpose is to distinguish database expression evaluation from the application's intended search language.
+A product that deliberately supports SQL for authorized analytics has a different boundary: constrain its data, tenant and execution capabilities.
 
-The useful question is: **does changing this input produce a controlled database-dependent semantic difference that cannot be explained by normal application logic?**
+## Context-specific payloads and experiments
 
-## Minimal hunt loop
+These are conditional probes, not a sequence to spray. Adapt quote/comment syntax only after the context supports it.
+Use an owned read-only dataset. SQL text below is the parameter value, before normal HTTP encoding.
 
-1. Establish a stable baseline request and response/timing distribution.
-2. Change one input in a way that tests query interpretation without destructive side effects.
-3. Compare a matched positive/control pair rather than a single anomalous response.
-4. Repeat enough times to distinguish deterministic behavior from network/WAF/backend jitter.
-5. Identify the narrowest supported technique class: boolean/content differential, controlled error, timing, or another query-dependent effect.
-6. Falsify alternate explanations such as validation branches, search semantics, cache variance, rate limiting, WAF delay, or backend instability.
-7. Only after injection is established, determine the minimum additional evidence needed to demonstrate impact under program rules.
+| Question | Positive/challenge | Matched control | What would distinguish the hypotheses? |
+|---|---|---|---|
+| Numeric expression evaluated? | `1 AND 1=1` | `1 AND 1=2` | Existing owned id 1 survives only the true branch; type errors alone are inconclusive. |
+| Single-quoted string breakout? | `AUDIT_ALPHA' AND 'a'='a'-- ` | `AUDIT_ALPHA' AND 'a'='b'-- ` | Result toggles with predicate, not with the mere apostrophe. Requires a compatible string context/comment. |
+| Inline expression in a lab query? | `SELECT CASE WHEN 2=2 THEN 'AUDIT_YES' ELSE 'AUDIT_NO' END` | Change `2=2` to `2=3` | Confirms the local oracle, not a remote injection point. |
+| User-selected sort is an expression? | Two valid documented sort keys first; then a harmless DB-specific conditional expression if evidence supports raw SQL | Same expression with reversed condition | Owned records reorder as predicted, without changing dataset membership. |
+| Error is condition-dependent? | A DB-specific expression that is valid in one branch and invalid in the other | Same structure, condition reversed | Error classification follows the condition over interleaved trials; generic 500/WAF signatures do not count. |
+| Stored data reaches a later query? | Save `AUDIT_ALPHA'` in one owned preference consumed by an export | Save an ordinary marker through the same flow | Identify the later consumer and then use a matched predicate there; persistence alone proves no injection. |
+| Representation chooses a different query path? | Equivalent documented JSON/form values | Original content type and equivalent body | Same authorized operation behaves differently because of query construction, not malformed serialization. |
 
-## High-signal contexts
+Do not use `OR pg_sleep(...)` as a generic PostgreSQL boolean: `pg_sleep` returns void.
+Do not assume a DB evaluates conditional branches exactly as a programming language does; optimizer behavior matters.
+If timing is necessary, select a source-backed short delay valid in that precise expression context and obey request budgets.
+Prefer content/boolean proof when it answers the same question with less load.
 
-Pay attention when the application exposes query-construction escape hatches such as:
+## Blind and statistical reasoning
 
-- sort/order/group fields,
-- search/filter builders,
-- reporting/analytics expressions,
-- raw ORM fragments,
-- dynamic table/column selection,
-- stored values later reused in query construction,
-- alternate parsers for JSON/form/query inputs.
+Define the signal before collecting a timing sample: response category, owned row presence, error class or elapsed time.
+Interleave challenge/control order and retain raw samples, not only averages.
+Compare distributions and stability; a single large latency is not an oracle.
+Check rate limiting, backend retries and cache misses with ordinary marker controls.
+Avoid unbounded regex, heavy joins or benchmark loops as detection techniques.
+For OOB, use a unique token and distinguish SQL execution from link scanners or log processors.
+An outbound DNS event does not establish file read, credential access or command execution.
 
-These are hypotheses, not assumptions of vulnerability.
+## Expand from the demonstrated capability
 
-## Timing evidence
+Once interpretation is proved, ask the nearest security question: unauthorized row visibility, tenant filter removal or protected write authority.
+Use known synthetic records rather than enumerating schema or extracting real user data.
+A query-construction error that cannot cross the intended data boundary may need a narrower report.
+A database role may be read-only, sandboxed or restricted to one tenant; do not inherit a universal database-compromise claim.
+Second-order input can execute only later; preserve the original write and exact consuming action.
+An eventual rollback does not erase a read or completed action during the vulnerable window.
 
-A timing candidate requires controlled repetition and a matched control. Record baseline variance and show that the delay tracks the input condition rather than infrastructure noise.
+## Falsification and evidence
 
-Do not treat one slow response as SQL injection.
+Save the successful normal action, matched pair, full raw responses and relevant independent state.
+Record DB/context confidence, exact encoding, repeat count and noise controls.
+Attempt the strongest benign account: documented query language, validation branch, search semantics, cache variation or WAF delay.
+Separate injection demonstrated, protected data/action demonstrated, policy eligibility and submission status.
+Do not assign a score from the class name.
 
-## Error evidence
+Close only the exact tested context if the paired input is treated as literal data or rejected before query construction.
+Keep an invalid-control or unexplained-timing result inconclusive.
+Reopen for an observed second consumer, raw query fragment, alternate representation or changed deployment.
+Do not label the whole endpoint or database safe after one protected parameter.
 
-Database-looking errors are leads. Confirm that attacker input influences the query path and that the behavior is reproducible. Generic 500s, parser errors, and WAF blocks do not establish SQL injection.
+## References and freshness
 
-## Second-order behavior
+Reviewed 2026-11-13. These support mechanisms; no claim that every DB/context or remote target was executed here.
 
-When input is stored and later processed, preserve the exact storage-to-query path. Prove that the later query consumes the attacker-controlled value and that the effect is not merely unsafe storage or logging.
+- [PortSwigger SQL injection](https://portswigger.net/web-security/sql-injection) — contextual detection, blind channels and second-order processing.
+- [OWASP SQL injection prevention](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html) — value parameterization versus identifier allowlists and query construction.
+- [PostgreSQL conditional expressions](https://www.postgresql.org/docs/current/functions-conditional.html) — context-dependent CASE behavior and evaluation caveats; consult the deployed major version.
 
-## Impact reasoning
-
-After confirmation, separate:
-
-- query manipulation only,
-- limited data inference/read capability,
-- broader read/write capability,
-- access to database features outside normal application data access.
-
-Do not assume full database compromise or code execution from the injection primitive alone.
-
-## Evidence contract
-
-A strong finding should preserve:
-
-1. exact input and endpoint,
-2. baseline/control behavior,
-3. matched test behavior,
-4. repeated evidence showing deterministic query-dependent effect,
-5. inferred query/context and confidence level,
-6. strongest benign explanation tested and rejected,
-7. minimum demonstrated impact.
-
-Numeric severity belongs to `reporting-mode`.
-
-## Stop conditions
-
-Park or reject when:
-
-- differences are not repeatable,
-- timing remains inside normal variance,
-- only generic validation/WAF/backend errors occur,
-- application semantics explain the response difference without query manipulation,
-- the candidate cannot be isolated to attacker-controlled input.
-
-## References on demand
-
-Use the `payloads` skill only after the query context or database family is understood. Canonical runtime material lives in `payloads/references/2-sqli-by-db.md`. Load only the small subset that answers the current question; do not copy the whole payload sheet into the hunt context.
+Use `orm_filter_inference.md` for unauthorized filtering through otherwise parameterized ORM queries.
+Use `nosql_injection.md` for non-SQL operator/type semantics.

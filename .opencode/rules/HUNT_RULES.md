@@ -51,15 +51,17 @@ Browser/session flows stay in `web-mode` even if JSON is involved; schema/protoc
 Deep dives are **decision support**, never replacement identities or mandatory playbooks.
 
 - Reason from target evidence before skill examples.
-- Ignore legacy persona/“always test” language.
+- Web references are canonical methodologies or compatibility pointers; do not retrieve archived payload dumps as a fallback. Ignore persona/“always test” language elsewhere.
 - Do not enumerate listed payloads, headers, bypasses, tools, or chains unless the observed architecture creates that question.
 - Use `payloads` for exact context-specific probes rather than loading duplicate payload dumps.
 - A listed chain never substitutes for proving each transition.
-- Legacy CVSS/platform baselines inside hunting files are non-binding; `reporting-mode` owns numeric scoring unless explicitly requested earlier.
+- Do not maintain CVSS/platform baselines in web discovery/payload files; `reporting-mode` computes a versioned vector from demonstrated facts.
 
 For large/legacy files: formulate the security question first, search/inspect headings, then read only the relevant section when possible. Prefer current primary/vendor research for version-sensitive behavior.
 
 ## 3. DISCOVERY / VIABILITY
+
+Use three different gates: discovery needs a concrete question and permitted cheap probe, validation needs a reproduced boundary with controls, and reporting needs the claimed effect/evidence. Never apply the report gate to suppress uncertain discovery or promise that every target contains a vulnerability.
 
 Before substantial deep work, keep the best-known candidate shape:
 
@@ -126,7 +128,7 @@ Time boxes are heuristics, not hard stops: prolonged recon without signal -> piv
 
 Reuse existing evidence before collecting more. Do not repeat verified work merely because a skill reloads. Re-run only for changed scope, stale/changed behavior, a real evidence gap, or operator request. Merge/diff stateful outputs rather than overwriting blindly.
 
-A temporary invalid state can still have lasting impact. Check actions and disclosure during the window before dismissing a rollback.
+A temporary invalid state can still have lasting impact. Check actions and disclosure during the window before dismissing a rollback. Durable final state is not a universal requirement for a protected read or an action already completed.
 
 For an actionable handoff or a changed model/runtime, retain minimal execution provenance when available: skill commit, runtime/model/settings evidence, actual skill/reference load events and decisive tool results. Distinguish runtime exports from declared/unknown context; writing “loaded” in a note is not proof of a load event. Do not dump secrets or require a full transcript for every request. Use core-identity/references/execution-provenance.md (relative to the skills directory) when diagnosing execution or testing revisions.
 

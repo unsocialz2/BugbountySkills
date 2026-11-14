@@ -64,3 +64,49 @@ Reject or narrow when:
 ## Cross-skill use
 
 Use `api_authorization_bypass.md` once identity is established but resource/action authorization is wrong. Use web-mode protocol guides for browser-centric OAuth/SAML/MFA/session flows. Use `payloads` only when a concrete parser/token mechanism requires exact input variants.
+
+## Discovery and experiment payloads — Credential-to-principal bindings
+
+Examples below are synthetic request shapes, not discovered target endpoints.
+Read policy first, substitute existing owned resources, and start with a normal
+successful operation. A cheap discriminating discovery probe does not require a
+previously confirmed vulnerability. No example has been replayed against an
+external target by this revision.
+
+| Question | Minimal control / probe | Protected or benign outcome to discriminate |
+|---|---|---|
+| Missing proof | Accepted A-token request vs the same exact request with Authorization absent | No private A marker or protected action without proof; distinguish public bootstrap output. |
+| Wrong purpose | A session/access token vs A invitation/reset artifact in the same header | An artifact issued for a different purpose must not authenticate to a protected read. |
+| Audience/resource confusion | A valid token for API X vs API Y, keeping issuer and actor known | A rejection is meaningful only after each API accepts its own valid control; do not forge a signature merely to test audience. |
+| Credential precedence | A bearer plus B cookie, then each alone, on researcher-owned accounts | Identify which principal is authoritative. Different supported credential priorities are not a bug until authority crosses an intended boundary. |
+| Revocation drift | Owned token accepted before revocation vs after the documented event and propagation window | Capture any protected result during the window; distinguish unsupported immediate revocation from broken product guarantees. |
+
+### Payload context
+
+```http
+GET /api/documents/DOC_A HTTP/1.1
+Host: api.example.invalid
+Authorization: Bearer TOKEN_A
+
+```
+Replay this control without the header, then with the documented wrong-purpose
+artifact. Replace names with observed paths/tokens; do not guess authentication
+from a response code. Follow the owning JWT/OAuth/session guide when the result
+identifies a protocol-specific weakness.
+
+### Evidence and reopening
+
+Keep actor/role/tenant, exact request bytes, successful normal control, probe
+response, authoritative readback or transient protected result, strongest benign
+explanation, and remaining gap. Close only the tested relationship/representation;
+reopen for an observed alternate consumer, changed lifecycle, repaired control, or
+new source evidence. Absence of output is not evidence that processing never ran.
+
+### Primary sources and applicability
+
+Sources checked 2026-11-13 for mechanism/design support; they are not target
+version or exploitability attestations. The experiment matrix is a synthesis.
+
+- [PortSwigger authentication](https://portswigger.net/web-security/authentication) — identity proof and state transitions.
+- [OWASP API2](https://api-security.owasp.org/editions/2023/en/0xa2-broken-authentication/) — API authentication boundaries.
+- [RFC 6750](https://www.rfc-editor.org/rfc/rfc6750) — bearer scope, transport and audience.

@@ -68,3 +68,48 @@ Reject or narrow when:
 ## Cross-skill use
 
 Use authentication/recovery skills when rate limiting is only one control inside a larger auth boundary. Use `race_conditions.md` when the issue is simultaneous state transition rather than accounting/velocity. Use GraphQL/gRPC-specific files only when protocol batching/streaming is actually relevant to the same protected operation.
+
+## Discovery and experiment payloads — The protected counter, not request throughput
+
+Examples below are synthetic request shapes, not discovered target endpoints.
+Read policy first, substitute existing owned resources, and start with a normal
+successful operation. A cheap discriminating discovery probe does not require a
+previously confirmed vulnerability. No example has been replayed against an
+external target by this revision.
+
+| Question | Minimal control / probe | Protected or benign outcome to discriminate |
+|---|---|---|
+| Throttled baseline | Observe a known low-limit synthetic fixture before changing any request dimension | If the threshold cannot be established within program limits, mark it blocked; do not manufacture a burst. |
+| Equivalent route bucket | After throttle on observed route X, make one equivalent request via documented route Y | Protected operation succeeding despite an intended shared limit matters; independent allocated quotas may be valid. |
+| Session-reset accounting | An exhausted own-account bucket before/after a normal session refresh | Changing sessions must not increase guesses against a promised account limit; account rotation alone proves nothing about one victim. |
+| Operation vs HTTP count | One operation vs two harmless aliased/batched operations in a fixture | Verify whether two protected effects consume the intended units; HTTP 200/429 alone is not an oracle. |
+| Parallel counter window | Sequential smallest pair vs synchronized pair after a clear invariant exists | Use race methodology. Stop at minimum evidence and count committed effects, not success-looking replies. |
+
+### Payload context
+
+```json
+{"operation":"redeem_test_credit","resource_id":"OWNED_ONE_USE_FIXTURE"}
+```
+This payload is a fixture shape. Prefer a sandbox operation whose configured
+limit is small and whose effects are reversible. A fabricated forwarding header
+must be justified by actual proxy trust evidence. There is no default 100-request
+or 1000-request proof, no IP-rotation service requirement, and no brute-force
+prescription. One admitted extra operation may prove accounting failure while
+its real security impact remains a separate question.
+
+### Evidence and reopening
+
+Keep actor/role/tenant, exact request bytes, successful normal control, probe
+response, authoritative readback or transient protected result, strongest benign
+explanation, and remaining gap. Close only the tested relationship/representation;
+reopen for an observed alternate consumer, changed lifecycle, repaired control, or
+new source evidence. Absence of output is not evidence that processing never ran.
+
+### Primary sources and applicability
+
+Sources checked 2026-11-13 for mechanism/design support; they are not target
+version or exploitability attestations. The experiment matrix is a synthesis.
+
+- [PortSwigger authentication protections](https://portswigger.net/web-security/authentication/password-based) — attempt controls and authentication effects.
+- [GraphQL security](https://graphql.org/learn/security/) — operation cost, breadth/batch and business-layer limits.
+- [OWASP API4](https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/) — resource accounting context.

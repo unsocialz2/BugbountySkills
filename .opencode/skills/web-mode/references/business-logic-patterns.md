@@ -36,7 +36,7 @@ Check whether billing state and product capability remain consistent across tria
 
 Cross-component assumptions often fail around background jobs, callbacks, queues, retries, cache invalidation, review decisions, inventory reservations, and delayed verification.
 
-Test the durable final state rather than the immediate response.
+Test authoritative state and protected reads/actions during any intermediate window; a rollback does not undo disclosure.
 
 ## Concurrency
 

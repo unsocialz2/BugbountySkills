@@ -37,7 +37,11 @@ def checked_headers(headers):
     if not isinstance(headers, dict):
         raise ValueError('headers must be a JSON object')
     blocked = {'authorization', 'cookie', 'proxy-authorization', 'host',
-               'content-length', 'transfer-encoding', 'connection', 'accept-encoding'}
+               'content-length', 'transfer-encoding', 'connection', 'accept-encoding',
+               'x-http-method-override', 'x-method-override', 'x-http-method',
+               'x-original-url', 'x-rewrite-url', 'forwarded', 'x-forwarded-for',
+               'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port',
+               'x-original-host', 'x-host', 'destination'}
     result = {}
     for name, value in headers.items():
         if (not isinstance(name, str) or not re.fullmatch(r"[!#$%&'*+.^_`|~0-9A-Za-z-]+", name)
@@ -121,7 +125,7 @@ def fetch(opener, url, max_bytes, headers=None):
         return body, response.headers.get('Content-Type', '')
 
 
-def collect(urls, output, kind, interval, max_bytes, fetcher=None, headers=None):
+def collect(urls, output, kind, interval, max_bytes, fetcher=None, headers=None, policy=None):
     if kind not in ('javascript', 'sourcemap'):
         raise ValueError('unsupported artifact kind')
     headers = checked_headers({} if headers is None else headers)
@@ -130,6 +134,8 @@ def collect(urls, output, kind, interval, max_bytes, fetcher=None, headers=None)
     urls = list(dict.fromkeys(checked_url(u.strip()) for u in urls if u.strip()))
     if not urls:
         raise ValueError('no URLs; refusing an empty successful run')
+    if policy is not None:
+        policy.preflight(urls, interval, max_bytes)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False, mode=0o700)
     opener = urllib.request.build_opener(NoRedirect())
@@ -139,6 +145,8 @@ def collect(urls, output, kind, interval, max_bytes, fetcher=None, headers=None)
                'requested': len(urls), 'input_sha256': input_digest(urls),
                'interval_seconds': interval, 'max_bytes': max_bytes,
                'custom_headers': bool(headers)}
+    summary['scope_policy_sha256'] = policy.sha256 if policy is not None else None
+    summary['scope_mode'] = 'enforced-policy' if policy is not None else 'preapproved-library-input'
     write_json_atomic(output / 'run.json', summary)
     failures = 0
     with (output / 'manifest.jsonl').open('x', encoding='utf-8') as manifest:
@@ -185,10 +193,13 @@ def main():
     parser.add_argument('--interval', required=True, type=float, help='minimum seconds between requests, selected from target policy')
     parser.add_argument('--max-bytes', type=int, default=10_000_000)
     parser.add_argument('--headers-file', type=Path, help='JSON object of non-credential program identification headers; never logged')
+    parser.add_argument('--scope-policy', required=True, type=Path, help='explicit scope/rate policy JSON; no inferred ownership')
     args = parser.parse_args()
     try:
+        from scope_policy import ScopePolicy
+        policy = ScopePolicy.load(args.scope_policy)
         headers = json.loads(args.headers_file.read_text(encoding='utf-8-sig')) if args.headers_file else {}
-        failures = collect(args.urls.read_text(encoding='utf-8-sig').splitlines(), args.output, args.kind, args.interval, args.max_bytes, headers=headers)
+        failures = collect(args.urls.read_text(encoding='utf-8-sig').splitlines(), args.output, args.kind, args.interval, args.max_bytes, headers=headers, policy=policy)
     except (OSError, ValueError, UnicodeError) as error:
         parser.exit(2, f'Collection setup failed: {type(error).__name__}\n')
     print(f'Collection complete; failed URLs: {failures}. Inspect manifest before downstream work.')
