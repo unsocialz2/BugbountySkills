@@ -30,9 +30,9 @@ preload the full catalogue or convert the index into a sequential checklist.
 ## Browser and access environment
 
 Read target policy first. Consult `ENV.md` at repository root only when resolving
-this workstation's browser/tool preferences. It preserves the operator's Windows
-ego-browser preference where available; verify runtime and load its installed
-guide before use. Other hosts may use an available permitted isolated browser.
+this workstation's browser/tool preferences. It preserves the operator's browser
+preference: headed Playwright first, ego-browser as the second option where
+available; verify the runtime before use. Other hosts may use an available permitted isolated browser.
 A missing preferred browser is a specific tooling blocker, not application security
 evidence. Never silently change personal profiles, clear user data, import sessions,
 or claim a browser/runtime that did not execute.
