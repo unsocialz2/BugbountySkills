@@ -1,44 +1,52 @@
-# SKILL: Severity Rating with CVSS
-## Version: 1.0 | Domain: reporting
+# Evidence-based severity and CVSS
 
----
+Score only a demonstrated finding, or give an explicitly qualified assessment
+when the program requests one. Select the CVSS version required by the current
+program; do not infer platform defaults from an old repository note.
 
-## CVSS v3.1 BASE METRICS
-- **Attack Vector (AV)** — Network / Adjacent / Local / Physical
-- **Attack Complexity (AC)** — Low / High
-- **Privileges Required (PR)** — None / Low / High
-- **User Interaction (UI)** — None / Required
-- **Scope (S)** — Unchanged / Changed
-- **Confidentiality (C)** — None / Low / High
-- **Integrity (I)** — None / Low / High
-- **Availability (A)** — None / Low / High
+## Build the metric argument
 
-## QUICK MAPPING
+1. Describe attacker starting privileges, entry context and user interaction.
+2. Separate exploit preconditions from the privilege the exploit gains.
+3. Identify exact confidentiality, integrity and availability effects evidenced.
+4. Identify the vulnerable component and any subsequent security authority.
+5. Choose metrics using that version's definitions; retain uncertain assumptions.
+6. Compute with the matching official calculator and publish full version/vector.
+7. Keep program taxonomy/priority, eligibility, duplicate status and CVSS separate.
 
-| Bug | Vector | Score |
-|-----|--------|-------|
-| Pre-auth RCE on public web | AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H | 9.8 Critical |
-| Auth RCE | AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H | 8.8 High |
-| Stored XSS in admin panel | AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:N | 9.0 Critical |
-| Reflected XSS | AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N | 6.1 Medium |
-| IDOR (full user read) | AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N | 6.5 Medium |
-| Open redirect | AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:L/A:N | 4.7 Medium |
-| Subdomain takeover (cookie scope) | AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:N | 9.6 Critical |
-| SSRF → IMDS | AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H | 9.9 Critical |
-| Self-XSS | AV:L/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N | 2.3 Low |
+## Version-specific considerations
 
-## CVSS v4.0 (Jan 2024+)
-Newer scoring includes Threat (Exploit Maturity) and Environmental metrics. H1/Bugcrowd still default to v3.1.
+- v3.1 uses AV/AC/PR/UI/S/C/I/A for Base. Scope is a security-authority concept,
+  not automatically changed because a different URL/tenant/server appears.
+- v4.0 adds Attack Requirements and distinguishes vulnerable-system from
+  subsequent-system impacts, with version-specific user interaction definitions.
+  Do not mechanically translate a v3.1 vector into v4.0 numbers.
+- Threat and Environmental metrics require their own evidence/assumptions. Do not
+  silently mix an environmental score with a base score in a report title.
 
-## CALCULATORS
-- https://www.first.org/cvss/calculator/3-1
-- https://nvd.nist.gov/vuln-metrics/cvss/v3-calculator
+## Reject score-by-name shortcuts
 
-## TIPS
-- Always show the vector string in the report.
-- If your vector seems generous, add 1-2 sentences justifying.
-- For BOLA on PII: C:H, not C:L.
-- For ATO via auth bypass: usually C:H/I:H/A:N.
+RCE, XSS, IDOR, SSRF, redirect and takeover names do not determine a score.
+Authentication alone does not determine all metrics. Data sensitivity alone does
+not establish the extent of confidentiality loss. Do not assign availability
+impact from an untested ability to read/write, nor full cloud control from a
+metadata callback. A sandboxed execution context has its own authority limits.
 
-## REFERENCES
-FIRST.org CVSS spec, OWASP Risk Rating Methodology
+A CSP bypass is not “XSS score + 1–2”. Additional confirmed links change the
+metric facts and require recomputation, not arithmetic bonuses. No score or
+program-priority prediction is warranted for a lead or a hypothetical chain.
+
+## Report the uncertainty clearly
+
+State the affected records/actions/roles and exact scope actually established.
+Where one unresolved prerequisite changes a metric, explain the conservative
+interpretation and the missing evidence; do not invent a precise final score.
+A program may accept technical validity while rejecting eligibility or marking a
+duplicate. Preserve those independent outcomes.
+
+## Primary sources
+
+- [FIRST v3.1 specification](https://www.first.org/cvss/v3.1/specification-document) — authoritative metric definitions and vector requirements.
+- [FIRST v3.1 calculator](https://www.first.org/cvss/calculator/3.1) — matching calculation.
+- [FIRST v4.0 specification](https://www.first.org/cvss/v4.0/specification-document) — v4 definitions and system impacts.
+- [FIRST v4 calculator](https://www.first.org/cvss/calculator/4.0) — matching calculation.

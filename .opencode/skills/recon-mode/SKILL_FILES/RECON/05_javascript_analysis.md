@@ -10,6 +10,7 @@ Use the bundled `scripts/collect_assets.py` relative to the recon-mode skill fol
 # Set RECON_SKILL to this skill's absolute directory and REQUEST_INTERVAL
 # to the target-policy-compatible spacing in seconds before executing.
 python3 "${RECON_SKILL:?}/scripts/collect_assets.py" \
+  --scope-policy scope-policy.json \
   --urls recon_data/js_urls_in_scope.txt \
   --output recon_data/js-run-001 --kind javascript \
   --interval "${REQUEST_INTERVAL:?}"
@@ -50,3 +51,8 @@ Use the same collector with `--kind sourcemap`, an approved map URL list, and an
 ## Handoff
 
 Record requested/saved/failed counts, relevant feature coverage, and evidence paths. A missing authenticated chunk or failed fetch means PARTIAL, not DONE. Hand off concrete request shapes to web/API testing and reachable source-to-sink candidates to source review. Exposure of a bundle or source map alone does not prove a vulnerability.
+
+The CLI now requires `--scope-policy`. Build it from the designated program policy
+using `references/scope-policy.md` in recon-mode; copy the example schema, not its
+example.invalid authorization. The CLI validates the complete input list and
+rate/byte/count budget before network access. It does not follow redirects.

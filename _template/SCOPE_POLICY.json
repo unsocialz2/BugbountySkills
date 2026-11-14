@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "policy_id": "REPLACE_WITH_PROGRAM_AND_POLICY_DATE",
+  "source": "REPLACE_WITH_DESIGNATED_POLICY_SOURCE",
+  "allow": [{"host": "app.example.invalid", "schemes": ["https"], "ports": [443], "methods": ["GET"]}],
+  "deny": [{"host": "app.example.invalid", "path_prefix": "/excluded", "methods": ["GET"]}],
+  "min_interval": 1,
+  "max_requests": 10,
+  "max_bytes": 10000000
+}

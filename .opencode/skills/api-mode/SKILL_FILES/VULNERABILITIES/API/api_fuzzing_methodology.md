@@ -68,3 +68,51 @@ Stop or narrow when:
 ## Tools
 
 Choose schema-aware/manual tooling that preserves clean controls and low-noise differentials. Tool choice is secondary to the experiment design.
+
+## Discovery and experiment payloads — Small interaction experiments with valid controls
+
+Examples below are synthetic request shapes, not discovered target endpoints.
+Read policy first, substitute existing owned resources, and start with a normal
+successful operation. A cheap discriminating discovery probe does not require a
+previously confirmed vulnerability. No example has been replayed against an
+external target by this revision.
+
+| Question | Minimal control / probe | Protected or benign outcome to discriminate |
+|---|---|---|
+| Presence/type | Valid scalar with marker vs absent/null/array only where schema permits meaningful comparison | Validation errors identify parser behavior; they do not prove exploitation or enforce ownership. |
+| Duplicate semantics | name=A, name=B, name=A&name=B, name=B&name=A on a harmless own fixture | Map first/last/array/multi-value access at each layer; framework name alone does not decide behavior. |
+| Coupled parser change | Valid JSON body+header vs valid form body+header | Preserve semantics. Mismatched header/body rejection is not an authorization result. |
+| Two-factor interaction | Control X, control Y, X+Y and neither on a local fixture | A failing factor alone does not rule out a composition flaw; justify combinations from the architecture. |
+| Second-order consumer | Stored marker control vs downstream preview/export consuming the same field | Track transformations and actors across storage/render/query steps; storage acceptance alone is not downstream execution. |
+
+### Payload context
+
+```text
+CONTROL A: label=AUDIT_A
+CONTROL B: label=AUDIT_B
+PROBE AB:  label=AUDIT_A&label=AUDIT_B
+PROBE BA:  label=AUDIT_B&label=AUDIT_A
+```
+These are form/query bytes, not four JSON values. A duplicate JSON key test uses
+a different parser and must preserve exact bytes; a dictionary serializer may
+remove the duplicate before transmission. Retain a distinctive output marker,
+normal successful controls and downstream state evidence. The smallest useful
+interaction can vary two coupled inputs; a rigid one-field rule must not prevent
+it when the combination is the hypothesis.
+
+### Evidence and reopening
+
+Keep actor/role/tenant, exact request bytes, successful normal control, probe
+response, authoritative readback or transient protected result, strongest benign
+explanation, and remaining gap. Close only the tested relationship/representation;
+reopen for an observed alternate consumer, changed lifecycle, repaired control, or
+new source evidence. Absence of output is not evidence that processing never ran.
+
+### Primary sources and applicability
+
+Sources checked 2026-11-13 for mechanism/design support; they are not target
+version or exploitability attestations. The experiment matrix is a synthesis.
+
+- [PortSwigger API testing](https://portswigger.net/web-security/api-testing) — parameter discovery and supported formats.
+- [PortSwigger server-side parameter pollution](https://portswigger.net/web-security/api-testing/server-side-parameter-pollution) — internal request construction boundaries.
+- [OWASP HPP](https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/07-Injection/04-HTTP_Parameter_Pollution/) — interacting component parser behavior.

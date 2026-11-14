@@ -13,7 +13,7 @@ import urllib.request
 from collect_assets import NoRedirect, checked_headers, checked_url, input_digest, utc_now, write_json_atomic
 
 
-def probe(urls, output, interval, max_bytes, headers=None):
+def probe(urls, output, interval, max_bytes, headers=None, policy=None):
     import math
     if not math.isfinite(interval) or interval < 0 or type(max_bytes) is not int or max_bytes <= 0:
         raise ValueError('invalid interval or byte limit')
@@ -21,12 +21,16 @@ def probe(urls, output, interval, max_bytes, headers=None):
     urls = list(dict.fromkeys(checked_url(u.strip()) for u in urls if u.strip()))
     if not urls:
         raise ValueError('empty approved URL list')
+    if policy is not None:
+        policy.preflight(urls, interval, max_bytes)
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False, mode=0o700)
     summary = {'schema_version': 1, 'format': 'url-probe', 'started_utc': utc_now(),
                'completed': False, 'status': 'running', 'requested': len(urls),
                'input_sha256': input_digest(urls), 'interval_seconds': interval,
                'max_bytes': max_bytes, 'custom_headers': bool(request_headers)}
+    summary['scope_policy_sha256'] = policy.sha256 if policy is not None else None
+    summary['scope_mode'] = 'enforced-policy' if policy is not None else 'preapproved-library-input'
     write_json_atomic(output / 'run.json', summary)
     opener = urllib.request.build_opener(NoRedirect())
     failed = 0
@@ -79,11 +83,14 @@ def main():
     parser.add_argument('--interval', required=True, type=float, help='seconds between requests, selected from program rules')
     parser.add_argument('--max-bytes', type=int, default=1_000_000)
     parser.add_argument('--headers-file', type=Path, help='JSON object of non-credential identification headers')
+    parser.add_argument('--scope-policy', required=True, type=Path, help='explicit scope/rate policy JSON')
     args = parser.parse_args()
     try:
+        from scope_policy import ScopePolicy
+        policy = ScopePolicy.load(args.scope_policy)
         headers = json.loads(args.headers_file.read_text(encoding='utf-8-sig')) if args.headers_file else None
         errors = probe(args.urls.read_text(encoding='utf-8-sig').splitlines(), args.output,
-                       args.interval, args.max_bytes, headers)
+                       args.interval, args.max_bytes, headers, policy=policy)
     except (OSError, ValueError, UnicodeError) as error:
         parser.exit(2, f'Probe failed: {type(error).__name__}\n')
     print(f'URL observations saved; transport/storage errors: {errors}. Inspect run.json and responses.jsonl.')

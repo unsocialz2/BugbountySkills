@@ -1,5 +1,13 @@
 # Account Takeover Chains — evidence-driven impact guide
 
+## Contents
+
+- Goal
+- Evidence contract
+- Stop conditions
+- Candidate discovery and minimal transition probes
+- Primary references
+
 Use this file **after** a concrete primitive exists and there is evidence it may cross an account-control boundary. Account takeover is an outcome, not a vulnerability class and not a default escalation target.
 
 ## Goal
@@ -104,3 +112,51 @@ Report the narrower demonstrated impact instead of forcing an ATO narrative.
 ## Cross-skill use
 
 The originating flaw stays in its owning skill (XSS, auth, IDOR/BAC, OAuth, MFA, CSRF, business logic, etc.). This file is only for evidence-based impact chaining. Numeric severity and platform wording belong to `reporting-mode`.
+
+## Candidate discovery and contextual payload sequence
+
+A confirmed primitive is required to claim a chain, not to map the product's normal account controls.
+During ordinary use, note which operations create independent future login authority: adding a
+passkey/IdP, moving recovery details, issuing a personal token, or creating a new trusted session.
+Choose the nearest reachable transition rather than trying every ATO recipe.
+
+| Existing capability | Smallest owned-account experiment | What it can prove |
+|---|---|---|
+| Authenticated action in A's session | Attempt a permitted recovery-address change to another researcher-controlled address; compare normal reauthentication. | Recovery-setting influence only until possession and future login are actually proven. |
+| Link-flow manipulation | Begin linking owned external identity B to local A; substitute the link transaction once while preserving a clean normal pair. | Wrong identity/account binding if the final link and independent login both demonstrate it. |
+| Readable reset artifact | Request a reset for owned A; consume only the captured artifact in an isolated session and inspect resulting identity. | Usable recovery authority; do not extrapolate from a token-shaped string or expired link. |
+| Stale session after security event | Revoke exactly that owned session, then repeat a harmless protected read and inspect current session list. | Revocation failure within the product's stated scope; not automatic durable account ownership. |
+| Weak actor can alter security metadata | Change one allowed fixture field; read authoritative security state independently. | No takeover if the field is echoed but does not change the login/recovery decision. |
+
+```http
+POST /observed/account/link/complete HTTP/1.1
+Host: app.example.invalid
+Content-Type: application/json
+
+{"link_transaction":"TX_A","external_result":"OWNED_RESULT_B"}
+```
+
+The route and field names are schematic. Run this only for a real exposed link flow with both
+identities under researcher control, and preserve normal A/A linking and unlink cleanup.
+Reauthentication checks must be challenged from the exact capability the initial primitive grants.
+Do not quietly supply the victim's password or second factor to make the next step work.
+
+A transient action can still have lasting impact, but test the lasting authority separately.
+For example, an added login credential must allow a fresh independent login after the original
+session ends; a one-time profile edit is a narrower result. Conversely, valid session compromise
+can be material without proving access survives every future security event.
+
+## Source and version boundaries
+
+Sources reviewed 2026-11-13. Recovery/linking policy and required assurance are product-specific.
+The probes describe how to test a chain boundary; they do not guarantee ATO or platform eligibility.
+
+## Primary references
+
+- [PortSwigger: Other authentication mechanisms](https://portswigger.net/web-security/authentication/other-mechanisms) — password reset and persistent-login boundaries.
+- [OWASP: Forgot Password](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html) — recovery token lifecycle and account binding.
+- [OWASP: Authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) — sensitive changes and reauthentication.
+
+## Scoped closure and reopening
+
+Reopen when the current primitive gains an evidenced new read/action, a supported recovery/linking operation changes, or the previously missing prerequisite becomes naturally reachable. Stop at a protected chain link and preserve the narrower proven result.

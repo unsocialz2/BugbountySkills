@@ -1,82 +1,42 @@
-# SKILL: Rate-Limiting Bypass
+# Rate limiting — compatibility route to protected accounting invariants
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (rate-limiting bypass) or pasted request matching this class
+Use [API rate limiting](../../../../api-mode/SKILL_FILES/VULNERABILITIES/API/api_rate_limiting_bypass.md)
+as the canonical methodology for routes, sessions, accounts, batches, quotas and enforcement windows.
+A browser login/recovery flow still needs the same accounting model and semantic proof.
 
----
+## Browser-specific entry
 
-## IDENTITY IN THIS SKILL
-Without rate-limit, brute force OTP / login / coupon / 2FA / reset flows = ATO. I exhaust every header / IP rotation / parallel route.
+Identify the exact protected behavior: attempts on one account/challenge, recovery message delivery,
+expensive generation, resource consumption or another concrete application guarantee.
+Observe a low-volume normal control and program-permitted limit behavior before challenging it.
+Do not send a fixed 100/1000 requests simply because a guide says so. A success status may be a
+throttle acknowledgement, generic anti-enumeration response or failed downstream operation.
 
----
+## PAYLOADS — one accounting dimension at a time
 
-## DETECTION
-Hit endpoint 100× fast — does it block? After how many?
-
-## EXPLOITATION
-### Headers that some APIs honor as the source IP
-```
-X-Forwarded-For: 1.2.3.4
-X-Real-IP: 1.2.3.4
-X-Originating-IP: 1.2.3.4
-X-Remote-IP: 1.2.3.4
-X-Remote-Addr: 1.2.3.4
-X-ProxyUser-Ip: 1.2.3.4
-True-Client-IP: 1.2.3.4
-Cluster-Client-IP: 1.2.3.4
-CF-Connecting-IP: 1.2.3.4
-Forwarded: for=1.2.3.4
-X-Original-URL: /endpoint/x
-X-Rewrite-URL: /endpoint/x
+```json
+{"challenge_id":"OWNED_CHALLENGE","code":"KNOWN_INVALID_AUDIT_CODE"}
 ```
 
-Rotate value per request via Burp Intruder / Turbo Intruder.
+After an observed block under allowed test volume, compare one justified dimension, for example
+an independently observed equivalent route or fresh session for the **same** controlled challenge.
+Retain the same protected account/action and prove whether the operation is actually accepted.
+Use only a small number of owned invalid proofs; this is an accounting test, not an OTP brute force.
 
-### Path tricks
-- `/api/login` → `/api/login/`, `/api/login//`, `/api//login`, `/api/./login`
-- `/api/login?x=1`, `/api/login;a=b`
+Changing to another owned account can test whether a bucket is account-scoped. It does not prove
+a per-account limit is bypassed: each account may legitimately have an independent allowance.
+Client-IP header mutation is meaningful only if the target actually trusts a forwarding boundary;
+never infer a bypass from a different response code without continued protected capability.
 
-### Method swap
-- POST → PUT/PATCH (some rate-limit only on POST)
+RFC 6585's 429 and Retry-After semantics describe HTTP signalling; an application can correctly
+limit with other responses, and absence of 429 alone does not establish missing protection.
+Use the canonical guide for exact controls, repeatability and scoped stop conditions.
 
-### Different region/host
-- `-H "Host: api.target.com"` vs `target.com/api`
+## Sources and limits
 
-### Content-Type swap
-- form vs JSON vs XML
+Sources reviewed 2026-11-13. Limit thresholds, reset periods, burst allowances and policy scope
+are deployment-specific. No traffic/endpoint test was executed for these illustrative payloads.
 
-### Distributed (multi-IP)
-- Use cloud functions / fly.io / fastly compute / VPS pool — each gets fresh IP.
-
-### Race condition / single-packet attack
-- 50 parallel reqs may all pass before counter increments.
-
-## PAYLOADS (real, copy-paste, grouped)
-(see headers above)
-
-## BYPASS TECHNIQUES
-(see exploitation)
-
-## CHAIN POTENTIAL
-Rate-limit bypass → OTP brute → ATO; coupon brute → financial; 2FA brute → ATO.
-
-## TOOLS
-Turbo Intruder, fireprox (AWS API Gateway IP rotation), proxychains
-
-## COMMANDS
-```bash
-# fireprox creates AWS API Gateway proxy = IP rotation per request
-python3 fireprox.py --command create --url https://target.com/api/login --region us-east-1 --profile_name default
-# then send your brute through https://....execute-api.us-east-1.amazonaws.com/fireprox/api/login
-```
-
-## EDGE CASES / NOT-A-BUG TRAPS
-Account-level rate limits (per user, not IP) cannot be IP-bypassed. Must rotate accounts.
-
-## TRIAGE ANGLE (per platform)
-Show 1000 requests in N minutes succeeding (proves bypass).
-
-## SEVERITY & CVSS
-Depends on chained bug.
-
-## REFERENCES
-ustayready/fireprox • PortSwigger Brute Force
+- [PortSwigger: Password-based login](https://portswigger.net/web-security/authentication/password-based) — login protection accounting pitfalls.
+- [OWASP: Authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) — throttling in the surrounding authentication threat model.
+- [IETF: RFC 6585](https://www.rfc-editor.org/rfc/rfc6585.html) — 429/Retry-After response semantics, not an exploitability checklist.

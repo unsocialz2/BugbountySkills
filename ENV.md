@@ -115,3 +115,15 @@ It does **not** answer:
 - what request rates or techniques are allowed.
 
 Those decisions come from the active target's `rules.txt` and scope files every time.
+
+## Browser preference for the operator workstation
+
+The operator prefers Windows ego lite / ego-browser when running on the verified
+Windows/WSL workstation. Known Windows path:
+`C:/Users/ahmed/.local/share/ego/active_version_dir/ego-browser.exe`; known WSL
+interop path: `/mnt/c/Users/ahmed/.local/share/ego/active_version_dir/ego-browser.exe`.
+These are environment hints, not portable requirements. Verify existence/version
+and follow the installed ego-browser guide (`ego-browser skill`, matching runtime
+and agent Space). On another host use its permitted isolated browser. Record a
+missing-tool or onboarding blocker specifically. Do not alter personal profiles
+or pretend fallback execution used ego.

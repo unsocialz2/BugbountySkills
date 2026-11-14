@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "bounded-held-out-lifecycle-spot-check",
+  "case_count": 2,
+  "positive_case": {
+    "finding_demonstrated": true,
+    "controls_and_unauthorized_content_verified": true,
+    "http_actions": 14
+  },
+  "repaired_case": {
+    "withdrawn_acceptance_denied": true,
+    "private_content_denied": true,
+    "normal_acceptance_positive_control": true,
+    "http_actions": 13
+  },
+  "evidence_records_compared_to_actual_server_trace": 25,
+  "server_trace_events": 27,
+  "loaded_guides": [
+    "web-mode",
+    "capability_links",
+    "business_logic_bugs"
+  ],
+  "fixture_source_sha256": "0b84b464e2ccc1c28724dba06e6c04ebf2e6182105fa6d7d0d94bda35b7c4ea8",
+  "evidence_sha256": "0c9cd5ca336d96b7ebf145442d121e4f379fd73ac7b39244077c250ca4d82388",
+  "actual_server_trace_sha256": "7a53398bc7c1b62baf7936b7d1a466446d9866f79ddf64ea06cf8102fdd55d48",
+  "limits": [
+    "One newly authored synthetic lifecycle scenario and its repaired twin, not a baseline comparison or general discovery-performance estimate.",
+    "The first direct port attempts were blocked; a local-only console then performed real HTTP inside the same execution namespace, without changing the application.",
+    "Candidate had product usage help and controlled accounts; no fixture source, polarity, coordinator answer or grading oracle.",
+    "Execution evidence is local HTTP, not real-browser delivery or a live-target finding.",
+    "These fixtures are now known regression material and must not be reused as a fresh held-out benchmark."
+  ]
+}

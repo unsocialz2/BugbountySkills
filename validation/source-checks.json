@@ -1,0 +1,713 @@
+{
+  "schema_version": 1,
+  "checked_date": "2026-11-13",
+  "meaning": "Retrieval availability check for the declared primary references; not verification of every claim, current target versions, or exploitability. Topic guides state mechanism support and applicability limits.",
+  "sources": [
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Authentication - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Authorization - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Business_Logic_Security_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Business Logic Security - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Business_Logic_Security_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Clickjacking Defense - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Cross-Site Request Forgery Prevention - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/DOM_Clobbering_Prevention_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "DOM Clobbering Prevention - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/DOM_Clobbering_Prevention_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "File Upload - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Forgot Password - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Input Validation - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Insecure Direct Object Reference Prevention - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Multifactor Authentication - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/NoSQL_Security_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "NoSQL Security - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/NoSQL_Security_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "OS Command Injection Defense - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Passkey_Security_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Passkey Security - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Passkey_Security_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/SAML_Security_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "SAML Security - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/SAML_Security_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "SQL Injection Prevention - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Server Side Request Forgery Prevention - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Session Management - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Unvalidated Redirects and Forwards - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "WebSocket Security - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Webhook_Security_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "Webhook Security - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/Webhook_Security_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "XML External Entity Prevention - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/XS_Leaks_Cheat_Sheet.html",
+      "state": "retrieved",
+      "title": "XS Leaks - OWASP Cheat Sheet Series (https://cheatsheetseries.owasp.org/cheatsheets/XS_Leaks_Cheat_Sheet.html)"
+    },
+    {
+      "url": "https://cwe.mitre.org/data/definitions/113.html",
+      "state": "retrieved",
+      "title": "CWE - CWE-113: Improper Neutralization of CRLF Sequences in HTTP Headers (5.0) (https://cwe.mitre.org/data/definitions/113.html)"
+    },
+    {
+      "url": "https://datatracker.ietf.org/doc/html/rfc8725",
+      "state": "retrieved",
+      "title": "RFC 8725 - JSON Web Token Best Current Practices (https://datatracker.ietf.org/doc/html/rfc8725)"
+    },
+    {
+      "url": "https://datatracker.ietf.org/doc/html/rfc9700",
+      "state": "retrieved",
+      "title": "RFC 9700 - Best Current Practice for OAuth 2.0 Security (https://datatracker.ietf.org/doc/html/rfc9700)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API",
+      "state": "retrieved",
+      "title": "Trusted Types API - Web APIs | MDN (https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket",
+      "state": "retrieved",
+      "title": "WebSocket: WebSocket() constructor - Web APIs | MDN (https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage",
+      "state": "retrieved",
+      "title": "Window: postMessage() method - Web APIs | MDN (https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Attribute_selectors",
+      "state": "retrieved",
+      "title": "Attribute selectors - CSS | MDN (https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Attribute_selectors)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe",
+      "state": "retrieved",
+      "title": "<iframe> HTML inline frame element - HTML | MDN (https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+      "state": "retrieved",
+      "title": "Cross-Origin Resource Sharing (CORS) - HTTP | MDN (https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP",
+      "state": "retrieved",
+      "title": "Content Security Policy (CSP) - HTTP | MDN (https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition",
+      "state": "retrieved",
+      "title": "Content-Disposition header - HTTP | MDN (https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy",
+      "state": "retrieved",
+      "title": "Cross-Origin-Opener-Policy (COOP) header - HTTP | MDN (https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+      "state": "retrieved",
+      "title": "Set-Cookie header - HTTP | MDN (https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Vary",
+      "state": "retrieved",
+      "title": "Vary header - HTTP | MDN (https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Vary)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Prototype_pollution",
+      "state": "retrieved",
+      "title": "JavaScript prototype pollution - Security | MDN (https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Prototype_pollution)"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy",
+      "state": "retrieved",
+      "title": "Same-origin policy - Security | MDN (https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy)"
+    },
+    {
+      "url": "https://developers.cloudflare.com/fundamentals/security/protect-your-origin-server/",
+      "state": "retrieved",
+      "title": "Protect your origin server \u00b7 Cloudflare Fundamentals docs (https://developers.cloudflare.com/fundamentals/security/protect-your-origin-server/)"
+    },
+    {
+      "url": "https://developers.cloudflare.com/rules/normalization/",
+      "state": "retrieved",
+      "title": "URL normalization \u00b7 Cloudflare Rules docs (https://developers.cloudflare.com/rules/normalization/)"
+    },
+    {
+      "url": "https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/",
+      "state": "retrieved",
+      "title": "Authenticated Origin Pulls (mTLS) \u00b7 Cloudflare SSL/TLS docs (https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/)"
+    },
+    {
+      "url": "https://docs.aws.amazon.com/waf/latest/developerguide/waf-oversize-request-components.html",
+      "state": "retrieved",
+      "title": "Oversize web request components in AWS WAF - AWS WAF, AWS Firewall Manager, AWS Shield Advanced, and AWS Shield network security director (https://docs.aws.amazon.com/waf/latest/developerguide/waf-oversize-request-components.html)"
+    },
+    {
+      "url": "https://docs.djangoproject.com/en/stable/ref/models/querysets/",
+      "state": "retrieved",
+      "title": "QuerySet API reference | Django documentation | Django (https://docs.djangoproject.com/en/stable/ref/models/querysets/ ; rewritten summary of https://docs.djangoproject.com/en/6.1/ref/models/querysets/)"
+    },
+    {
+      "url": "https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/verifying-your-custom-domain-for-github-pages",
+      "state": "retrieved",
+      "title": "Verifying your custom domain for GitHub Pages - GitHub Docs (https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/verifying-your-custom-domain-for-github-pages)"
+    },
+    {
+      "url": "https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries",
+      "state": "retrieved",
+      "title": "Validating webhook deliveries - GitHub Docs (https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries)"
+    },
+    {
+      "url": "https://docs.npmjs.com/cli/v11/using-npm/scope/",
+      "state": "retrieved",
+      "title": "Scope | npm Docs (https://docs.npmjs.com/cli/v11/using-npm/scope/)"
+    },
+    {
+      "url": "https://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf",
+      "state": "retrieved",
+      "title": " (https://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf)"
+    },
+    {
+      "url": "https://docs.python.org/3/library/pickle.html",
+      "state": "retrieved",
+      "title": "pickle \u2014 Python object serialization \u2014 Python 3.15.2 documentation (https://docs.python.org/3/library/pickle.html)"
+    },
+    {
+      "url": "https://docs.python.org/3/library/urllib.parse.html",
+      "state": "retrieved",
+      "title": "urllib.parse \u2014 Parse URLs into components \u2014 Python 3.15.2 documentation (https://docs.python.org/3/library/urllib.parse.html)"
+    },
+    {
+      "url": "https://docs.python.org/3/library/xml.html",
+      "state": "retrieved",
+      "title": "XML Processing Modules \u2014 Python 3.15.2 documentation (https://docs.python.org/3/library/xml.html)"
+    },
+    {
+      "url": "https://docs.ruby-lang.org/en/3.4/Marshal.html",
+      "state": "retrieved",
+      "title": "module Marshal - Documentation for Ruby 3.4 (https://docs.ruby-lang.org/en/3.4/Marshal.html)"
+    },
+    {
+      "url": "https://docs.stripe.com/webhooks",
+      "state": "retrieved",
+      "title": " (https://docs.stripe.com/webhooks)"
+    },
+    {
+      "url": "https://ejs.co/",
+      "state": "retrieved",
+      "title": "EJS -- Embedded JavaScript templates (https://ejs.co/)"
+    },
+    {
+      "url": "https://freemarker.apache.org/docs/dgui_template_exp.html",
+      "state": "retrieved",
+      "title": "Expressions - Apache FreeMarker Manual (https://freemarker.apache.org/docs/dgui_template_exp.html)"
+    },
+    {
+      "url": "https://github.com/cure53/DOMPurify",
+      "state": "retrieved",
+      "title": "GitHub - cure53/DOMPurify: DOMPurify - a DOM-only, super-fast, uber-tolerant XSS sanitizer for HTML, MathML and SVG. DOMPurify works with a secure default, but offers a lot of configurability and hooks. Demo: \u00b7 GitHub (https://github.com/cure53/DOMPurify)"
+    },
+    {
+      "url": "https://github.com/portswigger/passkey-scanner",
+      "state": "retrieved",
+      "title": "GitHub - PortSwigger/passkey-scanner \u00b7 GitHub (https://github.com/portswigger/passkey-scanner)"
+    },
+    {
+      "url": "https://github.com/vladko312/Research_Successful_Errors/blob/main/README.md",
+      "state": "retrieved",
+      "title": "Research_Successful_Errors/README.md at main \u00b7 vladko312/Research_Successful_Errors \u00b7 GitHub (https://github.com/vladko312/Research_Successful_Errors/blob/main/README.md)"
+    },
+    {
+      "url": "https://handlebarsjs.com/guide/expressions.html",
+      "state": "retrieved",
+      "title": "Expressions | Handlebars (https://handlebarsjs.com/guide/expressions.html)"
+    },
+    {
+      "url": "https://httpwg.org/specs/rfc9110.html",
+      "state": "retrieved",
+      "title": "RFC 9110 - HTTP Semantics (https://httpwg.org/specs/rfc9110.html)"
+    },
+    {
+      "url": "https://httpwg.org/specs/rfc9111.html",
+      "state": "retrieved",
+      "title": "RFC 9111 - HTTP Caching (https://httpwg.org/specs/rfc9111.html)"
+    },
+    {
+      "url": "https://httpwg.org/specs/rfc9112.html",
+      "state": "retrieved",
+      "title": "RFC 9112 - HTTP/1.1 (https://httpwg.org/specs/rfc9112.html)"
+    },
+    {
+      "url": "https://jinja.palletsprojects.com/en/stable/sandbox/",
+      "state": "retrieved",
+      "title": "Sandbox \u2014 Jinja Documentation (3.1.x) (https://jinja.palletsprojects.com/en/stable/sandbox/)"
+    },
+    {
+      "url": "https://learn.microsoft.com/en-us/aspnet/core/mvc/views/razor?view=aspnetcore-10.0",
+      "state": "retrieved",
+      "title": "Razor syntax reference for ASP.NET Core | Microsoft Learn (https://learn.microsoft.com/en-us/aspnet/core/mvc/views/razor?view=aspnetcore-10.0)"
+    },
+    {
+      "url": "https://nextjs.org/docs/app/guides/data-security",
+      "state": "retrieved",
+      "title": "How to think about data security in Next.js (https://nextjs.org/docs/app/guides/data-security)"
+    },
+    {
+      "url": "https://nodejs.org/api/child_process.html",
+      "state": "retrieved",
+      "title": "Child process | Node.js v26.13.1 Documentation (https://nodejs.org/api/child_process.html)"
+    },
+    {
+      "url": "https://nodejs.org/api/url.html",
+      "state": "retrieved",
+      "title": "URL | Node.js v26.13.1 Documentation (https://nodejs.org/api/url.html)"
+    },
+    {
+      "url": "https://openid.net/specs/openid-connect-core-1_0.html",
+      "state": "retrieved",
+      "title": "Final: OpenID Connect Core 1.0 incorporating errata set 2 (https://openid.net/specs/openid-connect-core-1_0.html)"
+    },
+    {
+      "url": "https://owasp.github.io/www-project-top-10-ci-cd-security-risks/CICD-SEC-03-Dependency-Chain-Abuse",
+      "state": "retrieved",
+      "title": "CICD-SEC-3: Dependency Chain Abuse | OWASP Foundation (https://owasp.github.io/www-project-top-10-ci-cd-security-risks/CICD-SEC-03-Dependency-Chain-Abuse)"
+    },
+    {
+      "url": "https://owasp.org/www-community/attacks/Path_Traversal",
+      "state": "retrieved",
+      "title": "Path Traversal | OWASP Foundation (https://owasp.org/www-community/attacks/Path_Traversal ; rewritten summary of https://community.owasp.org/attacks/Path_Traversal)"
+    },
+    {
+      "url": "https://pip.pypa.io/en/stable/cli/pip_install/",
+      "state": "retrieved",
+      "title": "pip install - pip documentation v26.3 (https://pip.pypa.io/en/stable/cli/pip_install/)"
+    },
+    {
+      "url": "https://portswigger.net/kb/issues/00200200_http-response-header-injection",
+      "state": "retrieved",
+      "title": "HTTP response header injection - PortSwigger (https://portswigger.net/kb/issues/00200200_http-response-header-injection)"
+    },
+    {
+      "url": "https://portswigger.net/research/blind-css-exfiltration",
+      "state": "retrieved",
+      "title": "Blind CSS Exfiltration: exfiltrate unknown web pages | PortSwigger Research (https://portswigger.net/research/blind-css-exfiltration)"
+    },
+    {
+      "url": "https://portswigger.net/research/browser-powered-desync-attacks",
+      "state": "retrieved",
+      "title": "Browser-Powered Desync Attacks: A New Frontier in HTTP Request Smuggling | PortSwigger Research (https://portswigger.net/research/browser-powered-desync-attacks)"
+    },
+    {
+      "url": "https://portswigger.net/research/bypassing-character-blocklists-with-unicode-overflows",
+      "state": "retrieved",
+      "title": "Bypassing character blocklists with unicode overflows | PortSwigger Research (https://portswigger.net/research/bypassing-character-blocklists-with-unicode-overflows)"
+    },
+    {
+      "url": "https://portswigger.net/research/crlf-powered-desync-attacks",
+      "state": "retrieved",
+      "title": "CRLF-Powered Desync Attacks: Beheading HTTP Streams | PortSwigger Research (https://portswigger.net/research/crlf-powered-desync-attacks)"
+    },
+    {
+      "url": "https://portswigger.net/research/gotta-cache-em-all",
+      "state": "retrieved",
+      "title": "Gotta cache 'em all: bending the rules of web cache exploitation | PortSwigger Research (https://portswigger.net/research/gotta-cache-em-all)"
+    },
+    {
+      "url": "https://portswigger.net/research/http1-must-die",
+      "state": "retrieved",
+      "title": "HTTP/1.1 must die: the desync endgame | PortSwigger Research (https://portswigger.net/research/http1-must-die)"
+    },
+    {
+      "url": "https://portswigger.net/research/inline-style-exfiltration",
+      "state": "retrieved",
+      "title": "Inline Style Exfiltration: leaking data with chained CSS conditionals | PortSwigger Research (https://portswigger.net/research/inline-style-exfiltration)"
+    },
+    {
+      "url": "https://portswigger.net/research/introducing-the-url-validation-bypass-cheat-sheet",
+      "state": "retrieved",
+      "title": "Introducing the URL validation bypass cheat sheet | PortSwigger Research (https://portswigger.net/research/introducing-the-url-validation-bypass-cheat-sheet)"
+    },
+    {
+      "url": "https://portswigger.net/research/listen-to-the-whispers-web-timing-attacks-that-actually-work",
+      "state": "retrieved",
+      "title": "Listen to the whispers: web timing attacks that actually work | PortSwigger Research (https://portswigger.net/research/listen-to-the-whispers-web-timing-attacks-that-actually-work)"
+    },
+    {
+      "url": "https://portswigger.net/research/saml-roulette-the-hacker-always-wins",
+      "state": "retrieved",
+      "title": "SAML roulette: the hacker always wins | PortSwigger Research (https://portswigger.net/research/saml-roulette-the-hacker-always-wins)"
+    },
+    {
+      "url": "https://portswigger.net/research/server-side-prototype-pollution",
+      "state": "retrieved",
+      "title": "Server-side prototype pollution: Black-box detection without the DoS | PortSwigger Research (https://portswigger.net/research/server-side-prototype-pollution)"
+    },
+    {
+      "url": "https://portswigger.net/research/smashing-the-state-machine",
+      "state": "retrieved",
+      "title": "Smashing the state machine: the true potential of web race conditions | PortSwigger Research (https://portswigger.net/research/smashing-the-state-machine)"
+    },
+    {
+      "url": "https://portswigger.net/research/splitting-the-email-atom",
+      "state": "retrieved",
+      "title": "Splitting the email atom: exploiting parsers to bypass access controls | PortSwigger Research (https://portswigger.net/research/splitting-the-email-atom)"
+    },
+    {
+      "url": "https://portswigger.net/research/top-10-web-hacking-techniques-of-2025",
+      "state": "retrieved",
+      "title": "Top 10 web hacking techniques of 2025 | PortSwigger Research (https://portswigger.net/research/top-10-web-hacking-techniques-of-2025)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/access-control",
+      "state": "retrieved",
+      "title": "Access control vulnerabilities and privilege escalation | Web Security Academy (https://portswigger.net/web-security/access-control)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/api-testing/server-side-parameter-pollution",
+      "state": "retrieved",
+      "title": "Server-side parameter pollution | Web Security Academy (https://portswigger.net/web-security/api-testing/server-side-parameter-pollution)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/authentication",
+      "state": "retrieved",
+      "title": "Authentication vulnerabilities | Web Security Academy (https://portswigger.net/web-security/authentication)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/authentication/multi-factor",
+      "state": "retrieved",
+      "title": "Vulnerabilities in multi-factor authentication | Web Security Academy (https://portswigger.net/web-security/authentication/multi-factor)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/authentication/other-mechanisms",
+      "state": "retrieved",
+      "title": "Vulnerabilities in other authentication mechanisms | Web Security Academy (https://portswigger.net/web-security/authentication/other-mechanisms)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/clickjacking",
+      "state": "retrieved",
+      "title": "What is Clickjacking? Tutorial & Examples | Web Security Academy (https://portswigger.net/web-security/clickjacking)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/cors",
+      "state": "retrieved",
+      "title": "What is CORS (cross-origin resource sharing)? Tutorial & Examples | Web Security Academy (https://portswigger.net/web-security/cors)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/cross-site-scripting",
+      "state": "retrieved",
+      "title": "What is cross-site scripting (XSS) and how to prevent it? | Web Security Academy (https://portswigger.net/web-security/cross-site-scripting)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/cross-site-scripting/content-security-policy",
+      "state": "retrieved",
+      "title": "Content security policy | Web Security Academy (https://portswigger.net/web-security/cross-site-scripting/content-security-policy)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/cross-site-scripting/dom-based",
+      "state": "retrieved",
+      "title": "What is DOM-based XSS (cross-site scripting)? Tutorial & Examples | Web Security Academy (https://portswigger.net/web-security/cross-site-scripting/dom-based)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/csrf",
+      "state": "retrieved",
+      "title": "What is CSRF (Cross-site request forgery)? Tutorial & Examples | Web Security Academy (https://portswigger.net/web-security/csrf)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/deserialization",
+      "state": "retrieved",
+      "title": "Insecure deserialization | Web Security Academy (https://portswigger.net/web-security/deserialization)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/dom-based",
+      "state": "retrieved",
+      "title": "DOM-based vulnerabilities | Web Security Academy (https://portswigger.net/web-security/dom-based)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/dom-based/ajax-request-header-manipulation",
+      "state": "retrieved",
+      "title": "DOM-based Ajax request-header manipulation | Web Security Academy (https://portswigger.net/web-security/dom-based/ajax-request-header-manipulation)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/dom-based/controlling-the-web-message-source",
+      "state": "retrieved",
+      "title": "Controlling the web message source | Web Security Academy (https://portswigger.net/web-security/dom-based/controlling-the-web-message-source)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/dom-based/dom-clobbering",
+      "state": "retrieved",
+      "title": "DOM clobbering | Web Security Academy (https://portswigger.net/web-security/dom-based/dom-clobbering)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/dom-based/open-redirection",
+      "state": "retrieved",
+      "title": "DOM-based open redirection | Web Security Academy (https://portswigger.net/web-security/dom-based/open-redirection)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/file-path-traversal",
+      "state": "retrieved",
+      "title": "What is path traversal, and how to prevent it? | Web Security Academy (https://portswigger.net/web-security/file-path-traversal)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/file-upload",
+      "state": "retrieved",
+      "title": "File uploads | Web Security Academy (https://portswigger.net/web-security/file-upload)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/host-header",
+      "state": "retrieved",
+      "title": "HTTP Host header attacks | Web Security Academy (https://portswigger.net/web-security/host-header)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/host-header/exploiting",
+      "state": "retrieved",
+      "title": "How to identify and exploit HTTP Host header vulnerabilities | Web Security Academy (https://portswigger.net/web-security/host-header/exploiting)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/jwt",
+      "state": "retrieved",
+      "title": "JWT attacks | Web Security Academy (https://portswigger.net/web-security/jwt)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/logic-flaws",
+      "state": "retrieved",
+      "title": "Business logic vulnerabilities | Web Security Academy (https://portswigger.net/web-security/logic-flaws)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/logic-flaws/examples",
+      "state": "retrieved",
+      "title": "Examples of business logic vulnerabilities | Web Security Academy (https://portswigger.net/web-security/logic-flaws/examples)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/nosql-injection",
+      "state": "retrieved",
+      "title": "NoSQL injection | Web Security Academy (https://portswigger.net/web-security/nosql-injection)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/oauth",
+      "state": "retrieved",
+      "title": "OAuth 2.0 authentication vulnerabilities | Web Security Academy (https://portswigger.net/web-security/oauth)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/os-command-injection",
+      "state": "retrieved",
+      "title": "What is OS command injection, and how to prevent it? | Web Security Academy (https://portswigger.net/web-security/os-command-injection)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/prototype-pollution",
+      "state": "retrieved",
+      "title": "What is prototype pollution? | Web Security Academy (https://portswigger.net/web-security/prototype-pollution)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/race-conditions",
+      "state": "retrieved",
+      "title": "Race conditions | Web Security Academy (https://portswigger.net/web-security/race-conditions)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/request-smuggling/advanced",
+      "state": "retrieved",
+      "title": "Advanced request smuggling | Web Security Academy (https://portswigger.net/web-security/request-smuggling/advanced)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/request-smuggling/browser/cl-0",
+      "state": "retrieved",
+      "title": "CL.0 request smuggling | Web Security Academy (https://portswigger.net/web-security/request-smuggling/browser/cl-0)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/server-side-template-injection",
+      "state": "retrieved",
+      "title": "Server-side template injection | Web Security Academy (https://portswigger.net/web-security/server-side-template-injection)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/sql-injection",
+      "state": "retrieved",
+      "title": "What is SQL Injection? Tutorial & Examples | Web Security Academy (https://portswigger.net/web-security/sql-injection)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/ssrf",
+      "state": "retrieved",
+      "title": "What is SSRF (Server-side request forgery)? Tutorial & Examples | Web Security Academy (https://portswigger.net/web-security/ssrf)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/web-cache-deception",
+      "state": "retrieved",
+      "title": "Web cache deception | Web Security Academy (https://portswigger.net/web-security/web-cache-deception)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/web-cache-poisoning",
+      "state": "retrieved",
+      "title": "Web cache poisoning | Web Security Academy (https://portswigger.net/web-security/web-cache-poisoning)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/websockets/cross-site-websocket-hijacking",
+      "state": "retrieved",
+      "title": "Cross-site WebSocket hijacking | Web Security Academy (https://portswigger.net/web-security/websockets/cross-site-websocket-hijacking)"
+    },
+    {
+      "url": "https://portswigger.net/web-security/xxe",
+      "state": "retrieved",
+      "title": "What is XXE (XML external entity) injection? Tutorial & Examples | Web Security Academy (https://portswigger.net/web-security/xxe)"
+    },
+    {
+      "url": "https://pugjs.org/language/interpolation.html",
+      "state": "retrieved",
+      "title": "Interpolation \u2013 Pug (https://pugjs.org/language/interpolation.html)"
+    },
+    {
+      "url": "https://react.dev/reference/rsc/server-functions",
+      "state": "retrieved",
+      "title": "Server Functions \u2013 React (https://react.dev/reference/rsc/server-functions)"
+    },
+    {
+      "url": "https://shopify.github.io/liquid/filters/times/",
+      "state": "retrieved",
+      "title": "times \u2013 Liquid template language (https://shopify.github.io/liquid/filters/times/)"
+    },
+    {
+      "url": "https://twig.symfony.com/doc/3.x/templates.html",
+      "state": "retrieved",
+      "title": "Twig for Template Designers - Documentation - Twig PHP (https://twig.symfony.com/doc/3.x/templates.html)"
+    },
+    {
+      "url": "https://url.spec.whatwg.org/",
+      "state": "retrieval-failed",
+      "title": "Internal Error ()",
+      "detail": "Source request timed out; this does not establish the URL is invalid."
+    },
+    {
+      "url": "https://velocity.apache.org/engine/2.4/user-guide.html",
+      "state": "retrieved",
+      "title": "Apache Velocity Engine - User Guide (https://velocity.apache.org/engine/2.4/user-guide.html)"
+    },
+    {
+      "url": "https://wstg.owasp.org/v4.1/4-Web_Application_Security_Testing/11-Client_Side_Testing/05-Testing_for_CSS_Injection/",
+      "state": "retrieved",
+      "title": "WSTG - v4.1 | OWASP Web Security Testing Guide (https://wstg.owasp.org/v4.1/4-Web_Application_Security_Testing/11-Client_Side_Testing/05-Testing_for_CSS_Injection/)"
+    },
+    {
+      "url": "https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/10-Test_for_Subdomain_Takeover/",
+      "state": "retrieved",
+      "title": "WSTG - v4.2 | OWASP Web Security Testing Guide (https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/10-Test_for_Subdomain_Takeover/)"
+    },
+    {
+      "url": "https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution/",
+      "state": "retrieved",
+      "title": "WSTG - v4.2 | OWASP Web Security Testing Guide (https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution/)"
+    },
+    {
+      "url": "https://www.elttam.com/blog/leaking-more-than-you-joined-for/",
+      "state": "retrieved",
+      "title": "ORM Leaking More Than You Joined For - elttam (https://www.elttam.com/blog/leaking-more-than-you-joined-for/ ; rewritten summary of https://www.elttam.com/blog/leaking-more-than-you-joined-for)"
+    },
+    {
+      "url": "https://www.mongodb.com/docs/manual/reference/operator/query/",
+      "state": "retrieved",
+      "title": "Query Predicates - Database Manual - MongoDB Docs (https://www.mongodb.com/docs/manual/reference/operator/query/ ; rewritten summary of https://www.mongodb.com/docs/manual/reference/mql/query-predicates/)"
+    },
+    {
+      "url": "https://www.postgresql.org/docs/current/functions-conditional.html",
+      "state": "retrieved",
+      "title": "PostgreSQL: Documentation: 18: 9.18.\u00a0Conditional Expressions (https://www.postgresql.org/docs/current/functions-conditional.html)"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc5321",
+      "state": "retrieved",
+      "title": "RFC 5321: Simple Mail Transfer Protocol | RFC Editor (https://www.rfc-editor.org/rfc/rfc5321 ; rewritten summary of https://www.rfc-editor.org/info/rfc5321/)"
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc5322",
+      "state": "retrieved",
+      "title": "RFC 5322: Internet Message Format | RFC Editor (https://www.rfc-editor.org/rfc/rfc5322 ; rewritten summary of https://www.rfc-editor.org/info/rfc5322/)"
+    },
+    {
+      "url": "https://www.w3.org/TR/webauthn-2/",
+      "state": "retrieved",
+      "title": "Web Authentication: An API for accessing Public Key Credentials - Level 2 (https://www.w3.org/TR/webauthn-2/)"
+    },
+    {
+      "url": "https://xsleaks.dev/",
+      "state": "retrieved",
+      "title": "Introduction | XS-Leaks Wiki (https://xsleaks.dev/)"
+    },
+    {
+      "url": "https://zhero-web-sec.github.io/research-and-things/nextjs-cache-and-chains-the-stale-elixir",
+      "state": "retrieved",
+      "title": "Next.js, cache, and chains: the stale elixir - zhero_web_security (https://zhero-web-sec.github.io/research-and-things/nextjs-cache-and-chains-the-stale-elixir)"
+    }
+  ]
+}

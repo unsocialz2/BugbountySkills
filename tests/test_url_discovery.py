@@ -132,8 +132,14 @@ class UrlProbeTests(unittest.TestCase):
         with local_server() as (base, seen):
             (self.root / 'urls.txt').write_text(base + '/restricted\n', encoding='utf-8-sig')
             (self.root / 'headers.json').write_text(json.dumps({'X-Research': 'fixture-cli'}), encoding='utf-8-sig')
+            from urllib.parse import urlsplit
+            local = urlsplit(base)
+            (self.root/'scope-policy.json').write_text(json.dumps({
+                'version':1,'policy_id':'synthetic-loopback','source':'local test fixture',
+                'allow':[{'host':local.hostname,'schemes':['http'],'ports':[local.port]}],
+                'deny':[],'min_interval':0,'max_requests':10,'max_bytes':10000000}))
             args = [sys.executable, str(SCRIPTS / 'probe_urls.py'), '--urls', str(self.root / 'urls.txt'),
-                    '--output', str(self.output), '--interval', '0', '--headers-file', str(self.root / 'headers.json')]
+                    '--scope-policy', str(self.root/'scope-policy.json'), '--output', str(self.output), '--interval', '0', '--headers-file', str(self.root / 'headers.json')]
             result = subprocess.run(args, capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(seen, [('/restricted', 'fixture-cli')])

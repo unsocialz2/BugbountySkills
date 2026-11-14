@@ -11,3 +11,7 @@ validated_resolvers.txt
 
 # local discovery-pilot fixtures, traces and private scoring
 .lab-runs/
+
+# Python test/runtime caches
+__pycache__/
+*.py[cod]

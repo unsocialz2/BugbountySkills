@@ -17,7 +17,7 @@ Where appropriate, establish connections and application state before the synchr
 
 ## Evidence rule
 
-A synchronization technique matters only if it produces a durable result impossible in the sequential control. Different response order, latency, duplicate UI messages, or multiple success-looking responses without multiple committed effects are not enough.
+A synchronization technique matters only if it produces an unauthorized semantic result or a protected transient observation distinguishable from the sequential control. Different response order, latency, duplicate UI messages, or multiple success-looking responses without multiple committed effects are not enough.
 
 ## Tool choice
 

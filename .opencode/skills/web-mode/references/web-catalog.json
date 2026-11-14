@@ -1,0 +1,625 @@
+{
+  "schema_version": 1,
+  "methodologies": [
+    {
+      "id": "auth_bypass_all_types",
+      "category": "Identity, authorization and lifecycle",
+      "question": "Authentication proof/state transitions",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/auth_bypass_all_types.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/authentication"
+      ]
+    },
+    {
+      "id": "2fa_mfa_bypass",
+      "category": "Identity, authorization and lifecycle",
+      "question": "MFA and step-up bindings",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/2fa_mfa_bypass.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Multifactor_Authentication_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/authentication/multi-factor",
+        "https://www.w3.org/TR/webauthn-2/"
+      ]
+    },
+    {
+      "id": "idor_bola_bfla",
+      "category": "Identity, authorization and lifecycle",
+      "question": "Ownership, role, tenant and relationship policy",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/idor_bola_bfla.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Insecure_Direct_Object_Reference_Prevention_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/access-control"
+      ]
+    },
+    {
+      "id": "oauth_misconfig",
+      "category": "Identity, authorization and lifecycle",
+      "question": "OAuth/OIDC client, flow and identity binding",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/oauth_misconfig.md",
+      "reference_urls": [
+        "https://datatracker.ietf.org/doc/html/rfc9700",
+        "https://openid.net/specs/openid-connect-core-1_0.html",
+        "https://portswigger.net/web-security/oauth"
+      ]
+    },
+    {
+      "id": "jwt_attacks",
+      "category": "Identity, authorization and lifecycle",
+      "question": "Token verifier, keys, purpose and audience",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/jwt_attacks.md",
+      "reference_urls": [
+        "https://datatracker.ietf.org/doc/html/rfc8725",
+        "https://openid.net/specs/openid-connect-core-1_0.html",
+        "https://portswigger.net/web-security/jwt"
+      ]
+    },
+    {
+      "id": "saml_attacks",
+      "category": "Identity, authorization and lifecycle",
+      "question": "SAML signer/consumer and assertion bindings",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/saml_attacks.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/SAML_Security_Cheat_Sheet.html",
+        "https://docs.oasis-open.org/security/saml/v2.0/saml-profiles-2.0-os.pdf",
+        "https://portswigger.net/research/saml-roulette-the-hacker-always-wins"
+      ]
+    },
+    {
+      "id": "session_lifecycle",
+      "category": "Identity, authorization and lifecycle",
+      "question": "Session issue/refresh/revoke and stale authority",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/session_lifecycle.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html",
+        "https://datatracker.ietf.org/doc/html/rfc9700",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+        "https://portswigger.net/web-security/authentication/other-mechanisms"
+      ]
+    },
+    {
+      "id": "webauthn_passkeys",
+      "category": "Identity, authorization and lifecycle",
+      "question": "WebAuthn ceremony, RP/origin and recovery",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/webauthn_passkeys.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Passkey_Security_Cheat_Sheet.html",
+        "https://github.com/portswigger/passkey-scanner",
+        "https://www.w3.org/TR/webauthn-2/"
+      ]
+    },
+    {
+      "id": "email_identity_parsing",
+      "category": "Identity, authorization and lifecycle",
+      "question": "Email validation, delivery and identity normalization",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/email_identity_parsing.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html",
+        "https://portswigger.net/research/splitting-the-email-atom",
+        "https://portswigger.net/web-security/logic-flaws/examples",
+        "https://www.rfc-editor.org/rfc/rfc5321",
+        "https://www.rfc-editor.org/rfc/rfc5322"
+      ]
+    },
+    {
+      "id": "capability_links",
+      "category": "Identity, authorization and lifecycle",
+      "question": "Share/signed/invite capability scope and lifecycle",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/capability_links.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/access-control",
+        "https://portswigger.net/web-security/authentication/other-mechanisms"
+      ]
+    },
+    {
+      "id": "account_takeover_chains",
+      "category": "Identity, authorization and lifecycle",
+      "question": "Confirmed capability to actual account control",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/account_takeover_chains.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/authentication/other-mechanisms"
+      ]
+    },
+    {
+      "id": "business_logic_bugs",
+      "category": "Product state and background execution",
+      "question": "Target-specific state machine and invariants",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/business_logic_bugs.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Business_Logic_Security_Cheat_Sheet.html",
+        "https://portswigger.net/research/smashing-the-state-machine",
+        "https://portswigger.net/web-security/logic-flaws"
+      ]
+    },
+    {
+      "id": "race_conditions",
+      "category": "Product state and background execution",
+      "question": "Concurrent operations, sub-states and transient impact",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/race_conditions.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Business_Logic_Security_Cheat_Sheet.html",
+        "https://portswigger.net/research/smashing-the-state-machine",
+        "https://portswigger.net/web-security/race-conditions"
+      ]
+    },
+    {
+      "id": "async_jobs_webhooks",
+      "category": "Product state and background execution",
+      "question": "Queue/result/download/cancel and signed callback lifecycle",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/async_jobs_webhooks.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Webhook_Security_Cheat_Sheet.html",
+        "https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries",
+        "https://docs.stripe.com/webhooks",
+        "https://portswigger.net/research/smashing-the-state-machine",
+        "https://portswigger.net/web-security/access-control"
+      ]
+    },
+    {
+      "id": "xss_reflected_stored_dom",
+      "category": "Browser and rendering trust",
+      "question": "Source/transform/sink and victim execution",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/xss_reflected_stored_dom.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API",
+        "https://github.com/cure53/DOMPurify",
+        "https://portswigger.net/web-security/cross-site-scripting",
+        "https://portswigger.net/web-security/cross-site-scripting/dom-based"
+      ]
+    },
+    {
+      "id": "dom_clobbering",
+      "category": "Browser and rendering trust",
+      "question": "Named DOM properties and actual consumer gadgets",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/dom_clobbering.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/DOM_Clobbering_Prevention_Cheat_Sheet.html",
+        "https://github.com/cure53/DOMPurify",
+        "https://portswigger.net/web-security/dom-based/dom-clobbering"
+      ]
+    },
+    {
+      "id": "postmessage_attacks",
+      "category": "Browser and rendering trust",
+      "question": "Sender/source binding, replies and downstream action",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/postmessage_attacks.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy",
+        "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy",
+        "https://portswigger.net/web-security/dom-based/controlling-the-web-message-source"
+      ]
+    },
+    {
+      "id": "cors_misconfig",
+      "category": "Browser and rendering trust",
+      "question": "Cross-origin response read authority",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/cors_misconfig.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+        "https://portswigger.net/web-security/cors"
+      ]
+    },
+    {
+      "id": "csrf_all_types",
+      "category": "Browser and rendering trust",
+      "question": "Ambient authority and browser request delivery",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/csrf_all_types.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+        "https://portswigger.net/web-security/csrf"
+      ]
+    },
+    {
+      "id": "client_side_csrf",
+      "category": "Browser and rendering trust",
+      "question": "Trusted client constructing attacker-influenced requests",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/client_side_csrf.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html",
+        "https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage",
+        "https://portswigger.net/web-security/dom-based",
+        "https://portswigger.net/web-security/dom-based/ajax-request-header-manipulation"
+      ]
+    },
+    {
+      "id": "csp_bypass",
+      "category": "Browser and rendering trust",
+      "question": "Actual CSP directives, nonces, hashes and allowed gadgets",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/csp_bypass.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP",
+        "https://portswigger.net/web-security/cross-site-scripting/content-security-policy"
+      ]
+    },
+    {
+      "id": "browser_isolation",
+      "category": "Browser and rendering trust",
+      "question": "Origins/sites, cookies, Trusted Types, workers and embedding",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/browser_isolation.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+        "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy",
+        "https://portswigger.net/web-security/dom-based",
+        "https://xsleaks.dev/"
+      ]
+    },
+    {
+      "id": "iframe_attacks",
+      "category": "Browser and rendering trust",
+      "question": "Sandbox and parent/child origin boundaries",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/iframe_attacks.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe",
+        "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy",
+        "https://portswigger.net/web-security/clickjacking",
+        "https://portswigger.net/web-security/dom-based/controlling-the-web-message-source"
+      ]
+    },
+    {
+      "id": "clickjacking",
+      "category": "Browser and rendering trust",
+      "question": "Actual hit targets, victim cookies and sensitive actions",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/clickjacking.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Clickjacking_Defense_Cheat_Sheet.html",
+        "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/iframe",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+        "https://portswigger.net/web-security/clickjacking"
+      ]
+    },
+    {
+      "id": "open_redirect",
+      "category": "Browser and rendering trust",
+      "question": "Validator and actual navigation destination",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/open_redirect.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/dom-based/open-redirection",
+        "https://url.spec.whatwg.org/"
+      ]
+    },
+    {
+      "id": "websocket_attacks",
+      "category": "Browser and rendering trust",
+      "question": "Handshake, message authorization and subscription lifetime",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/websocket_attacks.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html",
+        "https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/WebSocket",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie",
+        "https://portswigger.net/web-security/websockets/cross-site-websocket-hijacking"
+      ]
+    },
+    {
+      "id": "xs_leaks",
+      "category": "Browser and rendering trust",
+      "question": "Browser-visible cross-origin oracle and secret inference",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/xs_leaks.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/XS_Leaks_Cheat_Sheet.html",
+        "https://portswigger.net/research/listen-to-the-whispers-web-timing-attacks-that-actually-work",
+        "https://portswigger.net/research/top-10-web-hacking-techniques-of-2025",
+        "https://xsleaks.dev/"
+      ]
+    },
+    {
+      "id": "css_injection",
+      "category": "Browser and rendering trust",
+      "question": "CSS grammar, rendering and conditional network inference",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/css_injection.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Selectors/Attribute_selectors",
+        "https://portswigger.net/research/blind-css-exfiltration",
+        "https://portswigger.net/research/inline-style-exfiltration",
+        "https://wstg.owasp.org/v4.1/4-Web_Application_Security_Testing/11-Client_Side_Testing/05-Testing_for_CSS_Injection/"
+      ]
+    },
+    {
+      "id": "http_request_smuggling",
+      "category": "HTTP, caching and routing",
+      "question": "Framing, downgrade, CL.0/H2.0/0.CL and modern desync",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/http_request_smuggling.md",
+      "reference_urls": [
+        "https://httpwg.org/specs/rfc9112.html",
+        "https://portswigger.net/research/browser-powered-desync-attacks",
+        "https://portswigger.net/research/crlf-powered-desync-attacks",
+        "https://portswigger.net/research/http1-must-die",
+        "https://portswigger.net/web-security/request-smuggling/advanced",
+        "https://portswigger.net/web-security/request-smuggling/browser/cl-0"
+      ]
+    },
+    {
+      "id": "crlf_header_injection",
+      "category": "HTTP, caching and routing",
+      "question": "Header grammar and context-specific splitting/tunnelling",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/crlf_header_injection.md",
+      "reference_urls": [
+        "https://cwe.mitre.org/data/definitions/113.html",
+        "https://httpwg.org/specs/rfc9112.html",
+        "https://portswigger.net/kb/issues/00200200_http-response-header-injection",
+        "https://portswigger.net/research/crlf-powered-desync-attacks"
+      ]
+    },
+    {
+      "id": "cache_poisoning",
+      "category": "HTTP, caching and routing",
+      "question": "Keying/cacheability and clean-client influenced response",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/cache_poisoning.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Vary",
+        "https://httpwg.org/specs/rfc9111.html",
+        "https://portswigger.net/research/gotta-cache-em-all",
+        "https://portswigger.net/web-security/web-cache-poisoning"
+      ]
+    },
+    {
+      "id": "web_cache_deception",
+      "category": "HTTP, caching and routing",
+      "question": "Private content and path/cache interpretation",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/web_cache_deception.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Vary",
+        "https://httpwg.org/specs/rfc9111.html",
+        "https://portswigger.net/research/gotta-cache-em-all",
+        "https://portswigger.net/web-security/web-cache-deception"
+      ]
+    },
+    {
+      "id": "url_parser_differentials",
+      "category": "HTTP, caching and routing",
+      "question": "Decode/normalize/validate/route destination disagreement",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/url_parser_differentials.md",
+      "reference_urls": [
+        "https://docs.python.org/3/library/urllib.parse.html",
+        "https://nodejs.org/api/url.html",
+        "https://portswigger.net/research/gotta-cache-em-all",
+        "https://portswigger.net/research/introducing-the-url-validation-bypass-cheat-sheet",
+        "https://url.spec.whatwg.org/"
+      ]
+    },
+    {
+      "id": "http_parameter_pollution",
+      "category": "HTTP, caching and routing",
+      "question": "Duplicate input/accessor semantics across layers",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/http_parameter_pollution.md",
+      "reference_urls": [
+        "https://docs.python.org/3/library/urllib.parse.html",
+        "https://nodejs.org/api/url.html",
+        "https://portswigger.net/web-security/api-testing/server-side-parameter-pollution",
+        "https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/07-Input_Validation_Testing/04-Testing_for_HTTP_Parameter_Pollution/"
+      ]
+    },
+    {
+      "id": "server_side_parameter_pollution",
+      "category": "HTTP, caching and routing",
+      "question": "Input embedded in internal query/path/structured request",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/server_side_parameter_pollution.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+        "https://nodejs.org/api/url.html",
+        "https://portswigger.net/web-security/api-testing/server-side-parameter-pollution"
+      ]
+    },
+    {
+      "id": "host_header_attacks",
+      "category": "HTTP, caching and routing",
+      "question": "Host trust in URL generation and backend selection",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/host_header_attacks.md",
+      "reference_urls": [
+        "https://developers.cloudflare.com/fundamentals/security/protect-your-origin-server/",
+        "https://httpwg.org/specs/rfc9110.html",
+        "https://portswigger.net/web-security/host-header",
+        "https://portswigger.net/web-security/host-header/exploiting"
+      ]
+    },
+    {
+      "id": "waf_bypass_all_techniques",
+      "category": "HTTP, caching and routing",
+      "question": "Observed parser/configuration differential",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/waf_bypass_all_techniques.md",
+      "reference_urls": [
+        "https://developers.cloudflare.com/rules/normalization/",
+        "https://docs.aws.amazon.com/waf/latest/developerguide/waf-oversize-request-components.html",
+        "https://httpwg.org/specs/rfc9110.html",
+        "https://portswigger.net/research/bypassing-character-blocklists-with-unicode-overflows",
+        "https://portswigger.net/web-security/api-testing/server-side-parameter-pollution"
+      ]
+    },
+    {
+      "id": "cloudflare_bypass",
+      "category": "HTTP, caching and routing",
+      "question": "Origin reach and independent enforcement",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/cloudflare_bypass.md",
+      "reference_urls": [
+        "https://developers.cloudflare.com/fundamentals/security/protect-your-origin-server/",
+        "https://developers.cloudflare.com/ssl/origin-configuration/authenticated-origin-pull/",
+        "https://httpwg.org/specs/rfc9110.html",
+        "https://portswigger.net/web-security/host-header/exploiting"
+      ]
+    },
+    {
+      "id": "sqli_all_types",
+      "category": "Backend inputs and data consumers",
+      "question": "Query construction and matched semantic differentials",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/sqli_all_types.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/sql-injection",
+        "https://www.postgresql.org/docs/current/functions-conditional.html"
+      ]
+    },
+    {
+      "id": "nosql_injection",
+      "category": "Backend inputs and data consumers",
+      "question": "Operator, expression and type-aware query boundaries",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/nosql_injection.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/NoSQL_Security_Cheat_Sheet.html",
+        "https://portswigger.net/web-security/nosql-injection",
+        "https://www.mongodb.com/docs/manual/reference/operator/query/"
+      ]
+    },
+    {
+      "id": "orm_filter_inference",
+      "category": "Backend inputs and data consumers",
+      "question": "ORM selectors, relationships and predicate inference",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/orm_filter_inference.md",
+      "reference_urls": [
+        "https://docs.djangoproject.com/en/stable/ref/models/querysets/",
+        "https://portswigger.net/research/top-10-web-hacking-techniques-of-2025",
+        "https://www.elttam.com/blog/leaking-more-than-you-joined-for/"
+      ]
+    },
+    {
+      "id": "ssrf_all_types",
+      "category": "Backend inputs and data consumers",
+      "question": "Effective server request identity/destination/visibility",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/ssrf_all_types.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
+        "https://nodejs.org/api/url.html",
+        "https://portswigger.net/web-security/ssrf"
+      ]
+    },
+    {
+      "id": "ssti_all_engines",
+      "category": "Backend inputs and data consumers",
+      "question": "Actual template language, context and sandbox",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/ssti_all_engines.md",
+      "reference_urls": [
+        "https://ejs.co/",
+        "https://freemarker.apache.org/docs/dgui_template_exp.html",
+        "https://github.com/vladko312/Research_Successful_Errors/blob/main/README.md",
+        "https://handlebarsjs.com/guide/expressions.html",
+        "https://jinja.palletsprojects.com/en/stable/sandbox/",
+        "https://learn.microsoft.com/en-us/aspnet/core/mvc/views/razor?view=aspnetcore-10.0",
+        "https://portswigger.net/web-security/server-side-template-injection",
+        "https://pugjs.org/language/interpolation.html",
+        "https://shopify.github.io/liquid/filters/times/",
+        "https://twig.symfony.com/doc/3.x/templates.html",
+        "https://velocity.apache.org/engine/2.4/user-guide.html"
+      ]
+    },
+    {
+      "id": "xxe_all_types",
+      "category": "Backend inputs and data consumers",
+      "question": "XML fetch/expansion/XInclude and processing pipelines",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/xxe_all_types.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.html",
+        "https://docs.python.org/3/library/xml.html",
+        "https://portswigger.net/web-security/xxe"
+      ]
+    },
+    {
+      "id": "deserialization_all_langs",
+      "category": "Backend inputs and data consumers",
+      "question": "Integrity, loaded types and actual load-time hooks",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/deserialization_all_langs.md",
+      "reference_urls": [
+        "https://docs.python.org/3/library/pickle.html",
+        "https://docs.ruby-lang.org/en/3.4/Marshal.html",
+        "https://portswigger.net/web-security/deserialization"
+      ]
+    },
+    {
+      "id": "rce_all_vectors",
+      "category": "Backend inputs and data consumers",
+      "question": "Command argv/shell and evaluation consumers",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/rce_all_vectors.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html",
+        "https://nodejs.org/api/child_process.html",
+        "https://portswigger.net/web-security/os-command-injection"
+      ]
+    },
+    {
+      "id": "lfi_rfi_path_traversal",
+      "category": "Backend inputs and data consumers",
+      "question": "Path containment, file read and include semantics",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/lfi_rfi_path_traversal.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html",
+        "https://owasp.org/www-community/attacks/Path_Traversal",
+        "https://portswigger.net/web-security/file-path-traversal"
+      ]
+    },
+    {
+      "id": "file_upload_bypass",
+      "category": "Backend inputs and data consumers",
+      "question": "Upload/store/process/serve/render lifecycle",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/file_upload_bypass.md",
+      "reference_urls": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html",
+        "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition",
+        "https://portswigger.net/web-security/file-upload"
+      ]
+    },
+    {
+      "id": "prototype_pollution",
+      "category": "Backend inputs and data consumers",
+      "question": "Assignment source, prototype scope and reachable gadget",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/prototype_pollution.md",
+      "reference_urls": [
+        "https://developer.mozilla.org/en-US/docs/Web/Security/Attacks/Prototype_pollution",
+        "https://portswigger.net/research/server-side-prototype-pollution",
+        "https://portswigger.net/web-security/prototype-pollution"
+      ]
+    },
+    {
+      "id": "framework_server_actions",
+      "category": "Backend inputs and data consumers",
+      "question": "SSR/RSC/Server Actions and framework cache boundaries",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/framework_server_actions.md",
+      "reference_urls": [
+        "https://nextjs.org/docs/app/guides/data-security",
+        "https://portswigger.net/research/top-10-web-hacking-techniques-of-2025",
+        "https://react.dev/reference/rsc/server-functions",
+        "https://zhero-web-sec.github.io/research-and-things/nextjs-cache-and-chains-the-stale-elixir"
+      ]
+    },
+    {
+      "id": "subdomain_takeover",
+      "category": "Ownership and build edges",
+      "question": "Current provider claimability and subsequent trust",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/subdomain_takeover.md",
+      "reference_urls": [
+        "https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/verifying-your-custom-domain-for-github-pages",
+        "https://portswigger.net/web-security/cors",
+        "https://portswigger.net/web-security/host-header",
+        "https://wstg.owasp.org/v4.2/4-Web_Application_Security_Testing/02-Configuration_and_Deployment_Management_Testing/10-Test_for_Subdomain_Takeover/"
+      ]
+    },
+    {
+      "id": "dependency_confusion",
+      "category": "Ownership and build edges",
+      "question": "Actual resolver precedence and package attribution",
+      "path": "SKILL_FILES/VULNERABILITIES/WEB/dependency_confusion.md",
+      "reference_urls": [
+        "https://docs.npmjs.com/cli/v11/using-npm/scope/",
+        "https://owasp.github.io/www-project-top-10-ci-cd-security-risks/CICD-SEC-03-Dependency-Chain-Abuse",
+        "https://pip.pypa.io/en/stable/cli/pip_install/"
+      ]
+    }
+  ],
+  "compatibility": {
+    "graphql_attacks": "api-mode/SKILL_FILES/VULNERABILITIES/API/graphql_introspection_attacks.md",
+    "mass_assignment": "api-mode/SKILL_FILES/VULNERABILITIES/API/api_mass_assignment.md",
+    "rate_limiting_bypass": "api-mode/SKILL_FILES/VULNERABILITIES/API/api_rate_limiting_bypass.md",
+    "csrf_websocket": "web-mode/SKILL_FILES/VULNERABILITIES/WEB/websocket_attacks.md"
+  },
+  "source_index_note": "Reference URLs declared by each guide; source review claims and runtime execution limits remain separate in that guide. This index is not an automated truth or freshness attestation."
+}

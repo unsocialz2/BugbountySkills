@@ -63,3 +63,50 @@ Reject or narrow when:
 ## Cross-skill use
 
 Use `api_authorization_bypass.md` when the primary issue is which actor may mutate the object, and `business_logic_bugs.md` when the field change violates a broader workflow/business invariant.
+
+## Discovery and experiment payloads — Input authority, including nested objects
+
+Examples below are synthetic request shapes, not discovered target endpoints.
+Read policy first, substitute existing owned resources, and start with a normal
+successful operation. A cheap discriminating discovery probe does not require a
+previously confirmed vulnerability. No example has been replayed against an
+external target by this revision.
+
+| Question | Minimal control / probe | Protected or benign outcome to discriminate |
+|---|---|---|
+| Echo vs authority | Update a normal display field, then append one known read-only field | Use an independent GET/action to distinguish reflected input from authoritative changes. |
+| Read-only security flag | Known own fixture verified=false control vs verified=true with the same normal update | Prove the actual entitlement or verification-gated action; a JSON echo is insufficient. |
+| Create vs update | Observed create and PATCH input shapes for the same record type | A create-only field may legitimately be immutable on update; identify the intended guarantee. |
+| Nested relationship | A-owned attachment owner field vs B-owned relationship reference | Do not mistake a nested BOLA issue for mere extra-field acceptance; record each binding. |
+| Bulk/upsert drift | Single normal update vs a documented bulk/upsert of one owned record | Test one record first. Validate returned success against actual state and lifecycle restrictions. |
+
+### Payload context
+
+```json
+{"display_name":"AUDIT_MARKER"}
+```
+```json
+{"display_name":"AUDIT_MARKER","verified":true}
+```
+`verified` is a synthetic example, not a field to inject everywhere. Use a real
+schema/response hint. First test the field's current value, then one meaningful
+change only if allowed. Keep balance/role mutations in a disposable fixture or
+explicit program-approved test workflow. BOPLA also includes over-readable
+properties; response-field exposure belongs to authorization analysis.
+
+### Evidence and reopening
+
+Keep actor/role/tenant, exact request bytes, successful normal control, probe
+response, authoritative readback or transient protected result, strongest benign
+explanation, and remaining gap. Close only the tested relationship/representation;
+reopen for an observed alternate consumer, changed lifecycle, repaired control, or
+new source evidence. Absence of output is not evidence that processing never ran.
+
+### Primary sources and applicability
+
+Sources checked 2026-11-13 for mechanism/design support; they are not target
+version or exploitability attestations. The experiment matrix is a synthesis.
+
+- [PortSwigger API testing](https://portswigger.net/web-security/api-testing) — hidden fields and mass assignment.
+- [OWASP mass assignment](https://cheatsheetseries.owasp.org/cheatsheets/Mass_Assignment_Cheat_Sheet.html) — binders, DTOs and allowed input properties.
+- [OWASP API3](https://api-security.owasp.org/editions/2023/en/0xa3-broken-object-property-level-authorization/) — read/write object-property authorization.

